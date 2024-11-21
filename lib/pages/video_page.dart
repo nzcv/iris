@@ -35,6 +35,7 @@ class VideoPage extends HookWidget {
     final isPlaying = useState(false);
     final showControls = useState(false);
     final hideTimer = useRef<Timer?>(null);
+    final subTitleIndex = useState(0);
 
     final positionStream = useStream(player.stream.position);
     final durationStream = useStream(player.stream.duration);
@@ -47,6 +48,30 @@ class VideoPage extends HookWidget {
         [
           playlist.data?.index,
         ]);
+
+    final List<SubTitle>? subTitles = useMemoized(
+        () => playlist.data != null && playlist.data!.index >= 0
+            ? playQueue[playlist.data!.index].subTitles
+            : [],
+        [
+          playlist.data?.index,
+        ]);
+
+    useEffect(() {
+      if (subTitles!.isEmpty) {
+        return null;
+      } else {
+        if (playlist.data != null && playlist.data!.index >= 0) {
+          player.setSubtitleTrack(
+            SubtitleTrack.uri(
+              subTitles[subTitleIndex.value].path!,
+              title: subTitles[subTitleIndex.value].name,
+            ),
+          );
+        }
+        return null;
+      }
+    }, [subTitles, subTitleIndex.value]);
 
     if (positionStream.hasData) {
       if (!sliderisChanging.value) {
@@ -125,6 +150,16 @@ class VideoPage extends HookWidget {
           ),
           play: autoPlay,
         );
+
+        if (playQueue[index].subTitles!.isNotEmpty) {
+          player.setSubtitleTrack(
+            SubtitleTrack.uri(
+              playQueue[index].subTitles![subTitleIndex.value].path!,
+              title: playQueue[index].subTitles![subTitleIndex.value].name,
+            ),
+          );
+        }
+
         isPlaying.value = true;
       }
       return player.dispose;
@@ -255,7 +290,10 @@ class VideoPage extends HookWidget {
                               decoration: TextDecoration.none),
                         ),
                         IconButton(
-                            onPressed: () => player.previous(),
+                            onPressed: () {
+                              subTitleIndex.value = 0;
+                              player.previous();
+                            },
                             icon: const Icon(
                               Icons.skip_previous,
                               color: iconColor,
@@ -277,7 +315,10 @@ class VideoPage extends HookWidget {
                               : player.play(),
                         ),
                         IconButton(
-                            onPressed: () => player.next(),
+                            onPressed: () {
+                              subTitleIndex.value = 0;
+                              player.next();
+                            },
                             icon: const Icon(
                               Icons.skip_next,
                               color: iconColor,

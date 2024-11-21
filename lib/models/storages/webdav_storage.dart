@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:iris/utils/check_file_type.dart';
+import 'package:iris/utils/find_sub_title.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:iris/models/file.dart';
 import 'package:iris/models/storages/storage.dart';
@@ -68,9 +69,20 @@ class WebdavStorage implements Storage {
 
       var files = await client.readDir(path);
 
+      final String dirPath =
+          'http://$url:$port/${path.replaceFirst(RegExp(r'^/+'), '')}';
+
       return files
-          .map((file) => FileItem(file.name, "http://$url:$port${file.path}",
-              file.isDir, file.size, checkFileType(file.name!), auth))
+          .map((file) => FileItem(
+                file.name,
+                '$dirPath/${file.name}',
+                file.isDir,
+                file.size,
+                checkFileType(file.name!),
+                auth,
+                findSubTitle(files.map((file) => file.name as String).toList(),
+                    file.name as String, dirPath),
+              ))
           .toList();
     } catch (e) {
       throw Exception('Error occurred: $e');

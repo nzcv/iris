@@ -38,7 +38,7 @@ class WebDAVDialog extends HookWidget {
         type: 'webdav',
         name: name.value,
         url: url.value,
-        basePath: basePath.value,
+        basePath: '/${basePath.value.replaceFirst(RegExp(r'^/+'), '')}',
         port: port.value,
         username: username.value,
         password: password.value,
@@ -52,7 +52,7 @@ class WebDAVDialog extends HookWidget {
             type: 'webdav',
             name: name.value,
             url: url.value,
-            basePath: basePath.value,
+            basePath: '/${basePath.value.replaceFirst(RegExp(r'^/+'), '')}',
             port: port.value,
             username: username.value,
             password: password.value,
@@ -116,8 +116,7 @@ class WebDAVDialog extends HookWidget {
                     labelText: 'Path',
                   ),
                   initialValue: basePath.value,
-                  onChanged: (value) => basePath.value =
-                      "/${value.replaceFirst(RegExp(r'^/+'), '')}",
+                  onChanged: (value) => basePath.value = value,
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
