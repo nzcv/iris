@@ -1,0 +1,104 @@
+import 'dart:convert';
+import 'package:iris/utils/check_file_type.dart';
+import 'package:webdav_client/webdav_client.dart' as webdav;
+import 'package:iris/models/file.dart';
+import 'package:iris/models/storages/storage.dart';
+
+class WebdavStorage implements Storage {
+  @override
+  String type;
+  @override
+  String name;
+  String url;
+  @override
+  String basePath;
+  String port;
+  String username;
+  String password;
+
+  WebdavStorage({
+    required this.type,
+    required this.name,
+    required this.url,
+    required this.basePath,
+    required this.port,
+    required this.username,
+    required this.password,
+  });
+
+  Future<bool> test() async {
+    try {
+      var client = webdav.newClient(
+        "http://$url:$port",
+        user: username,
+        password: password,
+        debug: false,
+      );
+
+      client.setHeaders({'accept-charset': 'utf-8'});
+      client.setConnectTimeout(4000);
+      client.setSendTimeout(4000);
+      client.setReceiveTimeout(4000);
+
+      await client.ping();
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  @override
+  Future<List<FileItem>> getFiles(String path) async {
+    try {
+      var client = webdav.newClient(
+        "http://$url:$port",
+        user: username,
+        password: password,
+        debug: false,
+      );
+
+      final String auth =
+          'Basic ${base64Encode(utf8.encode('$username:$password'))}';
+
+      client.setHeaders({'accept-charset': 'utf-8'});
+      client.setConnectTimeout(8000);
+      client.setSendTimeout(8000);
+      client.setReceiveTimeout(8000);
+
+      var files = await client.readDir(path);
+
+      return files
+          .map((file) => FileItem(file.name, "http://$url:$port${file.path}",
+              file.isDir, file.size, checkFileType(file.name!), auth))
+          .toList();
+    } catch (e) {
+      throw Exception('Error occurred: $e');
+    }
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type,
+      'name': name,
+      'url': url,
+      'basePath': basePath,
+      'port': port,
+      'username': username,
+      'password': password,
+    };
+  }
+
+  factory WebdavStorage.fromJson(Map<String, dynamic> json) {
+    return WebdavStorage(
+      type: json['type'],
+      name: json['name'],
+      url: json['url'],
+      basePath: json['basePath'],
+      port: json['port'],
+      username: json['username'],
+      password: json['password'],
+    );
+  }
+}
