@@ -42,6 +42,7 @@ class WebdavStorage implements Storage {
       client.setReceiveTimeout(4000);
 
       await client.ping();
+      await client.readDir(basePath);
       return true;
     } catch (e) {
       print(e);

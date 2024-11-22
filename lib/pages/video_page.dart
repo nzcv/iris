@@ -58,20 +58,42 @@ class VideoPage extends HookWidget {
         ]);
 
     useEffect(() {
+      if (!isPlaying.value) {
+        final autoPlay =
+            useAppStore().select(context, (state) => state.autoPlay);
+        player.open(
+          Playlist(
+            playQueue
+                .map((item) => item.path != null
+                    ? Media(item.path!,
+                        httpHeaders: item.auth!.isNotEmpty
+                            ? {'authorization': item.auth!}
+                            : {})
+                    : Media(''))
+                .toList(),
+            index: index,
+          ),
+          play: autoPlay,
+        );
+
+        isPlaying.value = true;
+      }
+      return player.dispose;
+    }, []);
+
+    useEffect(() {
       if (subTitles!.isEmpty) {
         return null;
       } else {
-        if (playlist.data != null && playlist.data!.index >= 0) {
-          player.setSubtitleTrack(
-            SubtitleTrack.uri(
-              subTitles[subTitleIndex.value].path!,
-              title: subTitles[subTitleIndex.value].name,
-            ),
-          );
-        }
+        player.setSubtitleTrack(
+          SubtitleTrack.uri(
+            subTitles[subTitleIndex.value].path!,
+            title: subTitles[subTitleIndex.value].name,
+          ),
+        );
         return null;
       }
-    }, [subTitles, subTitleIndex.value]);
+    }, [duration.value]);
 
     if (positionStream.hasData) {
       if (!sliderisChanging.value) {
@@ -131,39 +153,6 @@ class VideoPage extends HookWidget {
       }
       return null;
     }, [title]);
-
-    useEffect(() {
-      if (!isPlaying.value) {
-        final autoPlay =
-            useAppStore().select(context, (state) => state.autoPlay);
-        player.open(
-          Playlist(
-            playQueue
-                .map((item) => item.path != null
-                    ? Media(item.path!,
-                        httpHeaders: item.auth!.isNotEmpty
-                            ? {'authorization': item.auth!}
-                            : {})
-                    : Media(''))
-                .toList(),
-            index: index,
-          ),
-          play: autoPlay,
-        );
-
-        if (playQueue[index].subTitles!.isNotEmpty) {
-          player.setSubtitleTrack(
-            SubtitleTrack.uri(
-              playQueue[index].subTitles![subTitleIndex.value].path!,
-              title: playQueue[index].subTitles![subTitleIndex.value].name,
-            ),
-          );
-        }
-
-        isPlaying.value = true;
-      }
-      return player.dispose;
-    }, []);
 
     const bgColor = Colors.black45;
     const iconColor = Colors.white;

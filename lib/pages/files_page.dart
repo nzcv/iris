@@ -86,11 +86,59 @@ class FilesPage extends HookWidget {
                               leading: filteredFileList[index].isDir == true
                                   ? const Icon(Icons.folder)
                                   : const Icon(Icons.video_file),
-                              title: Text(filteredFileList[index].name ?? ''),
+                              title: Text(
+                                filteredFileList[index].name ?? '',
+                                // style: const TextStyle(
+                                //   fontWeight: FontWeight.w500,
+                                // ),
+                              ),
                               subtitle: filteredFileList[index].size != null &&
                                       filteredFileList[index].size != 0
-                                  ? Text(
-                                      "${fileSizeConvert(filteredFileList[index].size!)} MB")
+                                  ? Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                            "${fileSizeConvert(filteredFileList[index].size!)} MB"),
+                                        const Spacer(),
+                                        const SizedBox(width: 16),
+                                        ...filteredFileList[index]
+                                            .subTitles!
+                                            .map((subTitle) => subTitle.path
+                                                ?.split('.')
+                                                .last
+                                                .toUpperCase())
+                                            .toSet()
+                                            .toList()
+                                            .map((subTitleType) => Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    const SizedBox(width: 8),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .inversePrimary, // 设置背景颜色
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                                    8.0), // 设置圆角
+                                                      ),
+                                                      padding: const EdgeInsets
+                                                          .fromLTRB(8, 4, 8, 4),
+                                                      child: Text(
+                                                        '$subTitleType',
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  ],
+                                                )),
+                                      ],
+                                    )
                                   : null,
                               onTap: () {
                                 if (filteredFileList[index].isDir == true &&
