@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:iris/info.dart';
+import 'package:iris/store/app_store.dart';
 import 'package:iris/utils/is_desktop.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -24,17 +25,25 @@ class TitleBar extends HookWidget implements PreferredSizeWidget {
       systemNavigationBarColor: Colors.transparent,
     ));
 
-    final isMaximized = useState(false);
-
     final inHome =
         useMemoized(() => ModalRoute.of(context)?.settings.name == '/');
 
+    final isMaximized = useState(false);
+
     useEffect(() {
-      if (!isDesktop()) return null;
-      if (isMaximized.value) {
-        windowManager.maximize();
-      } else {
-        windowManager.unmaximize();
+      final subscription = useAppStore().stream.listen((state) {
+        isMaximized.value = state.isMaximized;
+      });
+      return subscription.cancel;
+    }, []);
+
+    useEffect(() {
+      if (isDesktop()) {
+        if (isMaximized.value) {
+          windowManager.maximize();
+        } else {
+          windowManager.unmaximize();
+        }
       }
       return null;
     }, [isMaximized.value]);
@@ -47,7 +56,7 @@ class TitleBar extends HookWidget implements PreferredSizeWidget {
         },
         onDoubleTap: () {
           if (isDesktop()) {
-            isMaximized.value = !isMaximized.value;
+            () => useAppStore().toggleMaximize();
           }
         },
         child: SafeArea(
@@ -97,8 +106,10 @@ class TitleBar extends HookWidget implements PreferredSizeWidget {
                           icon: Icon(Icons.minimize, color: iconColor),
                         ),
                         IconButton(
-                          onPressed: () =>
-                              isMaximized.value = !isMaximized.value,
+                          onPressed: () async =>
+                              await windowManager.isFullScreen()
+                                  ? windowManager.setFullScreen(false)
+                                  : useAppStore().toggleMaximize(),
                           icon: isMaximized.value == true
                               ? Icon(Icons.fullscreen_exit, color: iconColor)
                               : Icon(Icons.fullscreen, color: iconColor),

@@ -98,7 +98,7 @@ class WebDAVDialog extends HookWidget {
                     labelText: 'Name',
                   ),
                   initialValue: name.value,
-                  onChanged: (value) => name.value = value,
+                  onChanged: (value) => name.value = value.trim(),
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
@@ -107,7 +107,7 @@ class WebDAVDialog extends HookWidget {
                     labelText: 'URL',
                   ),
                   initialValue: url.value,
-                  onChanged: (value) => url.value = value,
+                  onChanged: (value) => url.value = value.trim(),
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
@@ -116,7 +116,7 @@ class WebDAVDialog extends HookWidget {
                     labelText: 'Path',
                   ),
                   initialValue: basePath.value,
-                  onChanged: (value) => basePath.value = value,
+                  onChanged: (value) => basePath.value = value.trim(),
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
@@ -125,7 +125,7 @@ class WebDAVDialog extends HookWidget {
                     labelText: 'Port',
                   ),
                   initialValue: port.value,
-                  onChanged: (value) => port.value = value,
+                  onChanged: (value) => port.value = value.trim(),
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
@@ -134,7 +134,7 @@ class WebDAVDialog extends HookWidget {
                     labelText: 'Username',
                   ),
                   initialValue: username.value,
-                  onChanged: (value) => username.value = value,
+                  onChanged: (value) => username.value = value.trim(),
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
@@ -143,7 +143,7 @@ class WebDAVDialog extends HookWidget {
                     labelText: 'Password',
                   ),
                   initialValue: password.value,
-                  onChanged: (value) => password.value = value,
+                  onChanged: (value) => password.value = value.trim(),
                 ),
                 const SizedBox(height: 16.0),
               ],
@@ -158,7 +158,7 @@ class WebDAVDialog extends HookWidget {
         ),
         TextButton(
           onPressed: testConnection,
-          child: const Text('Test Connection'),
+          child: const Text('Connection Test'),
         ),
         TextButton(
           onPressed: isTested.value

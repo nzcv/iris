@@ -38,6 +38,9 @@ class AppStore extends PersistentStore<AppState> {
     save(state);
   }
 
+  Future<void> toggleMaximize() async =>
+      set(state.copyWith(isMaximized: !state.isMaximized));
+
   @override
   Future<AppState?> load() async {
     try {

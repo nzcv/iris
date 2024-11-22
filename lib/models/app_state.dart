@@ -8,6 +8,7 @@ class AppState {
     this.autoPlay = true,
     this.loop = false,
     this.volume = 100,
+    this.isMaximized = false,
     this.isMuted = false,
     this.playbackProgress = const {},
     this.theme = 'auto',
@@ -19,6 +20,7 @@ class AppState {
   bool autoPlay;
   bool loop;
   int volume;
+  bool isMaximized;
   bool isMuted;
   Map<String, double> playbackProgress;
   String theme;
@@ -30,6 +32,7 @@ class AppState {
     bool? autoPlay,
     bool? loop,
     int? volume,
+    bool? isMaximized,
     bool? isMuted,
     Map<String, double>? playbackProgress,
     String? theme,
@@ -41,6 +44,7 @@ class AppState {
         autoPlay: autoPlay ?? this.autoPlay,
         loop: loop ?? this.loop,
         volume: volume ?? this.volume,
+        isMaximized: isMaximized ?? this.isMaximized,
         isMuted: isMuted ?? this.isMuted,
         playbackProgress: playbackProgress ?? this.playbackProgress,
         theme: theme ?? this.theme,
@@ -54,6 +58,7 @@ class AppState {
       'autoPlay': autoPlay,
       'loop': loop,
       'volume': volume,
+      'isMaximized': isMaximized,
       'isMuted': isMuted,
       'playbackProgress': playbackProgress,
       'theme': theme,
@@ -76,14 +81,15 @@ class AppState {
           })
           .toList()
           .cast<Storage>(),
-      autoPlay: json['autoPlay'],
-      loop: json['loop'],
-      volume: json['volume'],
-      isMuted: json['isMuted'],
+      autoPlay: json['autoPlay'] ?? true,
+      loop: json['loop'] ?? false,
+      volume: json['volume'] ?? 100,
+      isMaximized: json['isMaximized'] ?? false,
+      isMuted: json['isMuted'] ?? false,
       playbackProgress: Map<String, double>.from(json['playbackProgress']),
-      theme: json['theme'],
-      subtitleLanguage: json['subtitleLanguage'],
-      autoCheckUpdates: json['autoCheckUpdates'],
+      theme: json['theme'] ?? 'auto',
+      subtitleLanguage: json['subtitleLanguage'] ?? 'auto',
+      autoCheckUpdates: json['autoCheckUpdates'] ?? true,
     );
   }
 }
