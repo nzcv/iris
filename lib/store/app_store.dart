@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
-import 'package:iris/models/player_state.dart';
+import 'package:iris/models/app_state.dart';
 import 'package:iris/models/storages/storage.dart';
 import 'package:iris/store/persistent_store.dart';
-import 'package:iris/utils/path.dart';
 
 class AppStore extends PersistentStore<AppState> {
   AppStore() : super(AppState());
@@ -42,11 +41,14 @@ class AppStore extends PersistentStore<AppState> {
   @override
   Future<AppState?> load() async {
     try {
-      final file = File(await getConfigPath());
-      if (await file.exists()) {
-        final jsonString = await file.readAsString();
-        final jsonData = json.decode(jsonString);
-        return AppState.fromJson(jsonData);
+      AndroidOptions getAndroidOptions() => const AndroidOptions(
+            encryptedSharedPreferences: true,
+          );
+      final storage = FlutterSecureStorage(aOptions: getAndroidOptions());
+
+      String? appState = await storage.read(key: 'appState');
+      if (appState != null) {
+        return AppState.fromJson(json.decode(appState));
       }
     } catch (e) {
       log('Error loading AppState: $e');
@@ -57,9 +59,12 @@ class AppStore extends PersistentStore<AppState> {
   @override
   Future<void> save(AppState state) async {
     try {
-      final file = File(await getConfigPath());
-      final jsonString = json.encode(state.toJson());
-      await file.writeAsString(jsonString);
+      AndroidOptions getAndroidOptions() => const AndroidOptions(
+            encryptedSharedPreferences: true,
+          );
+      final storage = FlutterSecureStorage(aOptions: getAndroidOptions());
+
+      await storage.write(key: 'appState', value: json.encode(state.toJson()));
     } catch (e) {
       log('Error saving AppState: $e');
     }

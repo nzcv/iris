@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/info.dart';
@@ -40,15 +39,6 @@ class MyApp extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ));
-
     return MaterialApp(
       title: INFO.title,
       theme: ThemeData(

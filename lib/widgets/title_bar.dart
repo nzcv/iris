@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:iris/info.dart';
 import 'package:iris/utils/is_desktop.dart';
@@ -18,6 +19,11 @@ class TitleBar extends HookWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: bgColor ?? Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+    ));
+
     final isMaximized = useState(false);
 
     final inHome =
