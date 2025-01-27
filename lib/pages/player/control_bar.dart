@@ -294,7 +294,7 @@ class ControlBar extends HookWidget {
                           showControl();
                           if (isFullScreen) {
                             await windowManager.setFullScreen(false);
-                            await resizeWindow(playerCore.videoParams?.aspect);
+                            await resizeWindow(playerCore.aspect);
                           } else {
                             await windowManager.setFullScreen(true);
                           }

@@ -13,11 +13,13 @@ import 'package:iris/hooks/use_volume.dart';
 import 'package:iris/info.dart';
 import 'package:iris/models/file.dart';
 import 'package:iris/models/storages/local.dart';
+import 'package:iris/models/store/app_state.dart';
 import 'package:iris/pages/dialog/show_open_link_dialog.dart';
 import 'package:iris/pages/player/audio.dart';
 import 'package:iris/pages/player/control_bar_slider.dart';
 import 'package:iris/pages/history.dart';
 import 'package:iris/pages/play_queue.dart';
+import 'package:iris/pages/player/fvp_video.dart';
 import 'package:iris/pages/show_open_link_bottom_sheet.dart';
 import 'package:iris/pages/subtitle_and_audio_track.dart';
 import 'package:iris/pages/settings/settings.dart';
@@ -37,20 +39,25 @@ import 'package:iris/pages/player/control_bar.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:window_manager/window_manager.dart';
 
+enum PlayerBackend {
+  mediaKit,
+  fvp,
+}
+
 class IrisPlayer extends HookWidget {
   const IrisPlayer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final PlayerCore playerCore = usePlayerCore(context);
-    final PlayerController playerController =
-        usePlayerController(context, playerCore);
+    final playerType = PlayerBackend.mediaKit;
 
     final t = getLocalizations(context);
     final shuffle = useAppStore().select(context, (state) => state.shuffle);
     final fit = useAppStore().select(context, (state) => state.fit);
     final autoResize =
         useAppStore().select(context, (state) => state.autoResize);
+    final autoPlay = useAppStore().select(context, (state) => state.autoPlay);
+    final repeat = useAppStore().select(context, (state) => state.repeat);
 
     final playQueue =
         usePlayQueueStore().select(context, (state) => state.playQueue);
@@ -74,6 +81,10 @@ class IrisPlayer extends HookWidget {
                 : currentPlay.file.name
             : INFO.title,
         [currentPlay, currentPlayIndex, playQueue]);
+
+    final PlayerCore playerCore = usePlayerCore(context);
+    final PlayerController playerController =
+        usePlayerController(context, playerCore);
 
     final focusNode = useFocusNode();
 
@@ -106,10 +117,10 @@ class IrisPlayer extends HookWidget {
 
     useEffect(() {
       if (isDesktop) {
-        resizeWindow(!autoResize ? 0 : playerCore.videoParams?.aspect);
+        resizeWindow(!autoResize ? 0 : playerCore.aspect);
       }
       return;
-    }, [playerCore.videoParams?.aspect, autoResize]);
+    }, [playerCore.aspect, autoResize]);
 
     useEffect(() {
       if (appLifecycleState == AppLifecycleState.paused) {
@@ -399,14 +410,20 @@ class IrisPlayer extends HookWidget {
 
     final videoViewSize = useMemoized(() {
       if (fit != BoxFit.none ||
-          playerCore.videoParams?.w == null ||
-          playerCore.videoParams?.h == null) {
+          playerCore.width == null ||
+          playerCore.height == null) {
         return MediaQuery.of(context).size;
       } else {
-        return Size(playerCore.videoParams!.w! / scaleFactor,
-            playerCore.videoParams!.h! / scaleFactor);
+        return Size(
+            playerCore.width! / scaleFactor, playerCore.height! / scaleFactor);
       }
-    }, [fit, MediaQuery.of(context).size, playerCore.videoParams, scaleFactor]);
+    }, [
+      fit,
+      MediaQuery.of(context).size,
+      playerCore.width,
+      playerCore.height,
+      scaleFactor
+    ]);
 
     final videoViewOffset = useMemoized(
         () => fit == BoxFit.none
@@ -527,7 +544,7 @@ class IrisPlayer extends HookWidget {
                         if (isDesktop) {
                           if (await windowManager.isFullScreen()) {
                             await windowManager.setFullScreen(false);
-                            await resizeWindow(playerCore.videoParams?.aspect);
+                            await resizeWindow(playerCore.aspect);
                           } else {
                             await windowManager.setFullScreen(true);
                           }
@@ -681,13 +698,33 @@ class IrisPlayer extends HookWidget {
                           top: videoViewOffset.dy,
                           width: videoViewSize.width,
                           height: videoViewSize.height,
-                          child: Video(
-                            key: ValueKey(currentPlay?.file.getID()),
-                            controller: playerCore.controller,
-                            controls: NoVideoControls,
-                            fit: fit == BoxFit.none ? BoxFit.contain : fit,
-                            // wakelock: mediaType == 'video',
-                          ),
+                          child: currentPlay != null
+                              ? () {
+                                  switch (playerType) {
+                                    case PlayerBackend.fvp:
+                                      return FvpVideo(
+                                        key: ValueKey(currentPlay.file.uri),
+                                        file: currentPlay.file,
+                                        autoPlay: autoPlay,
+                                        looping:
+                                            repeat == Repeat.one ? true : false,
+                                        fit: fit == BoxFit.none
+                                            ? BoxFit.contain
+                                            : fit,
+                                      );
+                                    case PlayerBackend.mediaKit:
+                                      return Video(
+                                        key: ValueKey(currentPlay.file.uri),
+                                        controller: playerCore.controller,
+                                        controls: NoVideoControls,
+                                        fit: fit == BoxFit.none
+                                            ? BoxFit.contain
+                                            : fit,
+                                        // wakelock: mediaType == 'video',
+                                      );
+                                  }
+                                }()
+                              : Container(),
                         )
                       ],
                     ),
@@ -919,7 +956,7 @@ class IrisPlayer extends HookWidget {
                     onDoubleTap: () async {
                       if (isDesktop && await windowManager.isMaximized()) {
                         await windowManager.unmaximize();
-                        await resizeWindow(playerCore.videoParams?.aspect);
+                        await resizeWindow(playerCore.aspect);
                       } else {
                         await windowManager.maximize();
                       }

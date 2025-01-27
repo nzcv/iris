@@ -32,8 +32,6 @@ class PlayerCore {
   final AudioTrack audio;
   final List<AudioTrack> audios;
   final bool playing;
-  final VideoParams? videoParams;
-  final AudioParams? audioParams;
   final MediaType? mediaType;
   final Duration position;
   final Duration duration;
@@ -42,6 +40,9 @@ class PlayerCore {
   final bool completed;
   final double rate;
   final FileItem? cover;
+  final double? aspect;
+  final int? width;
+  final int? height;
   final void Function(Duration) updatePosition;
   final void Function(bool) updateSeeking;
   final Future<void> Function() saveProgress;
@@ -55,8 +56,6 @@ class PlayerCore {
     this.audio,
     this.audios,
     this.playing,
-    this.videoParams,
-    this.audioParams,
     this.mediaType,
     this.position,
     this.duration,
@@ -65,6 +64,9 @@ class PlayerCore {
     this.completed,
     this.rate,
     this.cover,
+    this.aspect,
+    this.width,
+    this.height,
     this.updatePosition,
     this.updateSeeking,
     this.saveProgress,
@@ -145,7 +147,7 @@ PlayerCore usePlayerCore(BuildContext context) {
 
   bool playing = useStream(player.stream.playing).data ?? false;
   VideoParams? videoParams = useStream(player.stream.videoParams).data;
-  AudioParams? audioParams = useStream(player.stream.audioParams).data;
+  // AudioParams? audioParams = useStream(player.stream.audioParams).data;
   ValueNotifier<Duration> position = useState(Duration.zero);
   Duration duration = useStream(player.stream.duration).data ?? Duration.zero;
   Duration buffer = useStream(player.stream.buffer).data ?? Duration.zero;
@@ -338,8 +340,6 @@ PlayerCore usePlayerCore(BuildContext context) {
     audio,
     audios,
     playing,
-    videoParams,
-    audioParams,
     mediaType,
     duration == Duration.zero ? Duration.zero : position.value,
     duration,
@@ -348,6 +348,9 @@ PlayerCore usePlayerCore(BuildContext context) {
     completed,
     rate,
     cover,
+    videoParams?.aspect,
+    videoParams?.w,
+    videoParams?.h,
     updatePosition,
     updateSeeking,
     saveProgress,
