@@ -34,9 +34,7 @@ import 'package:iris/utils/is_desktop.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:iris/widgets/custom_app_bar.dart';
 import 'package:iris/pages/player/control_bar.dart';
-import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 class IrisPlayer extends HookWidget {
@@ -44,6 +42,10 @@ class IrisPlayer extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final PlayerCore playerCore = usePlayerCore(context);
+    final PlayerController playerController =
+        usePlayerController(context, playerCore);
+
     final t = getLocalizations(context);
     final shuffle = useAppStore().select(context, (state) => state.shuffle);
     final fit = useAppStore().select(context, (state) => state.fit);
@@ -75,55 +77,10 @@ class IrisPlayer extends HookWidget {
 
     final focusNode = useFocusNode();
 
-    final player = useMemoized(
-      () => Player(
-        configuration: const PlayerConfiguration(
-          libass: true,
-        ),
-      ),
-    );
-    final controller = useMemoized(() => VideoController(player));
-
-    useEffect(() {
-      () async {
-        player.setSubtitleTrack(SubtitleTrack.no());
-        if (Platform.isAndroid) {
-          NativePlayer nativePlayer = player.platform as NativePlayer;
-
-          final appSupportDir = await getApplicationSupportDirectory();
-          final String fontsDir = "${appSupportDir.path}/fonts";
-
-          final Directory fontsDirectory = Directory(fontsDir);
-          if (!await fontsDirectory.exists()) {
-            await fontsDirectory.create(recursive: true);
-            logger('fonts directory created');
-          }
-
-          final File file = File("$fontsDir/NotoSansCJKsc-Medium.otf");
-          if (!await file.exists()) {
-            final ByteData data =
-                await rootBundle.load("assets/fonts/NotoSansCJKsc-Medium.otf");
-            final Uint8List buffer = data.buffer.asUint8List();
-            await file.create(recursive: true);
-            await file.writeAsBytes(buffer);
-            logger('NotoSansCJKsc-Medium.otf copied');
-          }
-
-          await nativePlayer.setProperty("sub-fonts-dir", fontsDir);
-          await nativePlayer.setProperty("sub-font", "NotoSansCJKsc-Medium");
-        }
-      }();
-      return player.dispose;
-    }, []);
-
     useEffect(() {
       focusNode.requestFocus();
       return;
     }, []);
-
-    final PlayerCore playerCore = usePlayerCore(context, player);
-    final PlayerController playerController =
-        usePlayerController(context, playerCore);
 
     final isHover = useState(false);
     final isTouch = useState(false);
@@ -236,6 +193,7 @@ class IrisPlayer extends HookWidget {
     useEffect(() {
       return () => progressHideTimer.value?.cancel();
     }, []);
+
     useEffect(() {
       if (isDesktop) {
         windowManager.setTitle(title);
@@ -725,7 +683,7 @@ class IrisPlayer extends HookWidget {
                           height: videoViewSize.height,
                           child: Video(
                             key: ValueKey(currentPlay?.file.getID()),
-                            controller: controller,
+                            controller: playerCore.controller,
                             controls: NoVideoControls,
                             fit: fit == BoxFit.none ? BoxFit.contain : fit,
                             // wakelock: mediaType == 'video',

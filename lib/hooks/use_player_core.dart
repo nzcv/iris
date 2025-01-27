@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:collection/collection.dart';
@@ -14,6 +15,8 @@ import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/files_filter.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
+import 'package:path_provider/path_provider.dart';
 
 enum MediaType {
   video,
@@ -22,6 +25,7 @@ enum MediaType {
 
 class PlayerCore {
   final Player player;
+  final VideoController controller;
   final SubtitleTrack subtitle;
   final List<SubtitleTrack> subtitles;
   final List<Subtitle> externalSubtitles;
@@ -44,6 +48,7 @@ class PlayerCore {
 
   PlayerCore(
     this.player,
+    this.controller,
     this.subtitle,
     this.subtitles,
     this.externalSubtitles,
@@ -66,7 +71,50 @@ class PlayerCore {
   );
 }
 
-PlayerCore usePlayerCore(BuildContext context, Player player) {
+PlayerCore usePlayerCore(BuildContext context) {
+  final player = useMemoized(
+    () => Player(
+      configuration: const PlayerConfiguration(
+        libass: true,
+      ),
+    ),
+  );
+
+  final controller = useMemoized(() => VideoController(player));
+
+  useEffect(() {
+    () async {
+      player.setSubtitleTrack(SubtitleTrack.no());
+
+      if (Platform.isAndroid) {
+        NativePlayer nativePlayer = player.platform as NativePlayer;
+
+        final appSupportDir = await getApplicationSupportDirectory();
+        final String fontsDir = "${appSupportDir.path}/fonts";
+
+        final Directory fontsDirectory = Directory(fontsDir);
+        if (!await fontsDirectory.exists()) {
+          await fontsDirectory.create(recursive: true);
+          logger('fonts directory created');
+        }
+
+        final File file = File("$fontsDir/NotoSansCJKsc-Medium.otf");
+        if (!await file.exists()) {
+          final ByteData data =
+              await rootBundle.load("assets/fonts/NotoSansCJKsc-Medium.otf");
+          final Uint8List buffer = data.buffer.asUint8List();
+          await file.create(recursive: true);
+          await file.writeAsBytes(buffer);
+          logger('NotoSansCJKsc-Medium.otf copied');
+        }
+
+        await nativePlayer.setProperty("sub-fonts-dir", fontsDir);
+        await nativePlayer.setProperty("sub-font", "NotoSansCJKsc-Medium");
+      }
+    }();
+    return player.dispose;
+  }, []);
+
   final localStorages =
       useStorageStore().select(context, (state) => state.localStorages);
   final storages = useStorageStore().select(context, (state) => state.storages);
@@ -283,6 +331,7 @@ PlayerCore usePlayerCore(BuildContext context, Player player) {
 
   return PlayerCore(
     player,
+    controller,
     subtitle,
     subtitles,
     externalSubtitles ?? [],
