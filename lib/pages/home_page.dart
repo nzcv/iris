@@ -20,9 +20,11 @@ class HomePage extends HookWidget {
     final player = () {
       switch (playerBackend) {
         case PlayerBackend.mediaKit:
-          return IrisPlayer(playerHooks: useMediaKitPlayer);
+          return IrisPlayer(
+              key: const ValueKey('mediaKit'), playerHooks: useMediaKitPlayer);
         case PlayerBackend.fvp:
-          return IrisPlayer(playerHooks: useFvpPlayer);
+          return IrisPlayer(
+              key: const ValueKey('fvp'), playerHooks: useFvpPlayer);
       }
     }();
 

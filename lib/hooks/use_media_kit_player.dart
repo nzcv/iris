@@ -137,7 +137,8 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
         if (Platform.isAndroid && currentFile.uri.startsWith('content://')) {
           return;
         }
-        logger('Save progress: ${currentFile.name}');
+        logger(
+            'Save progress: ${currentFile.name}, position: ${player.state.position}, duration: ${player.state.duration}');
         useHistoryStore().add(Progress(
           dateTime: DateTime.now().toUtc(),
           position: player.state.position,
@@ -159,7 +160,6 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
         Progress? progress = history[currentFile.getID()];
         if (progress != null) {
           if (!alwaysPlayFromBeginning &&
-              progress.duration.inMilliseconds == duration.inMilliseconds &&
               (progress.duration.inMilliseconds -
                       progress.position.inMilliseconds) >
                   5000) {
@@ -225,7 +225,8 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
       if (Platform.isAndroid && currentFile.uri.startsWith('content://')) {
         return;
       }
-      logger('Save progress: ${currentFile.name}');
+      logger(
+          'Save progress: ${currentFile.name}, position: ${player.state.position}, duration: ${player.state.duration}');
       useHistoryStore().add(Progress(
         dateTime: DateTime.now().toUtc(),
         position: player.state.position,

@@ -29,6 +29,7 @@ void main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   fvp.registerWith(options: {
+    'fastSeek': true,
     'subtitleFontFile':
         Platform.isAndroid ? 'assets/fonts/NotoSansCJKsc-Medium.otf' : null,
   });

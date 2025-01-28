@@ -24,7 +24,7 @@ class Play extends HookWidget {
       child: Column(
         children: [
           ListTile(
-              leading: const Icon(Icons.restart_alt_rounded),
+              leading: const Icon(Icons.settings_input_component_rounded),
               title: Text(t.player_backend),
               trailing: DropdownButton<PlayerBackend>(
                 borderRadius: BorderRadius.circular(8),

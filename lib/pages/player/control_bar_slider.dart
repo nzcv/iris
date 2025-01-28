@@ -101,10 +101,17 @@ class ControlBarSlider extends HookWidget {
                       },
                       onChanged: (value) {
                         showControl();
-                        player.updatePosition(Duration(seconds: value.toInt()));
+                        if (player is MediaKitPlayer) {
+                          player
+                              .updatePosition(Duration(seconds: value.toInt()));
+                        } else if (player is FvpPlayer) {
+                          player.seekTo(Duration(seconds: value.toInt()));
+                        }
                       },
                       onChangeEnd: (value) async {
-                        await player.seekTo(Duration(seconds: value.toInt()));
+                        if (player is MediaKitPlayer) {
+                          await player.seekTo(Duration(seconds: value.toInt()));
+                        }
                         player.updateSeeking(false);
                       },
                     ),

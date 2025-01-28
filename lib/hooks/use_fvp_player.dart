@@ -84,21 +84,19 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   final rate = useState(controller.value.playbackSpeed);
   final seeking = useState(false);
 
-  void updateSeeking(bool value) => seeking.value = value;
-
   useEffect(() {
     () async {
       if (controller.dataSource.isEmpty) return;
       await controller.initialize();
 
-      if (currentPlay != null &&
-          currentPlay.file.type == ContentType.video &&
-          duration.value != Duration.zero) {
+      if (autoPlay) {
+        await controller.play();
+      }
+
+      if (currentPlay != null && currentPlay.file.type == ContentType.video) {
         Progress? progress = history[currentPlay.file.getID()];
         if (progress != null) {
           if (!alwaysPlayFromBeginning &&
-              progress.duration.inMilliseconds ==
-                  duration.value.inMilliseconds &&
               (progress.duration.inMilliseconds -
                       progress.position.inMilliseconds) >
                   5000) {
@@ -115,10 +113,6 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       }
 
       await controller.setLooping(repeat == Repeat.one ? true : false);
-
-      if (autoPlay) {
-        await controller.play();
-      }
     }();
 
     return () {
@@ -138,6 +132,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       rate.value = controller.value.playbackSpeed;
 
       if (controller.value.isCompleted) {
+        logger('Completed: ${currentPlay?.file.name}');
         if (repeat == Repeat.one) return;
         if (currentPlayIndex == playQueue.length - 1) {
           if (repeat == Repeat.all) {
@@ -178,7 +173,8 @@ FvpPlayer useFvpPlayer(BuildContext context) {
             currentPlay.file.uri.startsWith('content://')) {
           return;
         }
-        logger('Save progress: ${currentPlay.file.name}');
+        logger(
+            'Save progress: ${currentPlay.file.name}, position: ${controller.value.position}, duration: ${controller.value.duration}');
         useHistoryStore().add(Progress(
           dateTime: DateTime.now().toUtc(),
           position: controller.value.position,
@@ -216,7 +212,8 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       if (Platform.isAndroid && file.uri.startsWith('content://')) {
         return;
       }
-      logger('Save progress: ${file.name}');
+      logger(
+          'Save progress: ${file.name}, position: ${controller.value.position}, duration: ${controller.value.duration}');
       useHistoryStore().add(Progress(
         dateTime: DateTime.now().toUtc(),
         position: controller.value.position,
@@ -249,6 +246,6 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     saveProgress: saveProgress,
     seeking: seeking.value,
     updatePosition: seekTo,
-    updateSeeking: updateSeeking,
+    updateSeeking: (value) => seeking.value = value,
   );
 }
