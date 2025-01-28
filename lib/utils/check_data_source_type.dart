@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:iris/hooks/use_fvp.dart';
 import 'package:iris/models/file.dart';
 import 'package:iris/models/storages/storage.dart';
+import 'package:video_player/video_player.dart';
 
 DataSourceType checkDataSourceType(FileItem file) {
   if (Platform.isAndroid && file.uri.startsWith('content://')) {

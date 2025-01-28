@@ -3,77 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
-import 'package:collection/collection.dart';
 import 'package:iris/models/file.dart';
+import 'package:iris/models/player.dart';
 import 'package:iris/models/progress.dart';
-import 'package:iris/models/storages/storage.dart';
 import 'package:iris/models/store/app_state.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_history_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
-import 'package:iris/store/use_storage_store.dart';
-import 'package:iris/utils/files_filter.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:path_provider/path_provider.dart';
 
-enum MediaType {
-  video,
-  audio,
-}
-
-class PlayerCore {
-  final Player player;
-  final VideoController controller;
-  final SubtitleTrack subtitle;
-  final List<SubtitleTrack> subtitles;
-  final List<Subtitle> externalSubtitles;
-  final AudioTrack audio;
-  final List<AudioTrack> audios;
-  final bool playing;
-  final MediaType? mediaType;
-  final Duration position;
-  final Duration duration;
-  final Duration buffer;
-  final bool seeking;
-  final bool completed;
-  final double rate;
-  final FileItem? cover;
-  final double? aspect;
-  final int? width;
-  final int? height;
-  final void Function(Duration) updatePosition;
-  final void Function(bool) updateSeeking;
-  final Future<void> Function() saveProgress;
-
-  PlayerCore(
-    this.player,
-    this.controller,
-    this.subtitle,
-    this.subtitles,
-    this.externalSubtitles,
-    this.audio,
-    this.audios,
-    this.playing,
-    this.mediaType,
-    this.position,
-    this.duration,
-    this.buffer,
-    this.seeking,
-    this.completed,
-    this.rate,
-    this.cover,
-    this.aspect,
-    this.width,
-    this.height,
-    this.updatePosition,
-    this.updateSeeking,
-    this.saveProgress,
-  );
-}
-
-PlayerCore usePlayerCore(BuildContext context) {
+MediaKitPlayer useMediaKitPlayer(BuildContext context) {
   final player = useMemoized(
     () => Player(
       configuration: const PlayerConfiguration(
@@ -116,10 +58,6 @@ PlayerCore usePlayerCore(BuildContext context) {
     }();
     return player.dispose;
   }, []);
-
-  final localStorages =
-      useStorageStore().select(context, (state) => state.localStorages);
-  final storages = useStorageStore().select(context, (state) => state.storages);
 
   final List<PlayQueueItem> playQueue =
       usePlayQueueStore().select(context, (state) => state.playQueue);
@@ -173,10 +111,6 @@ PlayerCore usePlayerCore(BuildContext context) {
           (subtitle) => subtitles.any((item) => item.title == subtitle.name)),
       [currentFile?.subtitles, subtitles]);
 
-  final MediaType? mediaType = useMemoized(
-      () => videoParams?.aspect != null ? MediaType.video : MediaType.audio,
-      [videoParams?.aspect]);
-
   final positionStream = useStream(player.stream.position);
 
   if (positionStream.hasData) {
@@ -184,36 +118,6 @@ PlayerCore usePlayerCore(BuildContext context) {
       position.value = positionStream.data!;
     }
   }
-
-  final List<String> dir = useMemoized(
-    () => currentFile == null || currentFile.path.isEmpty
-        ? []
-        : ([...currentFile.path]..removeLast()),
-    [currentFile],
-  );
-
-  final Storage? storage = useMemoized(
-      () => currentFile == null
-          ? null
-          : [...localStorages, ...storages].firstWhereOrNull(
-              (storage) => storage.id == currentFile.storageId),
-      [currentFile, localStorages, storages]);
-
-  final getCover = useMemoized(() async {
-    if (currentFile?.type != ContentType.audio) return null;
-
-    final files = await storage?.getFiles(dir);
-
-    if (files == null) return null;
-
-    final images = filesFilter(files, [ContentType.image]);
-
-    return images.firstWhereOrNull(
-            (image) => image.name.split('.').first.toLowerCase() == 'cover') ??
-        images.firstOrNull;
-  }, [currentFile, dir]);
-
-  final cover = useFuture(getCover).data;
 
   useEffect(() {
     if (currentFile == null || playQueue.isEmpty) {
@@ -331,28 +235,57 @@ PlayerCore usePlayerCore(BuildContext context) {
     }
   }
 
-  return PlayerCore(
-    player,
-    controller,
-    subtitle,
-    subtitles,
-    externalSubtitles ?? [],
-    audio,
-    audios,
-    playing,
-    mediaType,
-    duration == Duration.zero ? Duration.zero : position.value,
-    duration,
-    duration == Duration.zero ? Duration.zero : buffer,
-    seeking.value,
-    completed,
-    rate,
-    cover,
-    videoParams?.aspect,
-    videoParams?.w,
-    videoParams?.h,
-    updatePosition,
-    updateSeeking,
-    saveProgress,
+  Future<void> play() async {
+    await useAppStore().updateAutoPlay(true);
+    await player.play();
+  }
+
+  Future<void> pause() async {
+    await player.pause();
+  }
+
+  Future<void> seekTo(Duration newPosition) async => newPosition.inSeconds < 0
+      ? await player.seek(Duration.zero)
+      : newPosition.inSeconds > duration.inSeconds
+          ? await player.seek(duration)
+          : await player.seek(newPosition);
+
+  Future<void> backward(int seconds) async {
+    await seekTo(Duration(seconds: position.value.inSeconds - seconds));
+  }
+
+  Future<void> forward(int seconds) async {
+    await seekTo(Duration(seconds: position.value.inSeconds + seconds));
+  }
+
+  Future<void> updateRate(double value) async =>
+      player.state.rate == value ? null : await player.setRate(value);
+
+  return MediaKitPlayer(
+    player: player,
+    controller: controller,
+    subtitle: subtitle,
+    subtitles: subtitles,
+    externalSubtitles: externalSubtitles ?? [],
+    audio: audio,
+    audios: audios,
+    isPlaying: playing,
+    position: duration == Duration.zero ? Duration.zero : position.value,
+    duration: duration,
+    buffer: duration == Duration.zero ? Duration.zero : buffer,
+    seeking: seeking.value,
+    rate: rate,
+    aspect: videoParams?.aspect,
+    width: videoParams?.w?.toDouble(),
+    height: videoParams?.h?.toDouble(),
+    updatePosition: updatePosition,
+    updateSeeking: updateSeeking,
+    saveProgress: saveProgress,
+    play: play,
+    pause: pause,
+    backward: backward,
+    forward: forward,
+    updateRate: updateRate,
+    seekTo: seekTo,
   );
 }

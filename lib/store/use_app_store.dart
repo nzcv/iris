@@ -83,6 +83,11 @@ class AppStore extends PersistentStore<AppState> {
     await save(state);
   }
 
+  Future<void> updatePlayerBackend(PlayerBackend backend) async {
+    set(state.copyWith(playerBackend: backend));
+    await save(state);
+  }
+
   @override
   Future<AppState?> load() async {
     logger('Loading AppState');

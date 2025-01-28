@@ -1,29 +1,30 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
+import 'package:collection/collection.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/hooks/use_brightness.dart';
-import 'package:iris/hooks/use_player_controller.dart';
-import 'package:iris/hooks/use_player_core.dart';
 import 'package:iris/hooks/use_volume.dart';
 import 'package:iris/info.dart';
 import 'package:iris/models/file.dart';
+import 'package:iris/models/player.dart';
 import 'package:iris/models/storages/local.dart';
-import 'package:iris/models/store/app_state.dart';
+import 'package:iris/models/storages/storage.dart';
 import 'package:iris/pages/dialog/show_open_link_dialog.dart';
-import 'package:iris/pages/player/audio.dart';
-import 'package:iris/pages/player/control_bar_slider.dart';
 import 'package:iris/pages/history.dart';
 import 'package:iris/pages/play_queue.dart';
+import 'package:iris/pages/player/audio.dart';
 import 'package:iris/pages/player/fvp_video.dart';
 import 'package:iris/pages/show_open_link_bottom_sheet.dart';
-import 'package:iris/pages/subtitle_and_audio_track.dart';
 import 'package:iris/pages/settings/settings.dart';
+import 'package:iris/pages/subtitle_and_audio_track.dart';
+import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/check_content_type.dart';
+import 'package:iris/utils/files_filter.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/path_conv.dart';
 import 'package:iris/widgets/popup.dart';
@@ -39,25 +40,43 @@ import 'package:iris/pages/player/control_bar.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:window_manager/window_manager.dart';
 
-enum PlayerBackend {
-  mediaKit,
-  fvp,
+enum MediaType {
+  video,
+  audio,
 }
 
 class IrisPlayer extends HookWidget {
-  const IrisPlayer({super.key});
+  const IrisPlayer({super.key, required this.playerHooks});
+
+  final Function playerHooks;
 
   @override
   Widget build(BuildContext context) {
-    final playerType = PlayerBackend.mediaKit;
+    final MediaPlayer player = playerHooks(context);
+
+    final isHover = useState(false);
+    final isTouch = useState(false);
+    final isLongPress = useState(false);
+    final startPosition = useState<Offset?>(null);
+    final isHorizontalGesture = useState(false);
+    final isVerticalGesture = useState(false);
+    final isLeftGesture = useState(false);
+    final isRightGesture = useState(false);
+
+    final controlHideTimer = useRef<Timer?>(null);
+    final progressHideTimer = useRef<Timer?>(null);
+
+    final isShowControl = useState(true);
+    final isShowProgress = useState(false);
+
+    final brightness = useBrightness(isLeftGesture.value);
+    final volume = useVolume(isRightGesture.value);
 
     final t = getLocalizations(context);
     final shuffle = useAppStore().select(context, (state) => state.shuffle);
     final fit = useAppStore().select(context, (state) => state.fit);
     final autoResize =
         useAppStore().select(context, (state) => state.autoResize);
-    final autoPlay = useAppStore().select(context, (state) => state.autoPlay);
-    final repeat = useAppStore().select(context, (state) => state.repeat);
 
     final playQueue =
         usePlayQueueStore().select(context, (state) => state.playQueue);
@@ -82,9 +101,46 @@ class IrisPlayer extends HookWidget {
             : INFO.title,
         [currentPlay, currentPlayIndex, playQueue]);
 
-    final PlayerCore playerCore = usePlayerCore(context);
-    final PlayerController playerController =
-        usePlayerController(context, playerCore);
+    final List<String> dir = useMemoized(
+      () => currentPlay?.file == null || currentPlay!.file.path.isEmpty
+          ? []
+          : ([...currentPlay.file.path]..removeLast()),
+      [currentPlay?.file],
+    );
+
+    final localStorages =
+        useStorageStore().select(context, (state) => state.localStorages);
+    final storages =
+        useStorageStore().select(context, (state) => state.storages);
+
+    final Storage? storage = useMemoized(
+        () => currentPlay?.file == null
+            ? null
+            : [...localStorages, ...storages].firstWhereOrNull(
+                (storage) => storage.id == currentPlay?.file.storageId),
+        [currentPlay?.file, localStorages, storages]);
+
+    final getCover = useMemoized(() async {
+      if (currentPlay?.file.type != ContentType.audio) return null;
+
+      final files = await storage?.getFiles(dir);
+
+      if (files == null) return null;
+
+      final images = filesFilter(files, [ContentType.image]);
+
+      return images.firstWhereOrNull((image) =>
+              image.name.split('.').first.toLowerCase() == 'cover') ??
+          images.firstOrNull;
+    }, [currentPlay?.file, dir]);
+
+    final cover = useFuture(getCover).data;
+
+    final mediaType = useMemoized(
+        () => player.width == 0 || player.height == 0
+            ? MediaType.audio
+            : MediaType.video,
+        [player]);
 
     final focusNode = useFocusNode();
 
@@ -93,39 +149,21 @@ class IrisPlayer extends HookWidget {
       return;
     }, []);
 
-    final isHover = useState(false);
-    final isTouch = useState(false);
-    final isLongPress = useState(false);
-    final startPosition = useState<Offset?>(null);
-    final isHorizontalGesture = useState(false);
-    final isVerticalGesture = useState(false);
-    final isLeftGesture = useState(false);
-    final isRightGesture = useState(false);
-
-    final controlHideTimer = useRef<Timer?>(null);
-    final progressHideTimer = useRef<Timer?>(null);
-
-    final isShowControl = useState(true);
-    final isShowProgress = useState(false);
-
-    final brightness = useBrightness(isLeftGesture.value);
-    final volume = useVolume(isRightGesture.value);
-
     AppLifecycleState? appLifecycleState = useAppLifecycleState();
 
     final canPop = useState(false);
 
     useEffect(() {
       if (isDesktop) {
-        resizeWindow(!autoResize ? 0 : playerCore.aspect);
+        resizeWindow(!autoResize ? 0 : player.aspect);
       }
       return;
-    }, [playerCore.aspect, autoResize]);
+    }, [player.aspect, autoResize]);
 
     useEffect(() {
       if (appLifecycleState == AppLifecycleState.paused) {
         logger('App lifecycle state: paused');
-        playerCore.saveProgress();
+        player.saveProgress();
       }
       return;
     }, [appLifecycleState]);
@@ -184,7 +222,7 @@ class IrisPlayer extends HookWidget {
     }
 
     Future<void> showControlForHover(Future<void> callback) async {
-      playerCore.saveProgress();
+      player.saveProgress();
       showControl();
       isHover.value = true;
       await callback;
@@ -210,10 +248,10 @@ class IrisPlayer extends HookWidget {
         windowManager.setTitle(title);
       }
       return;
-    }, [title, playerCore.playing]);
+    }, [title, player.isPlaying]);
 
     useEffect(() {
-      if (isShowControl.value || playerCore.mediaType != MediaType.video) {
+      if (isShowControl.value || mediaType != MediaType.video) {
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
       } else {
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
@@ -239,12 +277,12 @@ class IrisPlayer extends HookWidget {
             // 上一个
             case LogicalKeyboardKey.arrowLeft:
               showControl();
-              playerController.previous();
+              usePlayQueueStore().previous();
               break;
             // 下一个
             case LogicalKeyboardKey.arrowRight:
               showControl();
-              playerController.next();
+              usePlayQueueStore().next();
               break;
             // 设置
             case LogicalKeyboardKey.keyP:
@@ -266,8 +304,8 @@ class IrisPlayer extends HookWidget {
             case LogicalKeyboardKey.keyX:
               showControl();
               shuffle
-                  ? playerController.sortPlayQueue()
-                  : playerController.shufflePlayQueue();
+                  ? usePlayQueueStore().sort()
+                  : usePlayQueueStore().shuffle();
               useAppStore().updateShuffle(!shuffle);
               break;
             // 循环
@@ -309,21 +347,21 @@ class IrisPlayer extends HookWidget {
           case LogicalKeyboardKey.space:
           case LogicalKeyboardKey.mediaPlayPause:
             showControl();
-            if (playerCore.playing) {
-              playerController.pause();
+            if (player.isPlaying) {
+              player.pause();
             } else {
-              playerController.play();
+              player.play();
             }
             break;
           // 上一个
           case LogicalKeyboardKey.mediaTrackPrevious:
-            playerController.previous();
+            usePlayQueueStore().previous();
             showControl();
             break;
           // 下一个
           case LogicalKeyboardKey.mediaTrackNext:
             showControl();
-            playerController.next();
+            usePlayQueueStore().next();
             break;
           // 存储
           case LogicalKeyboardKey.keyF:
@@ -350,7 +388,7 @@ class IrisPlayer extends HookWidget {
             showControlForHover(
               showPopup(
                 context: context,
-                child: SubtitleAndAudioTrack(playerCore: playerCore),
+                child: SubtitleAndAudioTrack(player: player),
                 direction: PopupDirection.right,
               ),
             );
@@ -384,7 +422,7 @@ class IrisPlayer extends HookWidget {
             } else {
               showProgress();
             }
-            playerController.backward(10);
+            player.backward(10);
             break;
           // 快进
           case LogicalKeyboardKey.arrowRight:
@@ -393,7 +431,7 @@ class IrisPlayer extends HookWidget {
             } else {
               showProgress();
             }
-            playerController.forward(10);
+            player.forward(10);
             break;
           default:
             break;
@@ -409,19 +447,16 @@ class IrisPlayer extends HookWidget {
     );
 
     final videoViewSize = useMemoized(() {
-      if (fit != BoxFit.none ||
-          playerCore.width == null ||
-          playerCore.height == null) {
+      if (fit != BoxFit.none || player.width == 0 || player.height == 0) {
         return MediaQuery.of(context).size;
       } else {
-        return Size(
-            playerCore.width! / scaleFactor, playerCore.height! / scaleFactor);
+        return Size(player.width! / scaleFactor, player.height! / scaleFactor);
       }
     }, [
       fit,
       MediaQuery.of(context).size,
-      playerCore.width,
-      playerCore.height,
+      player.width,
+      player.height,
       scaleFactor
     ]);
 
@@ -468,7 +503,7 @@ class IrisPlayer extends HookWidget {
         canPop: false,
         onPopInvokedWithResult: (bool didPop, Object? result) async {
           if (!didPop) {
-            await playerCore.saveProgress();
+            await player.saveProgress();
             if (!canPop.value) {
               canPop.value = true;
               if (context.mounted) {
@@ -493,7 +528,7 @@ class IrisPlayer extends HookWidget {
                 right: 0,
                 bottom: 0,
                 child: MouseRegion(
-                  cursor: isShowControl.value || !playerCore.playing
+                  cursor: isShowControl.value || player.isPlaying == false
                       ? SystemMouseCursors.basic
                       : SystemMouseCursors.none,
                   onHover: (event) {
@@ -524,27 +559,27 @@ class IrisPlayer extends HookWidget {
                           } else {
                             showProgress();
                           }
-                          await playerController.forward(10);
+                          await player.forward(10);
                         } else if (position < 0.25) {
                           if (isShowControl.value) {
                             showControl();
                           } else {
                             showProgress();
                           }
-                          playerController.backward(10);
+                          player.backward(10);
                         } else {
-                          if (playerCore.playing == true) {
-                            playerController.pause();
+                          if (player.isPlaying == true) {
+                            player.pause();
                             showControl();
                           } else {
-                            playerController.play();
+                            player.play();
                           }
                         }
                       } else {
                         if (isDesktop) {
                           if (await windowManager.isFullScreen()) {
                             await windowManager.setFullScreen(false);
-                            await resizeWindow(playerCore.aspect);
+                            await resizeWindow(player.aspect);
                           } else {
                             await windowManager.setFullScreen(true);
                           }
@@ -552,29 +587,29 @@ class IrisPlayer extends HookWidget {
                       }
                     },
                     onLongPressStart: (details) {
-                      if (isTouch.value && playerCore.playing) {
+                      if (isTouch.value && player.isPlaying == true) {
                         isLongPress.value = true;
-                        playerController.updateRate(2.0);
+                        player.updateRate(2.0);
                       }
                     },
                     onLongPressMoveUpdate: (details) {
                       int fast = (details.offsetFromOrigin.dx / 50).toInt();
                       if (fast >= 1) {
-                        playerController
+                        player
                             .updateRate(fast > 4 ? 5.0 : (1 + fast).toDouble());
                       } else if (fast <= -1) {
-                        playerController.updateRate(fast < -3
+                        player.updateRate(fast < -3
                             ? 0.25
                             : (1 - 0.25 * fast.abs()).toDouble());
                       }
                     },
                     onLongPressEnd: (details) {
-                      playerController.updateRate(1.0);
+                      player.updateRate(1.0);
                       isTouch.value = false;
                       isLongPress.value = false;
                     },
                     onLongPressCancel: () {
-                      playerController.updateRate(1.0);
+                      player.updateRate(1.0);
                       isTouch.value = false;
                       isLongPress.value = false;
                     },
@@ -599,24 +634,24 @@ class IrisPlayer extends HookWidget {
                             !isVerticalGesture.value) {
                           if (dx > dy) {
                             isHorizontalGesture.value = true;
-                            playerCore.updateSeeking(true);
+                            player.updateSeeking(true);
                           } else {
                             isVerticalGesture.value = true;
                           }
                         }
 
                         // 调整进度
-                        if (isHorizontalGesture.value && playerCore.seeking) {
+                        if (isHorizontalGesture.value && player.seeking) {
                           double dx = details.delta.dx;
                           int seconds =
-                              (dx * 5 + playerCore.position.inSeconds).toInt();
+                              (dx * 5 + player.position.inSeconds).toInt();
                           Duration position = Duration(
                               seconds: seconds < 0
                                   ? 0
-                                  : seconds > playerCore.duration.inSeconds
-                                      ? playerCore.duration.inSeconds
+                                  : seconds > player.duration.inSeconds
+                                      ? player.duration.inSeconds
                                       : seconds);
-                          playerCore.updatePosition(position);
+                          player.updatePosition(position);
                           if (isShowControl.value) {
                             showControl();
                           } else {
@@ -665,9 +700,9 @@ class IrisPlayer extends HookWidget {
                       isLeftGesture.value = false;
                       isRightGesture.value = false;
                       startPosition.value = null;
-                      if (playerCore.seeking) {
-                        await playerController.seekTo(playerCore.position);
-                        playerCore.updateSeeking(false);
+                      if (player.seeking) {
+                        await player.seekTo(player.position);
+                        player.updateSeeking(false);
                       }
                     },
                     onPanCancel: () async {
@@ -676,10 +711,10 @@ class IrisPlayer extends HookWidget {
                       isLeftGesture.value = false;
                       isRightGesture.value = false;
                       startPosition.value = null;
-                      if (playerCore.seeking) {
+                      if (player.seeking) {
                         isTouch.value = false;
-                        await playerController.seekTo(playerCore.position);
-                        playerCore.updateSeeking(false);
+                        await player.seekTo(player.position);
+                        player.updateSeeking(false);
                       }
                     },
                     child: Stack(
@@ -698,49 +733,38 @@ class IrisPlayer extends HookWidget {
                           top: videoViewOffset.dy,
                           width: videoViewSize.width,
                           height: videoViewSize.height,
-                          child: currentPlay != null
-                              ? () {
-                                  switch (playerType) {
-                                    case PlayerBackend.fvp:
-                                      return FvpVideo(
-                                        key: ValueKey(currentPlay.file.uri),
-                                        file: currentPlay.file,
-                                        autoPlay: autoPlay,
-                                        looping:
-                                            repeat == Repeat.one ? true : false,
-                                        fit: fit == BoxFit.none
-                                            ? BoxFit.contain
-                                            : fit,
-                                      );
-                                    case PlayerBackend.mediaKit:
-                                      return Video(
-                                        key: ValueKey(currentPlay.file.uri),
-                                        controller: playerCore.controller,
-                                        controls: NoVideoControls,
-                                        fit: fit == BoxFit.none
-                                            ? BoxFit.contain
-                                            : fit,
-                                        // wakelock: mediaType == 'video',
-                                      );
-                                  }
-                                }()
-                              : Container(),
-                        )
+                          child: player is FvpPlayer
+                              ? FvpVideo(
+                                  key: ValueKey(currentPlay?.file.uri),
+                                  player: player,
+                                )
+                              : player is MediaKitPlayer
+                                  ? Video(
+                                      key: ValueKey(currentPlay?.file.uri),
+                                      controller: player.controller,
+                                      controls: NoVideoControls,
+                                      fit: fit == BoxFit.none
+                                          ? BoxFit.contain
+                                          : fit,
+                                      // wakelock: mediaType == 'video',
+                                    )
+                                  : Container(),
+                        ),
                       ],
                     ),
                   ),
                 ),
               ),
               // Audio
-              if (playerCore.mediaType == MediaType.audio)
+              if (mediaType == MediaType.audio)
                 Positioned(
                     left: 0,
                     top: 0,
                     right: 0,
                     bottom: 0,
-                    child: Audio(playerCore: playerCore)),
+                    child: Audio(cover: cover)),
               // 播放速度
-              if (playerCore.rate != 1.0)
+              if (player.rate != 1.0)
                 Positioned(
                   left: 0,
                   top: 0,
@@ -767,7 +791,7 @@ class IrisPlayer extends HookWidget {
                           ),
                           const SizedBox(width: 10),
                           Text(
-                            playerCore.rate.toString(),
+                            player.rate.toString(),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -864,23 +888,23 @@ class IrisPlayer extends HookWidget {
                     ),
                   ),
                 ),
+              // if (isShowProgress.value &&
+              //     !isShowControl.value &&
+              //     mediaType != MediaType.audio)
+              //   Positioned(
+              //     left: -28,
+              //     right: -28,
+              //     bottom: -16,
+              //     height: 32,
+              //     child: ControlBarSlider(
+              //       playerCore: playerCore,
+              //       showControl: showControl,
+              //       disabled: true,
+              //     ),
+              //   ),
               if (isShowProgress.value &&
                   !isShowControl.value &&
-                  playerCore.mediaType != MediaType.audio)
-                Positioned(
-                  left: -28,
-                  right: -28,
-                  bottom: -16,
-                  height: 32,
-                  child: ControlBarSlider(
-                    playerCore: playerCore,
-                    showControl: showControl,
-                    disabled: true,
-                  ),
-                ),
-              if (isShowProgress.value &&
-                  !isShowControl.value &&
-                  playerCore.mediaType != MediaType.audio)
+                  mediaType != MediaType.audio)
                 Positioned(
                   left: 12,
                   top: 12,
@@ -908,7 +932,7 @@ class IrisPlayer extends HookWidget {
                 ),
               if (isShowProgress.value &&
                   !isShowControl.value &&
-                  playerCore.mediaType != MediaType.audio)
+                  mediaType != MediaType.audio)
                 Positioned(
                   left: 12,
                   bottom: 6,
@@ -916,7 +940,7 @@ class IrisPlayer extends HookWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${formatDurationToMinutes(playerCore.position)} / ${formatDurationToMinutes(playerCore.duration)}',
+                        '${formatDurationToMinutes(player.position)} / ${formatDurationToMinutes(player.duration)}',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 16,
@@ -938,8 +962,7 @@ class IrisPlayer extends HookWidget {
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOutCubicEmphasized,
-                top: isShowControl.value ||
-                        playerCore.mediaType != MediaType.video
+                top: isShowControl.value || mediaType != MediaType.video
                     ? 0
                     : -72,
                 left: 0,
@@ -956,7 +979,7 @@ class IrisPlayer extends HookWidget {
                     onDoubleTap: () async {
                       if (isDesktop && await windowManager.isMaximized()) {
                         await windowManager.unmaximize();
-                        await resizeWindow(playerCore.aspect);
+                        await resizeWindow(player.aspect);
                       } else {
                         await windowManager.maximize();
                       }
@@ -968,7 +991,7 @@ class IrisPlayer extends HookWidget {
                     },
                     child: CustomAppBar(
                       title: title,
-                      playerCore: playerCore,
+                      player: player,
                       actions: [
                         const SizedBox(width: 8),
                       ],
@@ -980,8 +1003,7 @@ class IrisPlayer extends HookWidget {
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOutCubicEmphasized,
-                bottom: isShowControl.value ||
-                        playerCore.mediaType != MediaType.video
+                bottom: isShowControl.value || mediaType != MediaType.video
                     ? 0
                     : -96,
                 left: 0,
@@ -1000,7 +1022,7 @@ class IrisPlayer extends HookWidget {
                       child: GestureDetector(
                         onTap: () => showControl(),
                         child: ControlBar(
-                          playerCore: playerCore,
+                          player: player,
                           showControl: showControl,
                           showControlForHover: showControlForHover,
                         ),
