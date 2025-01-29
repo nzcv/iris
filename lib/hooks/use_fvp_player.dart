@@ -67,33 +67,55 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     }
   }, [file]);
 
-  final isPlaying = useState(false);
-  final externalSubtitle = useState<int?>(null);
-  final List<Subtitle> externalSubtitles = useMemoized(
-      () => currentPlay?.file.subtitles ?? [], [currentPlay?.file.subtitles]);
-  final position = useState(controller.value.position);
-  final duration = useState(controller.value.duration);
-  final buffered = useState(controller.value.buffered);
-  final width = useState(controller.value.size.width);
-  final height = useState(controller.value.size.height);
-  final double aspect = useMemoized(
-      () => width.value != 0 && height.value != 0
-          ? width.value / height.value
-          : 0,
-      [width.value, height.value]);
-  final rate = useState(controller.value.playbackSpeed);
-  final seeking = useState(false);
-
   useEffect(() {
     () async {
       if (controller.dataSource.isEmpty) return;
       await controller.initialize();
+      await controller.setLooping(repeat == Repeat.one ? true : false);
+    }();
 
-      if (autoPlay) {
-        await controller.play();
-      }
+    return () {
+      controller.pause();
+      controller.dispose();
+    };
+  }, [controller]);
 
-      if (currentPlay != null && currentPlay.file.type == ContentType.video) {
+  useEffect(() {
+    return () {
+      controller.pause();
+      controller.dispose();
+    };
+  }, []);
+
+  final isPlaying =
+      useListenableSelector(controller, () => controller.value.isPlaying);
+  final duration =
+      useListenableSelector(controller, () => controller.value.duration);
+  final position =
+      useListenableSelector(controller, () => controller.value.position);
+  final buffered =
+      useListenableSelector(controller, () => controller.value.buffered);
+  final playbackSpeed =
+      useListenableSelector(controller, () => controller.value.playbackSpeed);
+  final size = useListenableSelector(controller, () => controller.value.size);
+  final isCompleted =
+      useListenableSelector(controller, () => controller.value.isCompleted);
+
+  final externalSubtitle = useState<int?>(null);
+  final List<Subtitle> externalSubtitles = useMemoized(
+      () => currentPlay?.file.subtitles ?? [], [currentPlay?.file.subtitles]);
+
+  final double aspect = useMemoized(
+      () => size.width != 0 && size.height != 0 ? size.width / size.height : 0,
+      [size.width, size.height]);
+
+  final seeking = useState(false);
+
+  useEffect(() {
+    () async {
+      if (duration != Duration.zero &&
+          currentPlay != null &&
+          currentPlay.file.type == ContentType.video) {
         Progress? progress = history[currentPlay.file.getID()];
         if (progress != null) {
           if (!alwaysPlayFromBeginning &&
@@ -107,32 +129,25 @@ FvpPlayer useFvpPlayer(BuildContext context) {
         }
       }
 
+      if (autoPlay) {
+        controller.play();
+      }
+
       if (externalSubtitles.isNotEmpty) {
         externalSubtitle.value = 0;
         controller.setExternalSubtitle(externalSubtitles[0].uri);
       }
-
-      await controller.setLooping(repeat == Repeat.one ? true : false);
     }();
-
-    return () {
-      controller.pause();
-      controller.dispose();
-    };
-  }, [controller]);
+    return;
+  }, [duration]);
 
   useEffect(() {
-    controller.addListener(() async {
-      isPlaying.value = controller.value.isPlaying;
-      position.value = controller.value.position;
-      duration.value = controller.value.duration;
-      buffered.value = controller.value.buffered;
-      width.value = controller.value.size.width;
-      height.value = controller.value.size.height;
-      rate.value = controller.value.playbackSpeed;
-
-      if (controller.value.isCompleted) {
-        logger('Completed: ${currentPlay?.file.name}');
+    () async {
+      if (currentPlay != null &&
+          isCompleted &&
+          controller.value.position != Duration.zero &&
+          controller.value.duration != Duration.zero) {
+        logger('Completed: ${currentPlay.file.name}');
         if (repeat == Repeat.one) return;
         if (currentPlayIndex == playQueue.length - 1) {
           if (repeat == Repeat.all) {
@@ -143,18 +158,9 @@ FvpPlayer useFvpPlayer(BuildContext context) {
               .updateCurrentIndex(playQueue[currentPlayIndex + 1].index);
         }
       }
-    });
-
-    return () {
-      position.value = Duration.zero;
-      duration.value = Duration.zero;
-      buffered.value = [];
-      width.value = 0;
-      height.value = 0;
-      rate.value = 1;
-      controller.removeListener(() {});
-    };
-  }, [controller]);
+    }();
+    return;
+  }, [isCompleted]);
 
   useEffect(() {
     if (controller.value.isInitialized) {
@@ -186,13 +192,15 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   }, [currentPlay?.file]);
 
   useEffect(() {
-    if (isPlaying.value) {
+    if (isPlaying) {
+      logger('Enable wakelock');
       WakelockPlus.enable();
     } else {
+      logger('Disable wakelock');
       WakelockPlus.disable();
     }
     return;
-  }, [isPlaying.value]);
+  }, [isPlaying]);
 
   Future<void> play() async {
     await useAppStore().updateAutoPlay(true);
@@ -201,23 +209,27 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   Future<void> pause() async => controller.pause();
 
-  Future<void> seekTo(Duration newPosition) async => newPosition.inSeconds < 0
-      ? await controller.seekTo(Duration.zero)
-      : newPosition.inSeconds > duration.value.inSeconds
-          ? await controller.seekTo(duration.value)
-          : await controller.seekTo(newPosition);
+  Future<void> seekTo(Duration newPosition) async {
+    logger('Seek to: $newPosition');
+    if (duration == Duration.zero) return;
+    newPosition.inSeconds < 0
+        ? await controller.seekTo(Duration.zero)
+        : newPosition.inSeconds > duration.inSeconds
+            ? await controller.seekTo(duration)
+            : await controller.seekTo(newPosition);
+  }
 
   Future<void> saveProgress() async {
-    if (file != null && duration.value != Duration.zero) {
+    if (file != null && duration != Duration.zero) {
       if (Platform.isAndroid && file.uri.startsWith('content://')) {
         return;
       }
       logger(
-          'Save progress: ${file.name}, position: ${controller.value.position}, duration: ${controller.value.duration}');
+          'Save progress: ${file.name}, position: $position, duration: $duration');
       useHistoryStore().add(Progress(
         dateTime: DateTime.now().toUtc(),
-        position: controller.value.position,
-        duration: controller.value.duration,
+        position: position,
+        duration: duration,
         file: file,
       ));
     }
@@ -225,22 +237,24 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   return FvpPlayer(
     controller: controller,
-    isPlaying: isPlaying.value,
+    isPlaying: isPlaying,
     externalSubtitle: externalSubtitle,
     externalSubtitles: externalSubtitles,
-    position: position.value,
-    duration: duration.value,
-    buffer: buffered.value.isEmpty ? Duration.zero : buffered.value.last.end,
+    position: duration == Duration.zero ? Duration.zero : position,
+    duration: duration,
+    buffer: buffered.isEmpty || duration == Duration.zero
+        ? Duration.zero
+        : buffered.last.end,
     aspect: aspect,
-    width: width.value,
-    height: height.value,
-    rate: rate.value,
+    width: size.width,
+    height: size.height,
+    rate: playbackSpeed,
     play: play,
     pause: pause,
     backward: (seconds) =>
-        seekTo(Duration(seconds: position.value.inSeconds - seconds)),
+        seekTo(Duration(seconds: position.inSeconds - seconds)),
     forward: (seconds) =>
-        seekTo(Duration(seconds: position.value.inSeconds + seconds)),
+        seekTo(Duration(seconds: position.inSeconds + seconds)),
     updateRate: (value) => controller.setPlaybackSpeed(value),
     seekTo: seekTo,
     saveProgress: saveProgress,

@@ -1,30 +1,29 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
-import 'package:collection/collection.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
+import 'package:iris/hooks/use_app_lifecycle.dart';
 import 'package:iris/hooks/use_brightness.dart';
+import 'package:iris/hooks/use_cover.dart';
 import 'package:iris/hooks/use_volume.dart';
 import 'package:iris/info.dart';
 import 'package:iris/models/file.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/models/storages/local.dart';
-import 'package:iris/models/storages/storage.dart';
 import 'package:iris/pages/dialog/show_open_link_dialog.dart';
 import 'package:iris/pages/history.dart';
 import 'package:iris/pages/play_queue.dart';
 import 'package:iris/pages/player/audio.dart';
+import 'package:iris/pages/player/control_bar_slider.dart';
 import 'package:iris/pages/player/fvp_video.dart';
 import 'package:iris/pages/show_open_link_bottom_sheet.dart';
 import 'package:iris/pages/settings/settings.dart';
 import 'package:iris/pages/subtitle_and_audio_track.dart';
-import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/check_content_type.dart';
-import 'package:iris/utils/files_filter.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/path_conv.dart';
 import 'package:iris/widgets/popup.dart';
@@ -48,11 +47,14 @@ enum MediaType {
 class IrisPlayer extends HookWidget {
   const IrisPlayer({super.key, required this.playerHooks});
 
-  final Function playerHooks;
+  final MediaPlayer Function(BuildContext) playerHooks;
 
   @override
   Widget build(BuildContext context) {
     final MediaPlayer player = playerHooks(context);
+
+    useAppLifecycle(player);
+    final cover = useCover(context);
 
     final isHover = useState(false);
     final isTouch = useState(false);
@@ -63,11 +65,11 @@ class IrisPlayer extends HookWidget {
     final isLeftGesture = useState(false);
     final isRightGesture = useState(false);
 
-    final controlHideTimer = useRef<Timer?>(null);
-    final progressHideTimer = useRef<Timer?>(null);
-
     final isShowControl = useState(true);
     final isShowProgress = useState(false);
+
+    final controlHideTimer = useRef<Timer?>(null);
+    final progressHideTimer = useRef<Timer?>(null);
 
     final brightness = useBrightness(isLeftGesture.value);
     final volume = useVolume(isRightGesture.value);
@@ -101,46 +103,25 @@ class IrisPlayer extends HookWidget {
             : INFO.title,
         [currentPlay, currentPlayIndex, playQueue]);
 
-    final List<String> dir = useMemoized(
-      () => currentPlay?.file == null || currentPlay!.file.path.isEmpty
-          ? []
-          : ([...currentPlay.file.path]..removeLast()),
-      [currentPlay?.file],
-    );
-
-    final localStorages =
-        useStorageStore().select(context, (state) => state.localStorages);
-    final storages =
-        useStorageStore().select(context, (state) => state.storages);
-
-    final Storage? storage = useMemoized(
-        () => currentPlay?.file == null
-            ? null
-            : [...localStorages, ...storages].firstWhereOrNull(
-                (storage) => storage.id == currentPlay?.file.storageId),
-        [currentPlay?.file, localStorages, storages]);
-
-    final getCover = useMemoized(() async {
-      if (currentPlay?.file.type != ContentType.audio) return null;
-
-      final files = await storage?.getFiles(dir);
-
-      if (files == null) return null;
-
-      final images = filesFilter(files, [ContentType.image]);
-
-      return images.firstWhereOrNull((image) =>
-              image.name.split('.').first.toLowerCase() == 'cover') ??
-          images.firstOrNull;
-    }, [currentPlay?.file, dir]);
-
-    final cover = useFuture(getCover).data;
-
     final mediaType = useMemoized(
-        () => player.width == 0 || player.height == 0
+        () => player.width == null ||
+                player.height == null ||
+                player.width == 0 ||
+                player.height == 0 ||
+                (currentPlay != null &&
+                    checkContentType(currentPlay.file.name) ==
+                        ContentType.audio)
             ? MediaType.audio
             : MediaType.video,
         [player]);
+
+    useEffect(() {
+      if (isDesktop) {
+        resizeWindow(
+            !autoResize || mediaType == MediaType.audio ? 0 : player.aspect);
+      }
+      return;
+    }, [player.aspect, autoResize, mediaType]);
 
     final focusNode = useFocusNode();
 
@@ -149,24 +130,7 @@ class IrisPlayer extends HookWidget {
       return;
     }, []);
 
-    AppLifecycleState? appLifecycleState = useAppLifecycleState();
-
     final canPop = useState(false);
-
-    useEffect(() {
-      if (isDesktop) {
-        resizeWindow(!autoResize ? 0 : player.aspect);
-      }
-      return;
-    }, [player.aspect, autoResize]);
-
-    useEffect(() {
-      if (appLifecycleState == AppLifecycleState.paused) {
-        logger('App lifecycle state: paused');
-        player.saveProgress();
-      }
-      return;
-    }, [appLifecycleState]);
 
     useEffect(() {
       final timer = Future.delayed(Duration(seconds: 4), () {
@@ -222,11 +186,15 @@ class IrisPlayer extends HookWidget {
     }
 
     Future<void> showControlForHover(Future<void> callback) async {
-      player.saveProgress();
-      showControl();
-      isHover.value = true;
-      await callback;
-      showControl();
+      try {
+        player.saveProgress();
+        showControl();
+        isHover.value = true;
+        await callback;
+        showControl();
+      } catch (e) {
+        logger(e.toString());
+      }
     }
 
     void showProgress() {
@@ -616,7 +584,7 @@ class IrisPlayer extends HookWidget {
                     onPanStart: (details) async {
                       if (isDesktop &&
                           details.kind != PointerDeviceKind.touch) {
-                        showControlForHover(windowManager.startDragging());
+                        windowManager.startDragging();
                       } else if (details.kind == PointerDeviceKind.touch) {
                         isTouch.value = true;
                         startPosition.value = details.globalPosition;
@@ -735,7 +703,7 @@ class IrisPlayer extends HookWidget {
                           height: videoViewSize.height,
                           child: player is FvpPlayer
                               ? FvpVideo(
-                                  key: ValueKey(currentPlay?.file.uri),
+                                  key: ValueKey(currentPlay?.file.getID()),
                                   player: player,
                                 )
                               : player is MediaKitPlayer
@@ -888,20 +856,20 @@ class IrisPlayer extends HookWidget {
                     ),
                   ),
                 ),
-              // if (isShowProgress.value &&
-              //     !isShowControl.value &&
-              //     mediaType != MediaType.audio)
-              //   Positioned(
-              //     left: -28,
-              //     right: -28,
-              //     bottom: -16,
-              //     height: 32,
-              //     child: ControlBarSlider(
-              //       playerCore: playerCore,
-              //       showControl: showControl,
-              //       disabled: true,
-              //     ),
-              //   ),
+              if (isShowProgress.value &&
+                  !isShowControl.value &&
+                  mediaType != MediaType.audio)
+                Positioned(
+                  left: -28,
+                  right: -28,
+                  bottom: -16,
+                  height: 32,
+                  child: ControlBarSlider(
+                    player: player,
+                    showControl: showControl,
+                    disabled: true,
+                  ),
+                ),
               if (isShowProgress.value &&
                   !isShowControl.value &&
                   mediaType != MediaType.audio)
@@ -986,7 +954,7 @@ class IrisPlayer extends HookWidget {
                     },
                     onPanStart: (details) async {
                       if (isDesktop) {
-                        showControlForHover(windowManager.startDragging());
+                        windowManager.startDragging();
                       }
                     },
                     child: CustomAppBar(

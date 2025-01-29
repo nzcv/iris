@@ -29,7 +29,10 @@ void main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   fvp.registerWith(options: {
-    'fastSeek': true,
+    // 'fastSeek': true,
+    'player': {
+      'demux.buffer.ranges': '8',
+    },
     'subtitleFontFile':
         Platform.isAndroid ? 'assets/fonts/NotoSansCJKsc-Medium.otf' : null,
   });
