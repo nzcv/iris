@@ -27,14 +27,17 @@ void main(List<String> arguments) async {
   globals.arguments = arguments;
 
   WidgetsFlutterBinding.ensureInitialized();
+
   MediaKit.ensureInitialized();
+
   fvp.registerWith(options: {
     // 'fastSeek': true,
     'player': {
-      'demux.buffer.ranges': '8',
+      if (Platform.isAndroid) 'audio.renderer': 'AudioTrack',
+      // 'demux.buffer.ranges': '8',
     },
-    'subtitleFontFile':
-        Platform.isAndroid ? 'assets/fonts/NotoSansCJKsc-Medium.otf' : null,
+    if (Platform.isAndroid)
+      'subtitleFontFile': 'assets/fonts/NotoSansCJKsc-Medium.otf',
   });
 
   final appLinks = AppLinks();

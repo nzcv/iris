@@ -236,12 +236,15 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     }
   }
 
+  useEffect(() => saveProgress, []);
+
   Future<void> play() async {
     await useAppStore().updateAutoPlay(true);
     await player.play();
   }
 
   Future<void> pause() async {
+    await useAppStore().updateAutoPlay(false);
     await player.pause();
   }
 

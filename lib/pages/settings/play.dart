@@ -27,7 +27,7 @@ class Play extends HookWidget {
               leading: const Icon(Icons.settings_input_component_rounded),
               title: Text(t.player_backend),
               trailing: DropdownButton<PlayerBackend>(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 value: playerBackend,
                 onChanged: (value) {

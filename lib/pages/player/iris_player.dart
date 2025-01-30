@@ -612,7 +612,7 @@ class IrisPlayer extends HookWidget {
                         if (isHorizontalGesture.value && player.seeking) {
                           double dx = details.delta.dx;
                           int seconds =
-                              (dx * 5 + player.position.inSeconds).toInt();
+                              (dx * 2 + player.position.inSeconds).toInt();
                           Duration position = Duration(
                               seconds: seconds < 0
                                   ? 0
@@ -703,7 +703,7 @@ class IrisPlayer extends HookWidget {
                           height: videoViewSize.height,
                           child: player is FvpPlayer
                               ? FvpVideo(
-                                  key: ValueKey(currentPlay?.file.getID()),
+                                  key: ValueKey(currentPlay?.file.uri),
                                   player: player,
                                 )
                               : player is MediaKitPlayer

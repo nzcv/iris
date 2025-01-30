@@ -15,6 +15,17 @@ enum Repeat {
   one,
 }
 
+enum SortBy {
+  name,
+  size,
+  lastModified,
+}
+
+enum SortOrder {
+  asc,
+  desc,
+}
+
 @freezed
 class AppState with _$AppState {
   const factory AppState({
@@ -31,6 +42,9 @@ class AppState with _$AppState {
     @Default(false) bool autoResize,
     @Default(false) bool alwaysPlayFromBeginning,
     @Default(PlayerBackend.mediaKit) PlayerBackend playerBackend,
+    @Default(SortBy.name) SortBy sortBy,
+    @Default(SortOrder.asc) SortOrder sortOrder,
+    @Default(true) bool folderFirst,
   }) = _AppState;
 
   factory AppState.fromJson(Map<String, dynamic> json) =>

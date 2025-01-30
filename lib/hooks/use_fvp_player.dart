@@ -75,17 +75,11 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     }();
 
     return () {
-      controller.pause();
       controller.dispose();
     };
   }, [controller]);
 
-  useEffect(() {
-    return () {
-      controller.pause();
-      controller.dispose();
-    };
-  }, []);
+  useEffect(() => controller.dispose, []);
 
   final isPlaying =
       useListenableSelector(controller, () => controller.value.isPlaying);
@@ -207,7 +201,10 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     controller.play();
   }
 
-  Future<void> pause() async => controller.pause();
+  Future<void> pause() async {
+    await useAppStore().updateAutoPlay(false);
+    controller.pause();
+  }
 
   Future<void> seekTo(Duration newPosition) async {
     logger('Seek to: $newPosition');
@@ -234,6 +231,8 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       ));
     }
   }
+
+  useEffect(() => saveProgress, []);
 
   return FvpPlayer(
     controller: controller,
