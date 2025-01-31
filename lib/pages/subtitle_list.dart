@@ -105,7 +105,6 @@ class SubtitleList extends HookWidget {
             onTap: () {
               logger('Set subtitle: ${t.off}');
               (player as FvpPlayer).externalSubtitle.value = null;
-              (player as FvpPlayer).controller.setExternalSubtitle('');
               (player as FvpPlayer).controller.setSubtitleTracks([]);
               Navigator.of(context).pop();
             },
@@ -134,7 +133,6 @@ class SubtitleList extends HookWidget {
                 logger(
                     'Set subtitle: ${subtitle.metadata['title'] ?? subtitle.metadata['language'] ?? subtitle.index.toString()}');
                 (player as FvpPlayer).externalSubtitle.value = null;
-                (player as FvpPlayer).controller.setExternalSubtitle('');
                 (player as FvpPlayer)
                     .controller
                     .setSubtitleTracks([subtitles.indexOf(subtitle)]);
@@ -173,9 +171,6 @@ class SubtitleList extends HookWidget {
                         (player as FvpPlayer)
                             .externalSubtitles
                             .indexOf(subtitle);
-                    (player as FvpPlayer)
-                        .controller
-                        .setExternalSubtitle(subtitle.uri);
                     Navigator.of(context).pop();
                   },
                 ),

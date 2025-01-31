@@ -136,6 +136,18 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   }, [duration]);
 
   useEffect(() {
+    if (externalSubtitle.value == null) {
+      controller.setExternalSubtitle('');
+    } else if (externalSubtitles.isNotEmpty &&
+        externalSubtitle.value != null &&
+        externalSubtitle.value! < externalSubtitles.length) {
+      controller
+          .setExternalSubtitle(externalSubtitles[externalSubtitle.value!].uri);
+    }
+    return;
+  }, [externalSubtitle.value]);
+
+  useEffect(() {
     () async {
       if (currentPlay != null &&
           isCompleted &&
@@ -243,7 +255,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     duration: duration,
     buffer: buffered.isEmpty || duration == Duration.zero
         ? Duration.zero
-        : buffered.last.end,
+        : buffered.reduce((max, curr) => curr.end > max.end ? curr : max).end,
     aspect: aspect,
     width: size.width,
     height: size.height,
