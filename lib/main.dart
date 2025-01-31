@@ -34,7 +34,10 @@ void main(List<String> arguments) async {
     // 'fastSeek': true,
     'player': {
       if (Platform.isAndroid) 'audio.renderer': 'AudioTrack',
-      // 'demux.buffer.ranges': '8',
+      'avio.reconnect': '3',
+      'avio.reconnect_delay_max': '7',
+      'buffer': '2000+150000',
+      'demux.buffer.ranges': '8',
     },
     if (Platform.isAndroid)
       'subtitleFontFile': 'assets/fonts/NotoSansCJKsc-Medium.otf',
