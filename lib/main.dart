@@ -34,7 +34,7 @@ void main(List<String> arguments) async {
     // 'fastSeek': true,
     'player': {
       if (Platform.isAndroid) 'audio.renderer': 'AudioTrack',
-      'avio.reconnect': '3',
+      'avio.reconnect': '1',
       'avio.reconnect_delay_max': '7',
       'buffer': '2000+150000',
       'demux.buffer.ranges': '8',
