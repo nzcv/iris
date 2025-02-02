@@ -23,6 +23,7 @@ import 'package:iris/pages/player/fvp_video.dart';
 import 'package:iris/pages/show_open_link_bottom_sheet.dart';
 import 'package:iris/pages/settings/settings.dart';
 import 'package:iris/pages/subtitle_and_audio_track.dart';
+import 'package:iris/store/use_ui_store.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/path_conv.dart';
@@ -240,6 +241,17 @@ class IrisPlayer extends HookWidget {
 
     void onKeyEvent(KeyEvent event) async {
       if (event.runtimeType == KeyDownEvent) {
+        if (HardwareKeyboard.instance.isAltPressed) {
+          switch (event.logicalKey) {
+            // 退出
+            case LogicalKeyboardKey.keyX:
+              showControl();
+              await player.saveProgress();
+              exit(0);
+          }
+          return;
+        }
+
         if (HardwareKeyboard.instance.isControlPressed) {
           switch (event.logicalKey) {
             // 上一个
@@ -303,6 +315,12 @@ class IrisPlayer extends HookWidget {
                   ? await showOpenLinkDialog(context)
                   : await showOpenLinkBottomSheet(context);
               showControl();
+              break;
+            // 关闭当前播放媒体文件
+            case LogicalKeyboardKey.keyC:
+              showControl();
+              player.pause();
+              usePlayQueueStore().updateCurrentIndex(-1);
               break;
             default:
               break;
@@ -370,10 +388,16 @@ class IrisPlayer extends HookWidget {
           // 全屏
           case LogicalKeyboardKey.enter:
           case LogicalKeyboardKey.f11:
-            windowManager.setFullScreen(!await windowManager.isFullScreen());
+            if (isDesktop) {
+              windowManager.setFullScreen(!await windowManager.isFullScreen());
+            }
             break;
           case LogicalKeyboardKey.tab:
             showControl();
+            break;
+          case LogicalKeyboardKey.f10:
+            showControl();
+            await useUiStore().toggleIsAlwaysOnTop();
             break;
           default:
             break;
