@@ -322,6 +322,11 @@ class IrisPlayer extends HookWidget {
               player.pause();
               usePlayQueueStore().updateCurrentIndex(-1);
               break;
+            // 静音
+            case LogicalKeyboardKey.keyM:
+              showControl();
+              useAppStore().toggleMute();
+              break;
             default:
               break;
           }
@@ -424,6 +429,16 @@ class IrisPlayer extends HookWidget {
               showProgress();
             }
             player.forward(10);
+            break;
+          // 提升音量
+          case LogicalKeyboardKey.arrowUp:
+            showControl();
+            await useAppStore().updateVolume(useAppStore().state.volume + 1);
+            break;
+          // 降低音量
+          case LogicalKeyboardKey.arrowDown:
+            showControl();
+            await useAppStore().updateVolume(useAppStore().state.volume - 1);
             break;
           default:
             break;

@@ -10,6 +10,7 @@ import 'package:iris/pages/player/control_bar_slider.dart';
 import 'package:iris/pages/history.dart';
 import 'package:iris/pages/show_open_link_bottom_sheet.dart';
 import 'package:iris/pages/settings/settings.dart';
+import 'package:iris/pages/player/volume_control.dart';
 import 'package:iris/pages/subtitle_and_audio_track.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
@@ -37,6 +38,8 @@ class ControlBar extends HookWidget {
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
 
+    final volume = useAppStore().select(context, (state) => state.volume);
+    final isMuted = useAppStore().select(context, (state) => state.isMuted);
     final int playQueueLength =
         usePlayQueueStore().select(context, (state) => state.playQueue.length);
     final playQueue =
@@ -70,7 +73,7 @@ class ControlBar extends HookWidget {
         child: Column(
           children: [
             Visibility(
-              visible: MediaQuery.of(context).size.width < 960 || !isDesktop,
+              visible: MediaQuery.of(context).size.width < 1024 || !isDesktop,
               child: ControlBarSlider(
                 player: player,
                 showControl: showControl,
@@ -132,7 +135,7 @@ class ControlBar extends HookWidget {
                   ),
                 ),
                 Visibility(
-                  visible: MediaQuery.of(context).size.width >= 600,
+                  visible: MediaQuery.of(context).size.width >= 768,
                   child: IconButton(
                     tooltip:
                         '${t.shuffle}: ${shuffle ? t.on : t.off} ( Ctrl + X )',
@@ -153,7 +156,7 @@ class ControlBar extends HookWidget {
                   ),
                 ),
                 Visibility(
-                  visible: MediaQuery.of(context).size.width >= 600,
+                  visible: MediaQuery.of(context).size.width >= 768,
                   child: IconButton(
                     tooltip:
                         '${repeat == Repeat.one ? t.repeat_one : repeat == Repeat.all ? t.repeat_all : t.repeat_none} ( Ctrl + R )',
@@ -173,7 +176,7 @@ class ControlBar extends HookWidget {
                   ),
                 ),
                 Visibility(
-                  visible: MediaQuery.of(context).size.width >= 600,
+                  visible: MediaQuery.of(context).size.width >= 768,
                   child: IconButton(
                     tooltip:
                         '${t.video_zoom}: ${fit == BoxFit.contain ? t.fit : fit == BoxFit.fill ? t.stretch : fit == BoxFit.cover ? t.crop : '100%'} ( Ctrl + V )',
@@ -193,44 +196,58 @@ class ControlBar extends HookWidget {
                     },
                   ),
                 ),
+                if (MediaQuery.of(context).size.width < 600)
+                  Builder(
+                    builder: (context) => IconButton(
+                      tooltip: '${t.volume}: $volume',
+                      icon: Icon(
+                        isMuted || volume == 0
+                            ? Icons.volume_off_rounded
+                            : volume < 50
+                                ? Icons.volume_down_rounded
+                                : Icons.volume_up_rounded,
+                        size: 20,
+                      ),
+                      onPressed: () => showControlForHover(
+                        showVolumePopover(context, showControl),
+                      ),
+                    ),
+                  ),
+                if (MediaQuery.of(context).size.width >= 600)
+                  SizedBox(
+                    width: 160,
+                    child: VolumeControl(
+                      showControl: showControl,
+                      showVolumeText: false,
+                    ),
+                  ),
                 Expanded(
                   child: Visibility(
                     visible:
-                        MediaQuery.of(context).size.width >= 960 && isDesktop,
+                        MediaQuery.of(context).size.width >= 1024 && isDesktop,
                     child: ControlBarSlider(
                       player: player,
                       showControl: showControl,
                     ),
                   ),
                 ),
-                // Visibility(
-                //   visible: MediaQuery.of(context).size.width > 600,
-                //   child: IconButton(
-                //     tooltip: t.open_link,
-                //     icon: const Icon(Icons.file_present_rounded),
-                //     onPressed: () async {
-                //       showControl();
-                //       await pickFile();
-                //       showControl();
-                //     },
-                //   ),
-                // ),
-                IconButton(
-                  tooltip: '${t.storage} ( F )',
-                  icon: const Icon(
-                    Icons.storage_rounded,
-                    size: 18,
+                if (MediaQuery.of(context).size.width >= 420)
+                  IconButton(
+                    tooltip: '${t.subtitle_and_audio_track} ( S )',
+                    icon: const Icon(
+                      Icons.subtitles_rounded,
+                      size: 20,
+                    ),
+                    onPressed: () async {
+                      showControlForHover(
+                        showPopup(
+                          context: context,
+                          child: SubtitleAndAudioTrack(player: player),
+                          direction: PopupDirection.right,
+                        ),
+                      );
+                    },
                   ),
-                  onPressed: () async {
-                    showControlForHover(
-                      showPopup(
-                        context: context,
-                        child: const Storages(),
-                        direction: PopupDirection.right,
-                      ),
-                    );
-                  },
-                ),
                 IconButton(
                   tooltip: '${t.play_queue} ( P )',
                   icon: Transform.translate(
@@ -251,16 +268,16 @@ class ControlBar extends HookWidget {
                   },
                 ),
                 IconButton(
-                  tooltip: '${t.subtitle_and_audio_track} ( S )',
+                  tooltip: '${t.storage} ( F )',
                   icon: const Icon(
-                    Icons.subtitles_rounded,
-                    size: 20,
+                    Icons.storage_rounded,
+                    size: 18,
                   ),
                   onPressed: () async {
                     showControlForHover(
                       showPopup(
                         context: context,
-                        child: SubtitleAndAudioTrack(player: player),
+                        child: const Storages(),
                         direction: PopupDirection.right,
                       ),
                     );
@@ -299,7 +316,7 @@ class ControlBar extends HookWidget {
                   ),
                 ),
                 // Visibility(
-                //   visible: MediaQuery.of(context).size.width >= 600,
+                //   visible: MediaQuery.of(context).size.width >= 768,
                 //   child: IconButton(
                 //     tooltip: '${t.settings} ( Ctrl + P )',
                 //     icon: const Icon(
@@ -376,7 +393,7 @@ class ControlBar extends HookWidget {
                         showControl();
                       },
                     ),
-                    if (MediaQuery.of(context).size.width < 600)
+                    if (MediaQuery.of(context).size.width < 768)
                       PopupMenuItem(
                         child: ListTile(
                           mouseCursor: SystemMouseCursors.click,
@@ -407,7 +424,7 @@ class ControlBar extends HookWidget {
                           useAppStore().updateShuffle(!shuffle);
                         },
                       ),
-                    if (MediaQuery.of(context).size.width < 600)
+                    if (MediaQuery.of(context).size.width < 768)
                       PopupMenuItem(
                         child: ListTile(
                           mouseCursor: SystemMouseCursors.click,
@@ -440,7 +457,7 @@ class ControlBar extends HookWidget {
                           useAppStore().toggleRepeat();
                         },
                       ),
-                    if (MediaQuery.of(context).size.width < 600)
+                    if (MediaQuery.of(context).size.width < 768)
                       PopupMenuItem(
                         child: ListTile(
                           mouseCursor: SystemMouseCursors.click,
@@ -469,6 +486,30 @@ class ControlBar extends HookWidget {
                           useAppStore().toggleFit();
                         },
                       ),
+                    PopupMenuItem(
+                      child: ListTile(
+                        mouseCursor: SystemMouseCursors.click,
+                        leading: const Icon(
+                          Icons.subtitles_rounded,
+                          size: 20,
+                        ),
+                        title: Text(t.subtitle_and_audio_track),
+                        trailing: Text(
+                          'S',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).dividerColor,
+                          ),
+                        ),
+                      ),
+                      onTap: () => showControlForHover(
+                        showPopup(
+                          context: context,
+                          child: SubtitleAndAudioTrack(player: player),
+                          direction: PopupDirection.right,
+                        ),
+                      ),
+                    ),
                     PopupMenuItem(
                       child: ListTile(
                         mouseCursor: SystemMouseCursors.click,

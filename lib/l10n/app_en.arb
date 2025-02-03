@@ -50,6 +50,7 @@
   "local_storage": "Local storage",
   "menu": "Menu",
   "more_options": "More options",
+  "mute": "Mute",
   "name": "Name",
   "next": "Next",
   "no_new_version": "No new version",
@@ -90,10 +91,12 @@
   "test_connection": "Test connection",
   "theme_mode": "Theme mode",
   "unable_to_fetch_files": "Unable to fetch files.",
+  "unmute": "Unmute",
   "url": "URL",
   "usb_storage": "USB storage",
   "username": "Username",
   "version": "Version",
   "video": "Video",
-  "video_zoom": "Video zoom"
+  "video_zoom": "Video zoom",
+  "volume": "Volume"
 }

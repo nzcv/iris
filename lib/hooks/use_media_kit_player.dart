@@ -26,9 +26,13 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
 
   final controller = useMemoized(() => VideoController(player));
 
+  final volume = useAppStore().select(context, (state) => state.volume);
+  final isMuted = useAppStore().select(context, (state) => state.isMuted);
+
   useEffect(() {
     () async {
       player.setSubtitleTrack(SubtitleTrack.no());
+      player.setVolume(isMuted ? 0 : volume.toDouble());
 
       if (Platform.isAndroid) {
         NativePlayer nativePlayer = player.platform as NativePlayer;
@@ -205,6 +209,11 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     }();
     return null;
   }, [completed, repeat]);
+
+  useEffect(() {
+    player.setVolume(isMuted ? 0 : volume.toDouble());
+    return;
+  }, [volume, isMuted]);
 
   useEffect(() {
     logger('$repeat');

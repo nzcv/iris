@@ -4,10 +4,12 @@
 
 * Add  [FVP](https://github.com/wang-bin/fvp) player backend (Experimental, with unknown bugs)
 * Add file sort
+* add hotkeys: Toggle always on top ( `F10` ), Close currently media file ( `Ctrl + C` ), Exit application ( `Alt + X` )
 
 ### 更新日志
 * 添加 [FVP](https://github.com/wang-bin/fvp) 播放器后端（实验性，有未知bug）
 * 添加文件排序
+* 添加快捷键：切换窗口置顶（ `F10` ）、关闭当前媒体文件（ `Ctrl + C` ）、退出应用（ `Alt + X` ）
 
 
 ## v1.2.1

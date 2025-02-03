@@ -17,6 +17,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 FvpPlayer useFvpPlayer(BuildContext context) {
   final autoPlay = useAppStore().select(context, (state) => state.autoPlay);
+  final volume = useAppStore().select(context, (state) => state.volume);
+  final isMuted = useAppStore().select(context, (state) => state.isMuted);
   final repeat = useAppStore().select(context, (state) => state.repeat);
   final playQueue =
       usePlayQueueStore().select(context, (state) => state.playQueue);
@@ -72,6 +74,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       if (controller.dataSource.isEmpty) return;
       await controller.initialize();
       await controller.setLooping(repeat == Repeat.one ? true : false);
+      await controller.setVolume(isMuted ? 0 : volume / 100);
     }();
 
     return () {
@@ -167,6 +170,13 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     }();
     return;
   }, [isCompleted]);
+
+  useEffect(() {
+    if (controller.value.isInitialized) {
+      controller.setVolume(isMuted ? 0 : volume / 100);
+    }
+    return;
+  }, [volume, isMuted]);
 
   useEffect(() {
     if (controller.value.isInitialized) {

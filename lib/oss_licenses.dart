@@ -128,6 +128,7 @@ const allDependencies = <Package>[
   _platform,
   _plugin_platform_interface,
   _pool,
+  _popover,
   _posix,
   _provider,
   _pub_semver,
@@ -228,6 +229,7 @@ const dependencies = <Package>[
   _path,
   _path_provider,
   _permission_handler,
+  _popover,
   _provider,
   _saf_util,
   _screen_brightness,
@@ -7237,6 +7239,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     isMarkdown: false,
     isSdk: false,
     dependencies: [PackageRef('async'), PackageRef('stack_trace')]
+  );
+
+/// popover 0.3.1
+const _popover = Package(
+    name: 'popover',
+    description: 'A popover is a transient view that appears above other content onscreen when you tap a control or in an area.',
+    homepage: 'https://github.com/minikin/popover',
+    authors: [],
+    version: '0.3.1',
+    license: '''MIT License
+
+Copyright (c) 2021 - 2024 Oleksandr Prokhorenko
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.''',
+    isMarkdown: false,
+    isSdk: false,
+    dependencies: [PackageRef('flutter')]
   );
 
 /// posix 6.0.1
