@@ -22,6 +22,7 @@ Future<void> showVolumePopover(
       height: 48,
       arrowHeight: 0,
       arrowWidth: 0,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       barrierColor: Colors.transparent,
     );
 

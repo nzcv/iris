@@ -35,9 +35,9 @@ class CustomAppBar extends HookWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
-            Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
-            Theme.of(context).colorScheme.surface.withValues(alpha: 0),
+            Colors.black87.withValues(alpha: 0.8),
+            Colors.black87.withValues(alpha: 0.3),
+            Colors.black87.withValues(alpha: 0),
           ],
         ),
       ),

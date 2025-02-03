@@ -27,6 +27,7 @@ import 'package:iris/store/use_ui_store.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/path_conv.dart';
+import 'package:iris/widgets/dark_theme.dart';
 import 'package:iris/widgets/popup.dart';
 import 'package:iris/pages/storage/storages.dart';
 import 'package:iris/store/use_app_store.dart';
@@ -903,10 +904,12 @@ class IrisPlayer extends HookWidget {
                   right: -28,
                   bottom: -16,
                   height: 32,
-                  child: ControlBarSlider(
-                    player: player,
-                    showControl: showControl,
-                    disabled: true,
+                  child: DarkTheme(
+                    child: ControlBarSlider(
+                      player: player,
+                      showControl: showControl,
+                      disabled: true,
+                    ),
                   ),
                 ),
               if (isShowProgress.value &&
@@ -921,7 +924,7 @@ class IrisPlayer extends HookWidget {
                       Text(
                         currentPlay != null ? title : '',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: Colors.white,
                           fontSize: 20,
                           height: 1,
                           decoration: TextDecoration.none,
@@ -949,7 +952,7 @@ class IrisPlayer extends HookWidget {
                       Text(
                         '${formatDurationToMinutes(player.position)} / ${formatDurationToMinutes(player.duration)}',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: Colors.white,
                           fontSize: 16,
                           height: 2,
                           decoration: TextDecoration.none,
@@ -996,12 +999,14 @@ class IrisPlayer extends HookWidget {
                         windowManager.startDragging();
                       }
                     },
-                    child: CustomAppBar(
-                      title: title,
-                      player: player,
-                      actions: [
-                        const SizedBox(width: 8),
-                      ],
+                    child: DarkTheme(
+                      child: CustomAppBar(
+                        title: title,
+                        player: player,
+                        actions: [
+                          const SizedBox(width: 8),
+                        ],
+                      ),
                     ),
                   ),
                 ),
