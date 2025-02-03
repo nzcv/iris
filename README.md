@@ -34,39 +34,42 @@ English | [中文](./README_CN.md)
 | Key                  | Description                              |
 |----------------------|------------------------------------------|
 | `Space`              | Play / Pause / Select file               |
-| `Enter`              | Enter full screen / Exit full screen / Select file |
-| `F11`                | Enter full screen / Exit full screen     |
 | `Arrow Left`         | Fast backward 10 seconds                 |
 | `Arrow Right`        | Fast forward 10 seconds                  |
+| `Arrow Up`           | Volume up                                |
+| `Arrow Down`         | Volume down                              |
 | `Ctrl + Arrow Left`  | Previous                                 |
 | `Ctrl + Arrow Right` | Next                                     |
 | `Ctrl + X`           | Shuffle                                  |
 | `Ctrl + R`           | Repeat                                   |
 | `Ctrl + V`           | Video zoom                               |
-| `F`                  | Save                                     |
-| `P`                  | Play queue                               |
+| `Ctrl + M`           | Volume mute                              |
 | `S`                  | Subtitles and audio tracks               |
+| `P`                  | Play queue                               |
+| `F`                  | Storages                                 |
 | `Ctrl + O`           | Open file                                |
 | `Ctrl + L`           | Open link                                |
 | `Ctrl + C`           | Close currently media file               |
 | `Ctrl + H`           | Play history                             |
 | `Ctrl + P`           | Settings                                 |
+| `Enter`              | Enter full screen / Exit full screen / Select file |
+| `F11`                | Enter full screen / Exit full screen     |
 | `Esc`                | Exit current Menu / Go back / Exit full screen |
 | `F10`                | Toggle always on top                     |
 | `Alt + X`            | Exit application                         |
 
 ### Gesture Controls
-| Gesture                       | Description                              |
-|-------------------------------|------------------------------------------|
-| Tap                           | Select an item or open a menu            |
-| Double Tap Center             | Play / Pause                             |
-| Double Tap Left Side          | Fast backward 10 seconds                 |
-| Double Tap Right Side         | Fast forward 10 seconds                  |
-| Swipe Left / Right            | Adjust playback progress                 |
-| Swipe Up / Down on Left Side  | Adjust screen brightness                 |
-| Swipe Up / Down on Right Side | Adjust device volume                     |
-| Long Press                    | Start speed playback                     |
-| Long Press and Swipe Left/Right | Adjust speed playback speed            |
+| Gesture                         | Description                              |
+|---------------------------------|------------------------------------------|
+| Tap                             | Select an item or open a menu            |
+| Double tap center               | Play / Pause                             |
+| Double tap left side            | Fast backward 10 seconds                 |
+| Double tap right side           | Fast forward 10 seconds                  |
+| Swipe left / right              | Adjust playback progress                 |
+| Swipe up / down on left side    | Adjust screen brightness                 |
+| Swipe up / down on right side   | Adjust device volume                     |
+| Long press                      | Start speed playback                     |
+| Long press and swipe left / right | Adjust speed playback speed            |
 
 ## Contribution
 
