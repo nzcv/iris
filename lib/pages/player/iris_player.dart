@@ -119,11 +119,10 @@ class IrisPlayer extends HookWidget {
 
     useEffect(() {
       if (isDesktop) {
-        resizeWindow(
-            !autoResize || mediaType == MediaType.audio ? 0 : player.aspect);
+        resizeWindow(!autoResize ? 0 : player.aspect);
       }
       return;
-    }, [player.aspect, autoResize, mediaType]);
+    }, [player.aspect, autoResize]);
 
     final focusNode = useFocusNode();
 
