@@ -10,7 +10,7 @@ English | [中文](./README_CN.md)
 
 ## Features
 
-- [x] Base on [media-kit](https://github.com/media-kit/media-kit) supports multiple video formats
+- [x] Base on [Media Kit](https://github.com/media-kit/media-kit) | [FVP](https://github.com/wang-bin/fvp), supports multiple video formats
 - [x] Local storage and WebDAV support
 - [x] Switchable subtitle and audio track
 - [x] Playback queue support for random and repeat
@@ -33,37 +33,43 @@ English | [中文](./README_CN.md)
 ### Keyboard Controls
 | Key                  | Description                              |
 |----------------------|------------------------------------------|
-| `Space`              | Play / Pause / Select File               |
-| `Enter`              | Enter Full Screen / Exit Full Screen / Select File |
-| `F11`                | Enter Full Screen / Exit Full Screen     |
+| `Space`              | Play / Pause / Select file               |
 | `Arrow Left`         | Fast backward 10 seconds                 |
 | `Arrow Right`        | Fast forward 10 seconds                  |
+| `Arrow Up`           | Volume up                                |
+| `Arrow Down`         | Volume down                              |
 | `Ctrl + Arrow Left`  | Previous                                 |
 | `Ctrl + Arrow Right` | Next                                     |
 | `Ctrl + X`           | Shuffle                                  |
 | `Ctrl + R`           | Repeat                                   |
-| `Ctrl + V`           | Video Zoom                               |
-| `F`                  | Save                                     |
-| `P`                  | Play Queue                               |
-| `S`                  | Subtitles and Audio Tracks               |
-| `Ctrl + O`           | Open File                                |
-| `Ctrl + L`           | Open Link                                |
-| `Ctrl + H`           | Play History                             |
+| `Ctrl + V`           | Video zoom                               |
+| `Ctrl + M`           | Volume mute                              |
+| `S`                  | Subtitles and audio tracks               |
+| `P`                  | Play queue                               |
+| `F`                  | Storages                                 |
+| `Ctrl + O`           | Open file                                |
+| `Ctrl + L`           | Open link                                |
+| `Ctrl + C`           | Close currently media file               |
+| `Ctrl + H`           | Play history                             |
 | `Ctrl + P`           | Settings                                 |
-| `Esc`                | Exit Current Menu / Go Back / Close Full Screen |
+| `Enter`              | Enter full screen / Exit full screen / Select file |
+| `F11`                | Enter full screen / Exit full screen     |
+| `Esc`                | Exit current Menu / Go back / Exit full screen |
+| `F10`                | Toggle always on top                     |
+| `Alt + X`            | Exit application                         |
 
 ### Gesture Controls
-| Gesture              | Description                              |
-|----------------------|------------------------------------------|
-| Tap                  | Select an item or open a menu            |
-| Double Tap Center     | Play / Pause                            |
-| Double Tap Left Side  | Fast backward 10 seconds                |
-| Double Tap Right Side | Fast forward 10 seconds                 |
-| Swipe Left / Right    | Adjust playback progress                |
-| Swipe Up / Down on Left Side | Adjust screen brightness         |
-| Swipe Up / Down on Right Side | Adjust device volume            |
-| Long Press           | Start Speed Playback                     |
-| Long Press and Swipe Left/Right | Adjust Speed Playback Speed   |
+| Gesture                         | Description                              |
+|---------------------------------|------------------------------------------|
+| Tap                             | Select an item or open a menu            |
+| Double tap center               | Play / Pause                             |
+| Double tap left side            | Fast backward 10 seconds                 |
+| Double tap right side           | Fast forward 10 seconds                  |
+| Swipe left / right              | Adjust playback progress                 |
+| Swipe up / down on left side    | Adjust screen brightness                 |
+| Swipe up / down on right side   | Adjust device volume                     |
+| Long press                      | Start speed playback                     |
+| Long press and swipe left / right | Adjust speed playback speed            |
 
 ## Contribution
 

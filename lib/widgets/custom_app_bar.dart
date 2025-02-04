@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:iris/hooks/use_player_core.dart';
+import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/info.dart';
+import 'package:iris/models/player.dart';
+import 'package:iris/store/use_ui_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/is_desktop.dart';
 import 'package:iris/utils/resize_window.dart';
@@ -11,16 +13,18 @@ class CustomAppBar extends HookWidget {
   const CustomAppBar({
     super.key,
     this.title,
-    required this.playerCore,
+    required this.player,
     this.actions,
   });
   final String? title;
-  final PlayerCore playerCore;
+  final MediaPlayer player;
   final List<Widget>? actions;
 
   @override
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
+    final isAlwaysOnTop =
+        useUiStore().select(context, (state) => state.isAlwaysOnTop);
 
     return Container(
       padding: isDesktop
@@ -31,9 +35,9 @@ class CustomAppBar extends HookWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
-            Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
-            Theme.of(context).colorScheme.surface.withValues(alpha: 0),
+            Colors.black87.withValues(alpha: 0.8),
+            Colors.black87.withValues(alpha: 0.3),
+            Colors.black87.withValues(alpha: 0),
           ],
         ),
       ),
@@ -85,24 +89,17 @@ class CustomAppBar extends HookWidget {
                           children: [
                             Visibility(
                               visible: !isFullScreen,
-                              child: FutureBuilder<bool>(
-                                future: windowManager.isAlwaysOnTop(),
-                                builder: (context, snapshot) {
-                                  bool isAlwaysOnTop = snapshot.data ?? false;
-                                  return IconButton(
-                                    tooltip: isAlwaysOnTop
-                                        ? t.always_on_top_on
-                                        : t.always_on_top_off,
-                                    icon: Icon(
-                                      isAlwaysOnTop
-                                          ? Icons.push_pin_rounded
-                                          : Icons.push_pin_outlined,
-                                      size: 18,
-                                    ),
-                                    onPressed: () => windowManager
-                                        .setAlwaysOnTop(!isAlwaysOnTop),
-                                  );
-                                },
+                              child: IconButton(
+                                tooltip: isAlwaysOnTop
+                                    ? '${t.always_on_top_on} ( F10 )'
+                                    : '${t.always_on_top_off} ( F10 )',
+                                icon: Icon(
+                                  isAlwaysOnTop
+                                      ? Icons.push_pin_rounded
+                                      : Icons.push_pin_outlined,
+                                  size: 18,
+                                ),
+                                onPressed: useUiStore().toggleIsAlwaysOnTop,
                               ),
                             ),
                             Visibility(
@@ -120,8 +117,7 @@ class CustomAppBar extends HookWidget {
                                 onPressed: () async {
                                   if (isFullScreen) {
                                     await windowManager.setFullScreen(false);
-                                    await resizeWindow(
-                                        playerCore.videoParams?.aspect);
+                                    await resizeWindow(player.aspect);
                                   } else {
                                     await windowManager.setFullScreen(true);
                                   }
@@ -141,8 +137,7 @@ class CustomAppBar extends HookWidget {
                                 onPressed: () async {
                                   if (isMaximized) {
                                     await windowManager.unmaximize();
-                                    await resizeWindow(
-                                        playerCore.videoParams?.aspect);
+                                    await resizeWindow(player.aspect);
                                   } else {
                                     await windowManager.maximize();
                                   }
@@ -167,7 +162,7 @@ class CustomAppBar extends HookWidget {
                     ),
                     IconButton(
                       onPressed: () async {
-                        await playerCore.saveProgress();
+                        await player.saveProgress();
                         windowManager.close();
                       },
                       icon: const Icon(Icons.close_rounded),

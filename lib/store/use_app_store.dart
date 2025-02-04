@@ -62,6 +62,26 @@ class AppStore extends PersistentStore<AppState> {
     await save(state);
   }
 
+  Future<void> updateVolume(int volume) async {
+    set(state.copyWith(
+        volume: volume < 0
+            ? 0
+            : volume > 100
+                ? 100
+                : volume));
+    await save(state);
+  }
+
+  Future<void> updateMute(bool isMuted) async {
+    set(state.copyWith(isMuted: isMuted));
+    await save(state);
+  }
+
+  Future<void> toggleMute() async {
+    set(state.copyWith(isMuted: !state.isMuted));
+    save(state);
+  }
+
   Future<void> updateThemeMode(ThemeMode themeMode) async {
     set(state.copyWith(themeMode: themeMode));
     await save(state);
@@ -80,6 +100,26 @@ class AppStore extends PersistentStore<AppState> {
   Future<void> toggleAlwaysPlayFromBeginning() async {
     set(state.copyWith(
         alwaysPlayFromBeginning: !state.alwaysPlayFromBeginning));
+    await save(state);
+  }
+
+  Future<void> updatePlayerBackend(PlayerBackend backend) async {
+    set(state.copyWith(playerBackend: backend));
+    await save(state);
+  }
+
+  Future<void> updateSortBy(SortBy sortBy) async {
+    set(state.copyWith(sortBy: sortBy));
+    await save(state);
+  }
+
+  Future<void> updateSortOrder(SortOrder sortOrder) async {
+    set(state.copyWith(sortOrder: sortOrder));
+    await save(state);
+  }
+
+  Future<void> updateFolderFirst(bool folderFirst) async {
+    set(state.copyWith(folderFirst: folderFirst));
     await save(state);
   }
 

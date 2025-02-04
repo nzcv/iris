@@ -1,3 +1,21 @@
+## v1.3.0
+
+### Changelog
+
+* Add [FVP](https://github.com/wang-bin/fvp) player backend (Experimental, with unknown bugs)
+* Adding volume adjust
+* Add file sort
+* Add hotkeys: Volume up ( `Arrow Up` ), Volume down ( `Arrow Down` ), Volume mute ( `Ctrl + M` ), Toggle always on top ( `F10` ), Close currently media file ( `Ctrl + C` ), Exit application ( `Alt + X` )
+* Improved some visual effects
+
+### 更新日志
+* 添加 [FVP](https://github.com/wang-bin/fvp) 播放器后端（实验性，有未知bug）
+* 添加音量调整
+* 添加文件排序
+* 添加快捷键：提升音量（ `Arrow Up` ）、降低音量（ `Arrow Down` ）、静音（`Ctrl + M`）、切换窗口置顶（ `F10` ）、关闭当前媒体文件（ `Ctrl + C` ）、退出应用（ `Alt + X` ）
+* 改进了部分视觉效果
+
+
 ## v1.2.1
 
 ### Changelog

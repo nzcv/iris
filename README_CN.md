@@ -10,7 +10,7 @@
 
 ## 特性
 
-- [x] 基于 [media-kit](https://github.com/media-kit/media-kit) 可播放多种视频格式
+- [x] 基于 [Media Kit](https://github.com/media-kit/media-kit) | [FVP](https://github.com/wang-bin/fvp)，可播放多种视频格式
 - [x] 支持本地存储、WebDAV
 - [x] 可切换字幕和音轨
 - [x] 播放队列支持随机和重复
@@ -34,23 +34,29 @@
 | 键位                 | 描述                                   |
 |----------------------|----------------------------------------|
 | `Space`              | 播放 / 暂停 / 选择文件                  |
-| `Enter`              | 进入全屏 / 退出全屏 / 选择文件           |
-| `F11`                | 进入全屏 / 退出全屏                     |
 | `Arrow Left`         | 快退 10 秒                             |
 | `Arrow Right`        | 快进 10 秒                             |
+| `Arrow Up`           | 提升音量                               |
+| `Arrow Down`         | 降低音量                               |
 | `Ctrl + Arrow Left`  | 上一个                                 |
 | `Ctrl + Arrow Right` | 下一个                                 |
 | `Ctrl + X`           | 随机                                   |
 | `Ctrl + R`           | 重复                                   |
 | `Ctrl + V`           | 视频缩放                               |
-| `F`                  | 存储                                   |
-| `P`                  | 播放队列                               |
+| `Ctrl + M`           | 静音                                   |
 | `S`                  | 字幕和音轨                             |
+| `P`                  | 播放队列                               |
+| `F`                  | 存储                                   |
 | `Ctrl + O`           | 打开文件                               |
 | `Ctrl + L`           | 打开链接                               |
+| `Ctrl + C`           | 关闭当前媒体文件                        |
 | `Ctrl + H`           | 播放历史                               |
 | `Ctrl + P`           | 设置                                   |
+| `Enter`              | 进入全屏 / 退出全屏 / 选择文件           |
+| `F11`                | 进入全屏 / 退出全屏                     |
 | `Esc`                | 退出当前菜单 / 返回上一级 / 关闭全屏    |
+| `F10`                | 切换窗口置顶                           |
+| `Alt + X`            | 退出应用                               |
 
 ### 手势操作
 | 手势               | 描述                                   |
