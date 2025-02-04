@@ -525,10 +525,11 @@ packages:
   fvp:
     dependency: "direct main"
     description:
-      name: fvp
-      sha256: ad134b93f6400edd93e674ee15b9d365d0227b7fb1f013ac60f0dc601d387c78
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: master
+      resolved-ref: "01c745657c72324f8da9941e56c61f3f35fc3bd8"
+      url: "https://github.com/wang-bin/fvp"
+    source: git
     version: "0.29.0"
   glob:
     dependency: transitive

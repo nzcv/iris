@@ -44,6 +44,11 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   final file = useMemoized(() => currentPlay?.file, [currentPlay]);
 
+  final externalSubtitle = useState<int?>(null);
+
+  final List<Subtitle> externalSubtitles = useMemoized(
+      () => currentPlay?.file.subtitles ?? [], [currentPlay?.file.subtitles]);
+
   final controller = useMemoized(() {
     if (file == null) return VideoPlayerController.networkUrl(Uri.parse(''));
     switch (checkDataSourceType(file)) {
@@ -79,6 +84,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
     return () {
       controller.dispose();
+      externalSubtitle.value = null;
     };
   }, [controller]);
 
@@ -97,10 +103,6 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   final size = useListenableSelector(controller, () => controller.value.size);
   final isCompleted =
       useListenableSelector(controller, () => controller.value.isCompleted);
-
-  final externalSubtitle = useState<int?>(null);
-  final List<Subtitle> externalSubtitles = useMemoized(
-      () => currentPlay?.file.subtitles ?? [], [currentPlay?.file.subtitles]);
 
   final double aspect = useMemoized(
       () => size.width != 0 && size.height != 0 ? size.width / size.height : 0,
@@ -132,23 +134,20 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
       if (externalSubtitles.isNotEmpty) {
         externalSubtitle.value = 0;
-        controller.setExternalSubtitle(externalSubtitles[0].uri);
       }
     }();
     return;
   }, [duration]);
 
   useEffect(() {
-    if (externalSubtitle.value == null) {
+    if (externalSubtitle.value == null || externalSubtitles.isEmpty) {
       controller.setExternalSubtitle('');
-    } else if (externalSubtitles.isNotEmpty &&
-        externalSubtitle.value != null &&
-        externalSubtitle.value! < externalSubtitles.length) {
+    } else if (externalSubtitle.value! < externalSubtitles.length) {
       controller
           .setExternalSubtitle(externalSubtitles[externalSubtitle.value!].uri);
     }
     return;
-  }, [externalSubtitle.value]);
+  }, [externalSubtitles, externalSubtitle.value]);
 
   useEffect(() {
     () async {

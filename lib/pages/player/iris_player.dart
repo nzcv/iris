@@ -741,10 +741,7 @@ class IrisPlayer extends HookWidget {
                           width: videoViewSize.width,
                           height: videoViewSize.height,
                           child: player is FvpPlayer
-                              ? FvpVideo(
-                                  key: ValueKey(currentPlay?.file.uri),
-                                  player: player,
-                                )
+                              ? FvpVideo(player: player)
                               : player is MediaKitPlayer
                                   ? Video(
                                       key: ValueKey(currentPlay?.file.uri),
