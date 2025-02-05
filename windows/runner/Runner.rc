@@ -89,7 +89,7 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "nini22p.iris" "\0"
+            VALUE "CompanyName", "nini22P" "\0"
             VALUE "FileDescription", "iris" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "iris" "\0"

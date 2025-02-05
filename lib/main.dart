@@ -12,6 +12,7 @@ import 'package:iris/pages/home_page.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/theme.dart';
+import 'package:iris/utils/data_migration.dart';
 import 'package:iris/utils/is_desktop.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/request_storage_permission.dart';
@@ -27,6 +28,10 @@ void main(List<String> arguments) async {
   globals.arguments = arguments;
 
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isWindows) {
+    await dataMigration();
+  }
 
   MediaKit.ensureInitialized();
 
