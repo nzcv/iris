@@ -52,9 +52,6 @@ Future<List<FileItem>> getWebDAVFiles(
     debug: false,
   );
 
-  final String auth =
-      'Basic ${base64Encode(utf8.encode('$username:$password'))}';
-
   client.setHeaders({'accept-charset': 'utf-8'});
   client.setConnectTimeout(8000);
   client.setSendTimeout(8000);
@@ -77,10 +74,12 @@ Future<List<FileItem>> getWebDAVFiles(
         type: file.isDir ?? false
             ? ContentType.dir
             : checkContentType(file.name!),
-        auth: auth,
         subtitles: await findSubtitle(
             files.map((file) => file.name as String).toList(),
             file.name as String,
             baseUri),
       )));
 }
+
+String getWebDAVAuth(WebDAVStorage storage) =>
+    'Basic ${base64Encode(utf8.encode('${storage.username}:${storage.password}'))}';

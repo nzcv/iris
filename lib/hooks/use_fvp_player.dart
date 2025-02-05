@@ -10,6 +10,7 @@ import 'package:iris/models/store/app_state.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_history_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
+import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/check_data_source_type.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:video_player/video_player.dart';
@@ -51,16 +52,18 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   final controller = useMemoized(() {
     if (file == null) return VideoPlayerController.networkUrl(Uri.parse(''));
+    final storage = useStorageStore().findById(file.storageId);
+    final auth = storage?.getAuth();
     switch (checkDataSourceType(file)) {
       case DataSourceType.network:
         return VideoPlayerController.networkUrl(
           Uri.parse(file.uri),
-          httpHeaders: file.auth != null ? {'authorization': file.auth!} : {},
+          httpHeaders: auth != null ? {'authorization': auth} : {},
         );
       case DataSourceType.file:
         return VideoPlayerController.file(
           File(file.uri),
-          httpHeaders: file.auth != null ? {'authorization': file.auth!} : {},
+          httpHeaders: auth != null ? {'authorization': auth} : {},
         );
       case DataSourceType.contentUri:
         return VideoPlayerController.contentUri(
@@ -69,7 +72,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       default:
         return VideoPlayerController.networkUrl(
           Uri.parse(file.uri),
-          httpHeaders: file.auth != null ? {'authorization': file.auth!} : {},
+          httpHeaders: auth != null ? {'authorization': auth} : {},
         );
     }
   }, [file]);

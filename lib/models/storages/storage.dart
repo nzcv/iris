@@ -32,6 +32,8 @@ abstract class _Storage {
   Map<String, dynamic> toJson();
 
   Future<List<FileItem>> getFiles(List<String> path);
+
+  String? getAuth();
 }
 
 @freezed
@@ -71,6 +73,16 @@ sealed class Storage with _$Storage implements _Storage {
         return await getWebDAVFiles(this as WebDAVStorage, path);
       default:
         return [];
+    }
+  }
+
+  @override
+  String? getAuth() {
+    switch (type) {
+      case StorageType.webdav:
+        return getWebDAVAuth(this as WebDAVStorage);
+      default:
+        return null;
     }
   }
 }

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:iris/models/file.dart';
+import 'package:iris/store/use_storage_store.dart';
 
 class Audio extends HookWidget {
   const Audio({
@@ -14,6 +15,12 @@ class Audio extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final storage = useMemoized(
+        () => cover?.storageId == null
+            ? null
+            : useStorageStore().findById(cover!.storageId),
+        [cover?.storageId]);
+    final auth = useMemoized(() => storage?.getAuth(), [storage]);
     return IgnorePointer(
       child: Stack(
         children: [
@@ -29,9 +36,7 @@ class Audio extends HookWidget {
                       )
                     : Image.network(
                         cover!.uri,
-                        headers: cover!.auth != null
-                            ? {'authorization': cover!.auth!}
-                            : null,
+                        headers: auth != null ? {'authorization': auth} : null,
                         fit: BoxFit.cover,
                       )
                 : null,
@@ -60,9 +65,8 @@ class Audio extends HookWidget {
                             )
                           : Image.network(
                               cover!.uri,
-                              headers: cover!.auth != null
-                                  ? {'authorization': cover!.auth!}
-                                  : null,
+                              headers:
+                                  auth != null ? {'authorization': auth} : null,
                               fit: BoxFit.contain,
                             )
                       : null,
