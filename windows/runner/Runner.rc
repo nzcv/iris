@@ -93,7 +93,7 @@ BEGIN
             VALUE "FileDescription", "iris" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "iris" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2024 nini22p.iris. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2024 nini22P. All rights reserved." "\0"
             VALUE "OriginalFilename", "iris.exe" "\0"
             VALUE "ProductName", "iris" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
