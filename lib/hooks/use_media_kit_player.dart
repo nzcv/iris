@@ -10,6 +10,7 @@ import 'package:iris/models/store/app_state.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_history_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
+import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -127,12 +128,14 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     if (currentFile == null || playQueue.isEmpty) {
       player.stop();
     } else {
+      final storage = useStorageStore().findById(currentFile.storageId);
+      final auth = storage?.getAuth();
       logger('Now playing: ${currentFile.uri}, auto play: $autoPlay');
       player.open(
-        Media(currentFile.uri,
-            httpHeaders: currentFile.auth != null
-                ? {'authorization': currentFile.auth!}
-                : {}),
+        Media(
+          currentFile.uri,
+          httpHeaders: auth != null ? {'authorization': auth} : {},
+        ),
         play: autoPlay,
       );
     }

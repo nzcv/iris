@@ -1,3 +1,16 @@
+## v1.3.1
+
+### Changelog
+
+* The data save location for the Windows version has been changed to `C:\Users\<user>\AppData\Roaming\nini22P\iris`
+* Updated upstream dependencies and fixed the issue with switching subtitles in the FVP player backend
+
+### 更新日志
+
+* Windows 版本数据保存位置已修改为 `C:\Users\<user>\AppData\Roaming\nini22P\iris`
+* 更新上游依赖，修复 FVP 播放器后端切换字幕的问题
+
+
 ## v1.3.0
 
 ### Changelog

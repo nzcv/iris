@@ -32,7 +32,6 @@ abstract class FileItem implements _$FileItem {
     @Default(0) int size,
     DateTime? lastModified,
     @Default(ContentType.video) ContentType type,
-    String? auth,
     @Default([]) List<Subtitle> subtitles,
   }) = _FileItem;
 
