@@ -151,8 +151,6 @@ class WebDAVDialog extends HookWidget {
                           isTested.value = false;
                           if (value == '443') {
                             https.value = true;
-                          } else {
-                            https.value = false;
                           }
                         },
                       ),
@@ -176,9 +174,9 @@ class WebDAVDialog extends HookWidget {
                                   value: https.value,
                                   onChanged: (_) {
                                     isTested.value = false;
-                                    if (!https.value) {
+                                    if (portController.text == '80') {
                                       portController.text = '443';
-                                    } else {
+                                    } else if (portController.text == '443') {
                                       portController.text = '80';
                                     }
                                     https.value = !https.value;
