@@ -1,3 +1,14 @@
+## v1.3.2
+
+### Changelog
+
+* Support for custom https ports when adding WebDAV storage
+
+### 更新日志
+
+* 添加 WebDAV 存储时支持自定义 https 端口
+
+
 ## v1.3.1
 
 ### Changelog
