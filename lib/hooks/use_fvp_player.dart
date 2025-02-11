@@ -50,6 +50,10 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   final List<Subtitle> externalSubtitles = useMemoized(
       () => currentPlay?.file.subtitles ?? [], [currentPlay?.file.subtitles]);
 
+  final initValue = useState(false);
+
+  Future<void> init() async => initValue.value = true;
+
   final controller = useMemoized(() {
     if (file == null) return VideoPlayerController.networkUrl(Uri.parse(''));
     final storage = useStorageStore().findById(file.storageId);
@@ -75,7 +79,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
           httpHeaders: auth != null ? {'authorization': auth} : {},
         );
     }
-  }, [file]);
+  }, [file, initValue.value]);
 
   useEffect(() {
     () async {
@@ -222,6 +226,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   Future<void> play() async {
     await useAppStore().updateAutoPlay(true);
+    if (!controller.value.isInitialized) init();
     controller.play();
   }
 

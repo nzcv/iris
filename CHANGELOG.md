@@ -1,3 +1,14 @@
+## v1.3.3
+
+### Changelog
+
+* Fix issue of not being able to continue playback after startup
+
+### 更新日志
+
+* 修复启动后无法继续播放的问题
+
+
 ## v1.3.2
 
 ### Changelog

@@ -124,20 +124,23 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     }
   }
 
+  Future<void> init(FileItem file) async {
+    final storage = useStorageStore().findById(file.storageId);
+    final auth = storage?.getAuth();
+    await player.open(
+      Media(
+        file.uri,
+        httpHeaders: auth != null ? {'authorization': auth} : {},
+      ),
+      play: autoPlay,
+    );
+  }
+
   useEffect(() {
     if (currentFile == null || playQueue.isEmpty) {
       player.stop();
     } else {
-      final storage = useStorageStore().findById(currentFile.storageId);
-      final auth = storage?.getAuth();
-      logger('Now playing: ${currentFile.uri}, auto play: $autoPlay');
-      player.open(
-        Media(
-          currentFile.uri,
-          httpHeaders: auth != null ? {'authorization': auth} : {},
-        ),
-        play: autoPlay,
-      );
+      init(currentFile);
     }
     return () {
       if (currentFile != null && player.state.duration != Duration.zero) {
@@ -252,6 +255,9 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
 
   Future<void> play() async {
     await useAppStore().updateAutoPlay(true);
+    if (duration == Duration.zero && currentFile != null) {
+      await init(currentFile);
+    }
     await player.play();
   }
 
