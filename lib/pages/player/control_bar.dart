@@ -104,23 +104,37 @@ class ControlBar extends HookWidget {
                     ),
                   ),
                 DarkTheme(
-                  child: IconButton(
-                    tooltip:
-                        '${player.isPlaying == true ? t.pause : t.play} ( Space )',
-                    icon: Icon(
-                      player.isPlaying == true
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      size: 36,
-                    ),
-                    onPressed: () {
-                      showControl();
-                      if (player.isPlaying == true) {
-                        player.pause();
-                      } else {
-                        player.play();
-                      }
-                    },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      IconButton(
+                        tooltip:
+                            '${player.isPlaying == true ? t.pause : t.play} ( Space )',
+                        icon: Icon(
+                          player.isPlaying == true
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          size: 36,
+                        ),
+                        onPressed: () {
+                          showControl();
+                          if (player.isPlaying == true) {
+                            player.pause();
+                          } else {
+                            player.play();
+                          }
+                        },
+                      ),
+                      if (player.isInitializing)
+                        SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 4,
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 if (playQueueLength > 1)

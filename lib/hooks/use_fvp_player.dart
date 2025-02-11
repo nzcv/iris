@@ -52,10 +52,13 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   final initValue = useState(false);
 
+  final isInitializing = useState(false);
+
   Future<void> init() async => initValue.value = true;
 
   final controller = useMemoized(() {
     if (file == null) return VideoPlayerController.networkUrl(Uri.parse(''));
+    isInitializing.value = true;
     final storage = useStorageStore().findById(file.storageId);
     final auth = storage?.getAuth();
     switch (checkDataSourceType(file)) {
@@ -84,16 +87,23 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   useEffect(() {
     () async {
       if (controller.dataSource.isEmpty) return;
-      await controller.initialize();
-      await controller.setLooping(repeat == Repeat.one ? true : false);
-      await controller.setVolume(isMuted ? 0 : volume / 100);
+
+      try {
+        await controller.initialize();
+        await controller.setLooping(repeat == Repeat.one ? true : false);
+        await controller.setVolume(isMuted ? 0 : volume / 100);
+      } catch (e) {
+        logger('Error initializing player: $e');
+      }
+
+      isInitializing.value = false;
     }();
 
     return () {
       controller.dispose();
       externalSubtitle.value = null;
     };
-  }, [controller]);
+  }, [controller, initValue.value]);
 
   useEffect(() => controller.dispose, []);
 
@@ -226,7 +236,9 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   Future<void> play() async {
     await useAppStore().updateAutoPlay(true);
-    if (!controller.value.isInitialized) init();
+    if (!controller.value.isInitialized && !isInitializing.value) {
+      init();
+    }
     controller.play();
   }
 
@@ -265,6 +277,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   return FvpPlayer(
     controller: controller,
+    isInitializing: isInitializing.value,
     isPlaying: isPlaying,
     externalSubtitle: externalSubtitle,
     externalSubtitles: externalSubtitles,

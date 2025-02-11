@@ -124,16 +124,27 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     }
   }
 
+  final isInitializing = useState(false);
+
   Future<void> init(FileItem file) async {
-    final storage = useStorageStore().findById(file.storageId);
-    final auth = storage?.getAuth();
-    await player.open(
-      Media(
-        file.uri,
-        httpHeaders: auth != null ? {'authorization': auth} : {},
-      ),
-      play: autoPlay,
-    );
+    if (file.uri == '') return;
+    isInitializing.value = true;
+
+    try {
+      final storage = useStorageStore().findById(file.storageId);
+      final auth = storage?.getAuth();
+      await player.open(
+        Media(
+          file.uri,
+          httpHeaders: auth != null ? {'authorization': auth} : {},
+        ),
+        play: autoPlay,
+      );
+    } catch (e) {
+      logger('Error initializing player: $e');
+    }
+
+    isInitializing.value = false;
   }
 
   useEffect(() {
@@ -255,7 +266,9 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
 
   Future<void> play() async {
     await useAppStore().updateAutoPlay(true);
-    if (duration == Duration.zero && currentFile != null) {
+    if (duration == Duration.zero &&
+        currentFile != null &&
+        !isInitializing.value) {
       await init(currentFile);
     }
     await player.play();
@@ -291,6 +304,7 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     externalSubtitles: externalSubtitles ?? [],
     audio: audio,
     audios: audios,
+    isInitializing: isInitializing.value,
     isPlaying: playing,
     position: duration == Duration.zero ? Duration.zero : position.value,
     duration: duration,
