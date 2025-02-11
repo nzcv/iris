@@ -5,6 +5,7 @@ import 'package:media_kit_video/media_kit_video.dart' as media_kit_video;
 import 'package:video_player/video_player.dart';
 
 class MediaPlayer {
+  final bool isInitializing;
   final bool isPlaying;
   final List<Subtitle> externalSubtitles;
   final Duration position;
@@ -26,6 +27,7 @@ class MediaPlayer {
   final Future<void> Function(Duration) seekTo;
 
   MediaPlayer({
+    required this.isInitializing,
     required this.isPlaying,
     required this.externalSubtitles,
     required this.position,
@@ -64,6 +66,7 @@ class MediaKitPlayer extends MediaPlayer {
     required super.externalSubtitles,
     required this.audio,
     required this.audios,
+    required super.isInitializing,
     required super.isPlaying,
     required super.position,
     required super.duration,
@@ -91,6 +94,7 @@ class FvpPlayer extends MediaPlayer {
 
   FvpPlayer({
     required this.controller,
+    required super.isInitializing,
     required super.isPlaying,
     required this.externalSubtitle,
     required super.externalSubtitles,
