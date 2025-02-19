@@ -9,6 +9,7 @@ import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/hooks/use_app_lifecycle.dart';
 import 'package:iris/hooks/use_brightness.dart';
 import 'package:iris/hooks/use_cover.dart';
+import 'package:iris/hooks/use_orientation.dart';
 import 'package:iris/hooks/use_volume.dart';
 import 'package:iris/info.dart';
 import 'package:iris/models/file.dart';
@@ -56,6 +57,7 @@ class IrisPlayer extends HookWidget {
     final MediaPlayer player = playerHooks(context);
 
     useAppLifecycle(player);
+    useOrientation(context, player);
     final cover = useCover(context);
 
     final isHover = useState(false);

@@ -26,6 +26,12 @@ enum SortOrder {
   desc,
 }
 
+enum ScreenOrientation {
+  device,
+  landscape,
+  portrait,
+}
+
 @freezed
 class AppState with _$AppState {
   const factory AppState({
@@ -45,6 +51,7 @@ class AppState with _$AppState {
     @Default(SortBy.name) SortBy sortBy,
     @Default(SortOrder.asc) SortOrder sortOrder,
     @Default(true) bool folderFirst,
+    @Default(ScreenOrientation.device) ScreenOrientation orientation,
   }) = _AppState;
 
   factory AppState.fromJson(Map<String, dynamic> json) =>

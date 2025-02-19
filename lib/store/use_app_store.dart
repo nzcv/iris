@@ -123,6 +123,11 @@ class AppStore extends PersistentStore<AppState> {
     await save(state);
   }
 
+  Future<void> updateOrientation(ScreenOrientation orientation) async {
+    set(state.copyWith(orientation: orientation));
+    await save(state);
+  }
+
   @override
   Future<AppState?> load() async {
     logger('Loading AppState');
