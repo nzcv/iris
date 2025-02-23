@@ -1,3 +1,18 @@
+## v1.3.4
+
+### Changelog
+
+* The Android version allows you to set the screen orientation.
+* Add playback speed button.
+* Add hotkeys: Step forward `+`, Step backward `-`.
+
+### 更新日志
+
+* 安卓版本可以设置屏幕方向。
+* 添加播放速度按钮。
+* 添加快捷键：帧进 `+`，帧退 `-`。
+
+
 ## v1.3.3
 
 ### Changelog

@@ -79,6 +79,7 @@ class IrisPlayer extends HookWidget {
     final volume = useVolume(isRightGesture.value);
 
     final t = getLocalizations(context);
+    final rate = useAppStore().select(context, (state) => state.rate);
     final shuffle = useAppStore().select(context, (state) => state.shuffle);
     final fit = useAppStore().select(context, (state) => state.fit);
     final autoResize =
@@ -604,29 +605,33 @@ class IrisPlayer extends HookWidget {
                     onLongPressStart: (details) {
                       if (isTouch.value && player.isPlaying == true) {
                         isLongPress.value = true;
-                        player.updateRate(2.0);
+                        useAppStore().updateRate(2.0);
                       }
                     },
                     onLongPressMoveUpdate: (details) {
                       int fast = (details.offsetFromOrigin.dx / 50).toInt();
                       if (fast >= 1) {
-                        player
+                        useAppStore()
                             .updateRate(fast > 4 ? 5.0 : (1 + fast).toDouble());
                       } else if (fast <= -1) {
-                        player.updateRate(fast < -3
+                        useAppStore().updateRate(fast < -3
                             ? 0.25
                             : (1 - 0.25 * fast.abs()).toDouble());
                       }
                     },
                     onLongPressEnd: (details) {
-                      player.updateRate(1.0);
-                      isTouch.value = false;
+                      if (isLongPress.value) {
+                        useAppStore().updateRate(1.0);
+                      }
                       isLongPress.value = false;
+                      isTouch.value = false;
                     },
                     onLongPressCancel: () {
-                      player.updateRate(1.0);
-                      isTouch.value = false;
+                      if (isLongPress.value) {
+                        useAppStore().updateRate(1.0);
+                      }
                       isLongPress.value = false;
+                      isTouch.value = false;
                     },
                     onPanStart: (details) async {
                       if (isDesktop &&
@@ -776,7 +781,7 @@ class IrisPlayer extends HookWidget {
                     bottom: 0,
                     child: Audio(cover: cover)),
               // 播放速度
-              if (player.rate != 1.0)
+              if (rate != 1.0 && isLongPress.value)
                 Positioned(
                   left: 0,
                   top: 0,
@@ -803,7 +808,7 @@ class IrisPlayer extends HookWidget {
                           ),
                           const SizedBox(width: 10),
                           Text(
-                            player.rate.toString(),
+                            rate.toString(),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,

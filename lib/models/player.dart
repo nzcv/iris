@@ -12,7 +12,6 @@ class MediaPlayer {
   final Duration duration;
   final Duration buffer;
   final bool seeking;
-  final double rate;
   final double? aspect;
   final double? width;
   final double? height;
@@ -25,7 +24,6 @@ class MediaPlayer {
   final Future<void> Function(int) forward;
   final Future<void> Function() stepBackward;
   final Future<void> Function() stepForward;
-  final Future<void> Function(double) updateRate;
   final Future<void> Function(Duration) seekTo;
 
   MediaPlayer({
@@ -36,7 +34,6 @@ class MediaPlayer {
     required this.duration,
     required this.buffer,
     required this.seeking,
-    required this.rate,
     required this.aspect,
     required this.width,
     required this.height,
@@ -49,7 +46,6 @@ class MediaPlayer {
     required this.forward,
     required this.stepBackward,
     required this.stepForward,
-    required this.updateRate,
     required this.seekTo,
   });
 }
@@ -76,7 +72,6 @@ class MediaKitPlayer extends MediaPlayer {
     required super.duration,
     required super.buffer,
     required super.seeking,
-    required super.rate,
     required super.aspect,
     required super.width,
     required super.height,
@@ -89,7 +84,6 @@ class MediaKitPlayer extends MediaPlayer {
     required super.forward,
     required super.stepBackward,
     required super.stepForward,
-    required super.updateRate,
     required super.seekTo,
   });
 }
@@ -108,7 +102,6 @@ class FvpPlayer extends MediaPlayer {
     required super.duration,
     required super.buffer,
     required super.seeking,
-    required super.rate,
     required super.aspect,
     required super.width,
     required super.height,
@@ -121,7 +114,6 @@ class FvpPlayer extends MediaPlayer {
     required super.forward,
     required super.stepBackward,
     required super.stepForward,
-    required super.updateRate,
     required super.seekTo,
   });
 }

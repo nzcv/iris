@@ -39,6 +39,7 @@ class AppState with _$AppState {
     @Default(false) bool shuffle,
     @Default(Repeat.none) Repeat repeat,
     @Default(BoxFit.contain) BoxFit fit,
+    @Default(1) double rate,
     @Default(80) int volume,
     @Default(false) bool isMuted,
     @Default(ThemeMode.system) ThemeMode themeMode,

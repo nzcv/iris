@@ -52,6 +52,8 @@ English | [中文](./README_CN.md)
 | `Ctrl + C`           | Close currently media file               |
 | `Ctrl + H`           | Play history                             |
 | `Ctrl + P`           | Settings                                 |
+| `+`                  | Step forward                             |
+| `-`                  | Step backward                            |
 | `Enter`              | Enter full screen / Exit full screen / Select file |
 | `F11`                | Enter full screen / Exit full screen     |
 | `Esc`                | Exit current Menu / Go back / Exit full screen |
