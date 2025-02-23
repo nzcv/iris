@@ -44,6 +44,9 @@ class SubtitleList extends HookWidget {
                                 Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                   ),
+                  tileColor: (player as MediaKitPlayer).subtitle == subtitle
+                      ? Theme.of(context).hoverColor
+                      : null,
                   onTap: () {
                     logger(
                         'Set subtitle: ${subtitle.title ?? subtitle.language ?? subtitle.id}');
@@ -102,6 +105,10 @@ class SubtitleList extends HookWidget {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
             ),
+            tileColor: (player as FvpPlayer).externalSubtitle.value == null &&
+                    activeSubtitles.isEmpty
+                ? Theme.of(context).hoverColor
+                : null,
             onTap: () {
               logger('Set subtitle: ${t.off}');
               (player as FvpPlayer).externalSubtitle.value = null;
@@ -129,6 +136,10 @@ class SubtitleList extends HookWidget {
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
               ),
+              tileColor: (player as FvpPlayer).externalSubtitle.value == null &&
+                      activeSubtitles.contains(subtitles.indexOf(subtitle))
+                  ? Theme.of(context).hoverColor
+                  : null,
               onTap: () {
                 logger(
                     'Set subtitle: ${subtitle.metadata['title'] ?? subtitle.metadata['language'] ?? subtitle.index.toString()}');
@@ -165,6 +176,12 @@ class SubtitleList extends HookWidget {
                                 Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
+                  tileColor: (player as FvpPlayer).externalSubtitle.value ==
+                          (player as FvpPlayer)
+                              .externalSubtitles
+                              .indexOf(subtitle)
+                      ? Theme.of(context).hoverColor
+                      : null,
                   onTap: () {
                     logger('Set external subtitle: ${subtitle.name}');
                     (player as FvpPlayer).externalSubtitle.value =
