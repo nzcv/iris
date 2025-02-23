@@ -406,6 +406,12 @@ class IrisPlayer extends HookWidget {
             showControl();
             await useUiStore().toggleIsAlwaysOnTop();
             break;
+          case LogicalKeyboardKey.equal:
+            await player.stepForward();
+            break;
+          case LogicalKeyboardKey.minus:
+            await player.stepBackward();
+            break;
           default:
             break;
         }

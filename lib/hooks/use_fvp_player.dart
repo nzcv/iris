@@ -257,6 +257,16 @@ FvpPlayer useFvpPlayer(BuildContext context) {
             : await controller.seekTo(newPosition);
   }
 
+  Future<void> stepBackward() async {
+    await controller.step(frames: -1);
+    logger('Step backward');
+  }
+
+  Future<void> stepForward() async {
+    await controller.step(frames: 1);
+    logger('Step forward');
+  }
+
   Future<void> saveProgress() async {
     if (file != null && duration != Duration.zero) {
       if (Platform.isAndroid && file.uri.startsWith('content://')) {
@@ -296,6 +306,8 @@ FvpPlayer useFvpPlayer(BuildContext context) {
         seekTo(Duration(seconds: position.inSeconds - seconds)),
     forward: (seconds) =>
         seekTo(Duration(seconds: position.inSeconds + seconds)),
+    stepBackward: stepBackward,
+    stepForward: stepForward,
     updateRate: (value) => controller.setPlaybackSpeed(value),
     seekTo: seekTo,
     saveProgress: saveProgress,

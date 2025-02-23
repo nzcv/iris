@@ -293,6 +293,22 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     await seekTo(Duration(seconds: position.value.inSeconds + seconds));
   }
 
+  Future<void> stepBackward() async {
+    final nativePlayer = player.platform;
+    if (nativePlayer is NativePlayer) {
+      await nativePlayer.command(['frame-back-step']);
+      logger('Step backward');
+    }
+  }
+
+  Future<void> stepForward() async {
+    final nativePlayer = player.platform;
+    if (nativePlayer is NativePlayer) {
+      await nativePlayer.command(['frame-step']);
+      logger('Step forward');
+    }
+  }
+
   Future<void> updateRate(double value) async =>
       player.state.rate == value ? null : await player.setRate(value);
 
@@ -321,6 +337,8 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     pause: pause,
     backward: backward,
     forward: forward,
+    stepBackward: stepBackward,
+    stepForward: stepForward,
     updateRate: updateRate,
     seekTo: seekTo,
   );
