@@ -46,6 +46,9 @@ class AudioTrackList extends HookWidget {
                                 Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                   ),
+                  tileColor: (player as MediaKitPlayer).audio == audio
+                      ? Theme.of(context).hoverColor
+                      : null,
                   onTap: () {
                     logger(
                         'Set audio track: ${audio.title ?? audio.language ?? audio.id}');
@@ -78,6 +81,8 @@ class AudioTrackList extends HookWidget {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
             ),
+            tileColor:
+                activeAudioTracks.isEmpty ? Theme.of(context).hoverColor : null,
             onTap: () {
               logger('Set audio track: ${t.off}');
               (player as FvpPlayer).controller.setAudioTracks([]);
@@ -102,6 +107,9 @@ class AudioTrackList extends HookWidget {
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
               ),
+              tileColor: activeAudioTracks.contains(audios.indexOf(audio))
+                  ? Theme.of(context).hoverColor
+                  : null,
               onTap: () {
                 logger(
                     'Set audio track: ${audio.metadata['title'] ?? audio.metadata['language'] ?? audios.indexOf(audio).toString()}');

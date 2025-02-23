@@ -27,12 +27,14 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
 
   final controller = useMemoized(() => VideoController(player));
 
+  final rate = useAppStore().select(context, (state) => state.rate);
   final volume = useAppStore().select(context, (state) => state.volume);
   final isMuted = useAppStore().select(context, (state) => state.isMuted);
 
   useEffect(() {
     () async {
       player.setSubtitleTrack(SubtitleTrack.no());
+      player.setRate(rate);
       player.setVolume(isMuted ? 0 : volume.toDouble());
 
       if (Platform.isAndroid) {
@@ -95,7 +97,7 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
   Duration duration = useStream(player.stream.duration).data ?? Duration.zero;
   Duration buffer = useStream(player.stream.buffer).data ?? Duration.zero;
   bool completed = useStream(player.stream.completed).data ?? false;
-  double rate = useStream(player.stream.rate).data ?? 1.0;
+  // double rate = useStream(player.stream.rate).data ?? 1.0;
 
   Track? track = useStream(player.stream.track).data;
   AudioTrack audio =
@@ -228,6 +230,11 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
   }, [completed, repeat]);
 
   useEffect(() {
+    player.setRate(rate);
+    return;
+  }, [rate]);
+
+  useEffect(() {
     player.setVolume(isMuted ? 0 : volume.toDouble());
     return;
   }, [volume, isMuted]);
@@ -293,8 +300,21 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     await seekTo(Duration(seconds: position.value.inSeconds + seconds));
   }
 
-  Future<void> updateRate(double value) async =>
-      player.state.rate == value ? null : await player.setRate(value);
+  Future<void> stepBackward() async {
+    final nativePlayer = player.platform;
+    if (nativePlayer is NativePlayer) {
+      await nativePlayer.command(['frame-back-step']);
+      logger('Step backward');
+    }
+  }
+
+  Future<void> stepForward() async {
+    final nativePlayer = player.platform;
+    if (nativePlayer is NativePlayer) {
+      await nativePlayer.command(['frame-step']);
+      logger('Step forward');
+    }
+  }
 
   return MediaKitPlayer(
     player: player,
@@ -310,7 +330,6 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     duration: duration,
     buffer: duration == Duration.zero ? Duration.zero : buffer,
     seeking: seeking.value,
-    rate: rate,
     aspect: videoParams?.aspect,
     width: videoParams?.w?.toDouble(),
     height: videoParams?.h?.toDouble(),
@@ -321,7 +340,8 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     pause: pause,
     backward: backward,
     forward: forward,
-    updateRate: updateRate,
+    stepBackward: stepBackward,
+    stepForward: stepForward,
     seekTo: seekTo,
   );
 }

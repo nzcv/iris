@@ -26,6 +26,12 @@ enum SortOrder {
   desc,
 }
 
+enum ScreenOrientation {
+  device,
+  landscape,
+  portrait,
+}
+
 @freezed
 class AppState with _$AppState {
   const factory AppState({
@@ -33,6 +39,7 @@ class AppState with _$AppState {
     @Default(false) bool shuffle,
     @Default(Repeat.none) Repeat repeat,
     @Default(BoxFit.contain) BoxFit fit,
+    @Default(1) double rate,
     @Default(80) int volume,
     @Default(false) bool isMuted,
     @Default(ThemeMode.system) ThemeMode themeMode,
@@ -45,6 +52,7 @@ class AppState with _$AppState {
     @Default(SortBy.name) SortBy sortBy,
     @Default(SortOrder.asc) SortOrder sortOrder,
     @Default(true) bool folderFirst,
+    @Default(ScreenOrientation.device) ScreenOrientation orientation,
   }) = _AppState;
 
   factory AppState.fromJson(Map<String, dynamic> json) =>

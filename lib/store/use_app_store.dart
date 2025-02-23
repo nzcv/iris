@@ -62,6 +62,12 @@ class AppStore extends PersistentStore<AppState> {
     await save(state);
   }
 
+  Future<void> updateRate(double value) async {
+    logger('updateRate: $value');
+    set(state.copyWith(rate: value));
+    await save(state);
+  }
+
   Future<void> updateVolume(int volume) async {
     set(state.copyWith(
         volume: volume < 0
@@ -120,6 +126,11 @@ class AppStore extends PersistentStore<AppState> {
 
   Future<void> updateFolderFirst(bool folderFirst) async {
     set(state.copyWith(folderFirst: folderFirst));
+    await save(state);
+  }
+
+  Future<void> updateOrientation(ScreenOrientation orientation) async {
+    set(state.copyWith(orientation: orientation));
     await save(state);
   }
 

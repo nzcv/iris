@@ -6,6 +6,7 @@ import 'package:iris/models/player.dart';
 import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/store/app_state.dart';
 import 'package:iris/pages/dialog/show_open_link_dialog.dart';
+import 'package:iris/pages/dialog/show_rate_dialog.dart';
 import 'package:iris/pages/player/control_bar_slider.dart';
 import 'package:iris/pages/history.dart';
 import 'package:iris/pages/show_open_link_bottom_sheet.dart';
@@ -21,6 +22,7 @@ import 'package:iris/utils/resize_window.dart';
 import 'package:iris/widgets/dark_theme.dart';
 import 'package:iris/widgets/popup.dart';
 import 'package:iris/pages/storage/storages.dart';
+import 'package:iris/widgets/custom_menu.dart';
 import 'package:window_manager/window_manager.dart';
 
 class ControlBar extends HookWidget {
@@ -39,6 +41,7 @@ class ControlBar extends HookWidget {
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
 
+    final rate = useAppStore().select(context, (state) => state.rate);
     final volume = useAppStore().select(context, (state) => state.volume);
     final isMuted = useAppStore().select(context, (state) => state.isMuted);
     final int playQueueLength =
@@ -217,6 +220,66 @@ class ControlBar extends HookWidget {
                         showControl();
                         useAppStore().toggleFit();
                       },
+                    ),
+                  ),
+                if (MediaQuery.of(context).size.width > 600)
+                  Builder(
+                    builder: (context) => DarkTheme(
+                      child: Tooltip(
+                        message: t.playback_speed,
+                        child: TextButton(
+                          child: Text(
+                            '${rate}X',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Theme.of(context).colorScheme.surface,
+                            ),
+                          ),
+                          onPressed: () => showControlForHover(
+                            showCustomMenu(
+                              context,
+                              items: [
+                                0.25,
+                                0.5,
+                                0.75,
+                                1.0,
+                                1.25,
+                                1.5,
+                                1.75,
+                                2.0,
+                                3.0,
+                                4.0,
+                                5.0,
+                              ]
+                                  .map(
+                                    (item) => PopupMenuItem(
+                                      child: Text(
+                                        '${item}X',
+                                        style: TextStyle(
+                                          color: item == rate
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                              : null,
+                                          fontWeight: item == rate
+                                              ? FontWeight.bold
+                                              : FontWeight.w100,
+                                        ),
+                                      ),
+                                      onTap: () async {
+                                        showControl();
+                                        useAppStore().updateRate(item);
+                                      },
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 if (MediaQuery.of(context).size.width < 600)
@@ -519,6 +582,19 @@ class ControlBar extends HookWidget {
                             showControl();
                             useAppStore().toggleFit();
                           },
+                        ),
+                      if (MediaQuery.of(context).size.width <= 460)
+                        PopupMenuItem(
+                          child: ListTile(
+                            mouseCursor: SystemMouseCursors.click,
+                            leading: const Icon(
+                              Icons.speed_rounded,
+                              size: 20,
+                            ),
+                            title: Text('${t.playback_speed}: ${rate}X'),
+                          ),
+                          onTap: () =>
+                              showControlForHover(showRateDialog(context)),
                         ),
                       if (MediaQuery.of(context).size.width < 420)
                         PopupMenuItem(

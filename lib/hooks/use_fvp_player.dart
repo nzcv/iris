@@ -18,6 +18,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 FvpPlayer useFvpPlayer(BuildContext context) {
   final autoPlay = useAppStore().select(context, (state) => state.autoPlay);
+  final rate = useAppStore().select(context, (state) => state.rate);
   final volume = useAppStore().select(context, (state) => state.volume);
   final isMuted = useAppStore().select(context, (state) => state.isMuted);
   final repeat = useAppStore().select(context, (state) => state.repeat);
@@ -91,6 +92,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       try {
         await controller.initialize();
         await controller.setLooping(repeat == Repeat.one ? true : false);
+        await controller.setPlaybackSpeed(rate);
         await controller.setVolume(isMuted ? 0 : volume / 100);
       } catch (e) {
         logger('Error initializing player: $e');
@@ -115,8 +117,6 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       useListenableSelector(controller, () => controller.value.position);
   final buffered =
       useListenableSelector(controller, () => controller.value.buffered);
-  final playbackSpeed =
-      useListenableSelector(controller, () => controller.value.playbackSpeed);
   final size = useListenableSelector(controller, () => controller.value.size);
   final isCompleted =
       useListenableSelector(controller, () => controller.value.isCompleted);
@@ -189,6 +189,13 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   useEffect(() {
     if (controller.value.isInitialized) {
+      controller.setPlaybackSpeed(rate);
+    }
+    return;
+  }, [rate]);
+
+  useEffect(() {
+    if (controller.value.isInitialized) {
       controller.setVolume(isMuted ? 0 : volume / 100);
     }
     return;
@@ -257,6 +264,16 @@ FvpPlayer useFvpPlayer(BuildContext context) {
             : await controller.seekTo(newPosition);
   }
 
+  Future<void> stepBackward() async {
+    await controller.step(frames: -1);
+    logger('Step backward');
+  }
+
+  Future<void> stepForward() async {
+    await controller.step(frames: 1);
+    logger('Step forward');
+  }
+
   Future<void> saveProgress() async {
     if (file != null && duration != Duration.zero) {
       if (Platform.isAndroid && file.uri.startsWith('content://')) {
@@ -289,14 +306,14 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     aspect: aspect,
     width: size.width,
     height: size.height,
-    rate: playbackSpeed,
     play: play,
     pause: pause,
     backward: (seconds) =>
         seekTo(Duration(seconds: position.inSeconds - seconds)),
     forward: (seconds) =>
         seekTo(Duration(seconds: position.inSeconds + seconds)),
-    updateRate: (value) => controller.setPlaybackSpeed(value),
+    stepBackward: stepBackward,
+    stepForward: stepForward,
     seekTo: seekTo,
     saveProgress: saveProgress,
     seeking: seeking.value,
