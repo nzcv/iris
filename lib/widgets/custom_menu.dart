@@ -13,7 +13,7 @@ Future<void> showCustomMenu(
         child: Column(children: items),
       ),
       width: width,
-      height: min(MediaQuery.of(context).size.height * 0.8,
+      height: min(MediaQuery.of(context).size.height * 0.75,
           items.length * kMinInteractiveDimension),
       radius: 16,
       arrowHeight: 0,
