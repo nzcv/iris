@@ -308,7 +308,12 @@ class Files extends HookWidget {
             builder: (index) {
               return BreadCrumbItem(
                 content: TextButton(
-                  child: Text([storage.name, ...currentPath.sublist(1)][index]),
+                  child: Text([
+                    storage.basePath.length > 1
+                        ? currentPath.first
+                        : storage.name,
+                    ...currentPath.sublist(1),
+                  ][index]),
                   onPressed: () {
                     useStorageStore()
                         .updateCurrentPath(currentPath.sublist(0, index + 1));
@@ -445,7 +450,11 @@ class Files extends HookWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  currentPath.length > 1 ? currentPath.last : storage.name,
+                  currentPath.length > 1
+                      ? currentPath.last
+                      : storage.basePath.length > 1
+                          ? currentPath.first
+                          : storage.name,
                   maxLines: 1,
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,

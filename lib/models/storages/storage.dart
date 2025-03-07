@@ -4,6 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:iris/models/file.dart';
 import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/storages/webdav.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:iris/widgets/popup.dart';
 import 'package:iris/pages/storage/storages.dart';
 import 'package:iris/store/use_storage_store.dart';
@@ -73,7 +74,11 @@ sealed class Storage with _$Storage implements _Storage {
       case StorageType.network:
       case StorageType.usb:
       case StorageType.sdcard:
-        return await getLocalFiles(this as LocalStorage, path);
+        if (isAndroid && path[0].startsWith('content://')) {
+          return await getAndroidFiles(path.join('%2F'));
+        } else {
+          return await getLocalFiles(this as LocalStorage, path);
+        }
       case StorageType.webdav:
         return await getWebDAVFiles(this as WebDAVStorage, path);
       case StorageType.none:

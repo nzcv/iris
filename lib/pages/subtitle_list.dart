@@ -66,7 +66,7 @@ class SubtitleList extends HookWidget {
                     ),
                   ),
                   onTap: () {
-                    logger('Set external subtitle: ${subtitle.name}');
+                    logger('Set external subtitle: $subtitle');
                     (player as MediaKitPlayer).player.setSubtitleTrack(
                           SubtitleTrack.uri(
                             subtitle.uri,
@@ -183,7 +183,7 @@ class SubtitleList extends HookWidget {
                       ? Theme.of(context).hoverColor
                       : null,
                   onTap: () {
-                    logger('Set external subtitle: ${subtitle.name}');
+                    logger('Set external subtitle: $subtitle');
                     (player as FvpPlayer).externalSubtitle.value =
                         (player as FvpPlayer)
                             .externalSubtitles

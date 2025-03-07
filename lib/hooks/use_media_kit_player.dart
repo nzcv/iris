@@ -195,7 +195,7 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
       }
       // 设置字幕
       if (externalSubtitles!.isNotEmpty) {
-        logger('Set external subtitle: ${externalSubtitles[0].name}');
+        logger('Set external subtitle: ${externalSubtitles[0]}');
         await player.setSubtitleTrack(
           SubtitleTrack.uri(
             externalSubtitles[0].uri,

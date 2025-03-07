@@ -261,3 +261,25 @@ Future<void> pickAndroidFile() async {
     );
   }
 }
+
+Future<List<FileItem>> getAndroidFiles(String uri) async {
+  final list = await SafUtil().list(uri);
+
+  return await Future.wait(list
+      .map((file) async => FileItem(
+            name: file.name,
+            uri: file.uri,
+            path: [uri, file.name],
+            isDir: file.isDir,
+            size: file.isDir ? 0 : file.length,
+            lastModified:
+                DateTime.fromMillisecondsSinceEpoch(file.lastModified),
+            type: file.isDir ? ContentType.dir : checkContentType(file.name),
+            subtitles: await findSubtitle(
+              list.map((e) => e.name).toList(),
+              file.name,
+              uri,
+            ),
+          ))
+      .toList());
+}

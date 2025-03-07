@@ -11,6 +11,8 @@ import 'package:iris/utils/path_conv.dart';
 import 'package:iris/pages/dialog/show_local_dialog.dart';
 import 'package:iris/pages/dialog/show_webdav_dialog.dart';
 import 'package:iris/pages/storage/storages_list.dart';
+import 'package:iris/utils/platform.dart';
+import 'package:saf_util/saf_util.dart';
 
 class ITab {
   final String title;
@@ -91,18 +93,37 @@ class Storages extends HookWidget {
                           case StorageType.usb:
                           case StorageType.sdcard:
                             () async {
-                              String? selectedDirectory =
-                                  await FilePicker.platform.getDirectoryPath();
-                              if (selectedDirectory != null &&
-                                  context.mounted) {
-                                showLocalDialog(
-                                  context,
-                                  storage: LocalStorage(
-                                    type: value,
-                                    name: pathConv(selectedDirectory).last,
-                                    basePath: pathConv(selectedDirectory),
-                                  ),
+                              if (isAndroid) {
+                                final dir = await SafUtil().pickDirectory(
+                                  writePermission: true,
+                                  persistablePermission: true,
                                 );
+                                if (dir != null && context.mounted) {
+                                  showLocalDialog(
+                                    context,
+                                    storage: LocalStorage(
+                                      type: value,
+                                      name: dir.name,
+                                      basePath: [dir.uri],
+                                    ),
+                                  );
+                                }
+                              } else {
+                                String? selectedDirectory = await FilePicker
+                                    .platform
+                                    .getDirectoryPath();
+
+                                if (selectedDirectory != null &&
+                                    context.mounted) {
+                                  showLocalDialog(
+                                    context,
+                                    storage: LocalStorage(
+                                      type: value,
+                                      name: pathConv(selectedDirectory).last,
+                                      basePath: pathConv(selectedDirectory),
+                                    ),
+                                  );
+                                }
                               }
                             }();
                             break;
@@ -115,10 +136,10 @@ class Storages extends HookWidget {
                       },
                       itemBuilder: (BuildContext context) {
                         return [
-                          // PopupMenuItem<StorageType>(
-                          //   value: StorageType.internal,
-                          //   child: Text(t.local_storage),
-                          // ),
+                          PopupMenuItem<StorageType>(
+                            value: StorageType.internal,
+                            child: Text(t.local_storage),
+                          ),
                           const PopupMenuItem<StorageType>(
                             value: StorageType.webdav,
                             child: Text('WebDAV'),

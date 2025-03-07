@@ -40,21 +40,31 @@ class StoragesList extends HookWidget {
             allStorages[index].name.contains(allStorages[index].basePath[0])
                 ? null
                 : () {
+                    String? subtitle;
+
                     switch (allStorages[index].type) {
                       case StorageType.internal:
                       case StorageType.network:
                       case StorageType.usb:
                       case StorageType.sdcard:
-                        final subtitle =
+                        subtitle =
                             p.normalize(allStorages[index].basePath.join('/'));
-                        return Text(subtitle);
+                        break;
                       case StorageType.webdav:
                         final storage = allStorages[index] as WebDAVStorage;
-                        return Text(
-                            'http${storage.https ? 's' : ''}://${storage.host}${storage.basePath.join('/')}');
+                        subtitle =
+                            'http${storage.https ? 's' : ''}://${storage.host}${storage.basePath.join('/')}';
+                        break;
                       case StorageType.none:
-                        return null;
+                        break;
                     }
+
+                    return subtitle == null
+                        ? null
+                        : Text(
+                            subtitle,
+                            overflow: TextOverflow.ellipsis,
+                          );
                   }(),
         onTap: () {
           useStorageStore().updateCurrentPath(allStorages[index].basePath);
