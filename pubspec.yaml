@@ -47,14 +47,14 @@ dependencies:
   saf_util: ^0.6.2
   screen_brightness: ^0.2.2
   flutter_volume_controller: ^1.3.3
-  # fvp: ^0.29.0
-  fvp:
-    git:
-      url: https://github.com/wang-bin/fvp
-      ref: master
+  fvp: ^0.30.0
   video_player: ^2.9.2
   wakelock_plus: ^1.2.10
   popover: ^0.3.1
+  drives_windows:
+    git:
+      url: https://github.com/nini22P/drives_windows
+      ref: main
 
 dev_dependencies:
   flutter_test:

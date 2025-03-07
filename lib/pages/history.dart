@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
@@ -24,7 +26,7 @@ class History extends HookWidget {
     final List<MapEntry<String, Progress>> historyList = useMemoized(() {
       final entries = history.entries.toList();
       entries.sort((a, b) => b.value.dateTime.compareTo(a.value.dateTime));
-      return entries;
+      return entries.sublist(0, min(entries.length, 100));
     }, [history]);
 
     Future<void> play(int index) async {

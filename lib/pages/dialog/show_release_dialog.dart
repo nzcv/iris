@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:iris/utils/file_size_convert.dart';
-import 'package:iris/utils/is_desktop.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';

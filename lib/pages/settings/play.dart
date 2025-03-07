@@ -7,7 +7,7 @@ import 'package:iris/models/store/app_state.dart';
 import 'package:iris/pages/dialog/show_orientation_dialog.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/utils/get_localizations.dart';
-import 'package:iris/utils/is_desktop.dart';
+import 'package:iris/utils/platform.dart';
 
 class Play extends HookWidget {
   const Play({super.key});

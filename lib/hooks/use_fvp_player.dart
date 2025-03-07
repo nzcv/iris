@@ -62,6 +62,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     isInitializing.value = true;
     final storage = useStorageStore().findById(file.storageId);
     final auth = storage?.getAuth();
+    logger('Open file: $file');
     switch (checkDataSourceType(file)) {
       case DataSourceType.network:
         return VideoPlayerController.networkUrl(

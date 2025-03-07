@@ -19,7 +19,6 @@ class Favorite with _$Favorite {
 @freezed
 class StorageState with _$StorageState {
   factory StorageState({
-    @Default([]) List<LocalStorage> localStorages,
     @Default([]) List<Storage> storages,
     @Default([]) List<Favorite> favorites,
     @Default(null) Storage? currentStorage,

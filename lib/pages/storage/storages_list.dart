@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
+import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/storages/storage.dart';
 import 'package:iris/pages/dialog/show_local_dialog.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/pages/dialog/show_webdav_dialog.dart';
-import 'package:iris/utils/is_desktop.dart';
+import 'package:path/path.dart' as p;
 
 class StoragesList extends HookWidget {
   const StoragesList({super.key});
@@ -14,8 +15,11 @@ class StoragesList extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
-    final localStorages =
-        useStorageStore().select(context, (state) => state.localStorages);
+
+    final localStoragesFuture =
+        useMemoized(() async => await getLocalStorages(context), []);
+    final localStorages = useFuture(localStoragesFuture).data ?? [];
+
     final storages =
         useStorageStore().select(context, (state) => state.storages);
 
@@ -32,22 +36,26 @@ class StoragesList extends HookWidget {
       itemBuilder: (context, index) => ListTile(
         contentPadding: const EdgeInsets.fromLTRB(16, 0, 12, 0),
         title: Text(allStorages[index].name),
-        subtitle: localStorages.contains(allStorages[index]) && isDesktop
-            ? null
-            : () {
-                switch (allStorages[index].type) {
-                  case StorageType.internal:
-                  case StorageType.usb:
-                  case StorageType.sdcard:
-                    return Text(allStorages[index].basePath.join('/'));
-                  case StorageType.webdav:
-                    final storage = allStorages[index] as WebDAVStorage;
-                    return Text(
-                        'http${storage.https ? 's' : ''}://${storage.host}${storage.basePath.join('/')}');
-                  default:
-                    return null;
-                }
-              }(),
+        subtitle:
+            allStorages[index].name.contains(allStorages[index].basePath[0])
+                ? null
+                : () {
+                    switch (allStorages[index].type) {
+                      case StorageType.internal:
+                      case StorageType.network:
+                      case StorageType.usb:
+                      case StorageType.sdcard:
+                        final subtitle =
+                            p.normalize(allStorages[index].basePath.join('/'));
+                        return Text(subtitle);
+                      case StorageType.webdav:
+                        final storage = allStorages[index] as WebDAVStorage;
+                        return Text(
+                            'http${storage.https ? 's' : ''}://${storage.host}${storage.basePath.join('/')}');
+                      case StorageType.none:
+                        return null;
+                    }
+                  }(),
         onTap: () {
           useStorageStore().updateCurrentPath(allStorages[index].basePath);
           useStorageStore().updateCurrentStorage(allStorages[index]);

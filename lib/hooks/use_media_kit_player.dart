@@ -135,6 +135,7 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     try {
       final storage = useStorageStore().findById(file.storageId);
       final auth = storage?.getAuth();
+      logger('Open file: $file');
       await player.open(
         Media(
           file.uri,

@@ -1,9 +1,12 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
+import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/storages/storage.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/get_localizations.dart';
+import 'package:path/path.dart' as p;
 
 class Favorites extends HookWidget {
   const Favorites({super.key});
@@ -14,6 +17,10 @@ class Favorites extends HookWidget {
     final favorites =
         useStorageStore().select(context, (state) => state.favorites);
 
+    final localStoragesFuture =
+        useMemoized(() async => await getLocalStorages(context), []);
+    final localStorages = useFuture(localStoragesFuture).data ?? [];
+
     return ListView.builder(
       padding: EdgeInsets.zero,
       itemCount: favorites.length,
@@ -21,12 +28,20 @@ class Favorites extends HookWidget {
         contentPadding: const EdgeInsets.fromLTRB(16, 0, 12, 0),
         title: Text(favorites[index].path.last),
         subtitle: () {
-          final storage =
+          Storage? storage =
               useStorageStore().findById(favorites[index].storageId);
+          if (storage == null && favorites[index].storageId == localStorageId) {
+            storage = localStorages.firstWhereOrNull(
+                (element) => element.basePath[0] == favorites[index].path[0]);
+          }
           if (storage == null) return null;
           if (storage is LocalStorage) {
+            final subtitle = p.normalize(favorites[index].path.join('/'));
+            if (favorites[index].path.last == subtitle) {
+              return null;
+            }
             return Text(
-              favorites[index].path.join('/'),
+              subtitle,
               maxLines: 1,
               style: const TextStyle(overflow: TextOverflow.ellipsis),
             );
@@ -36,8 +51,12 @@ class Favorites extends HookWidget {
           }
         }(),
         onTap: () {
-          final storage =
+          Storage? storage =
               useStorageStore().findById(favorites[index].storageId);
+          if (storage == null && favorites[index].storageId == localStorageId) {
+            storage = localStorages.firstWhereOrNull(
+                (element) => element.basePath[0] == favorites[index].path[0]);
+          }
           if (storage == null) return;
           useStorageStore().updateCurrentPath(favorites[index].path);
           useStorageStore().updateCurrentStorage(storage);

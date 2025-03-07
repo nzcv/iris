@@ -11,9 +11,8 @@ import 'package:iris/globals.dart' as globals;
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:iris/utils/get_shuffle_play_queue.dart';
-import 'package:iris/utils/is_desktop.dart';
 import 'package:iris/utils/logger.dart';
-import 'package:iris/utils/path_conv.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:saf_util/saf_util.dart';
 
 class PlayQueueStore extends PersistentStore<PlayQueueState> {
@@ -148,8 +147,8 @@ class PlayQueueStore extends PersistentStore<PlayQueueState> {
         }
 
         // 本地播放
-        final filePath = pathConv(uri);
-        if (isMediaFile(filePath.last)) {
+        final filePath = uri;
+        if (isMediaFile(filePath)) {
           final state = await getLocalPlayQueue(filePath);
           if (state != null && state.playQueue.isNotEmpty) {
             await useAppStore().updateAutoPlay(true);

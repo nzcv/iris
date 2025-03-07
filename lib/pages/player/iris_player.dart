@@ -27,7 +27,7 @@ import 'package:iris/pages/subtitle_and_audio_track.dart';
 import 'package:iris/store/use_ui_store.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:iris/utils/logger.dart';
-import 'package:iris/utils/path_conv.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:iris/widgets/dark_theme.dart';
 import 'package:iris/widgets/popup.dart';
 import 'package:iris/pages/storage/storages.dart';
@@ -35,7 +35,6 @@ import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/utils/format_duration_to_minutes.dart';
 import 'package:iris/utils/get_localizations.dart';
-import 'package:iris/utils/is_desktop.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:iris/widgets/custom_app_bar.dart';
 import 'package:iris/pages/player/control_bar.dart';
@@ -490,22 +489,19 @@ class IrisPlayer extends HookWidget {
         final files = details.files
             .map((file) => checkContentType(file.path) == ContentType.video ||
                     checkContentType(file.path) == ContentType.audio
-                ? pathConv(file.path)
+                ? file.path
                 : null)
             .where((element) => element != null)
-            .toList();
+            .toList() as List<String>;
         if (files.isNotEmpty) {
           final firstFile = files[0];
-          if (firstFile == null || firstFile.isEmpty) return;
+          if (firstFile.isEmpty) return;
           final playQueue = await getLocalPlayQueue(firstFile);
           if (playQueue == null || playQueue.playQueue.isEmpty) return;
           final List<PlayQueueItem> filteredPlayQueue = [];
           for (final item in playQueue.playQueue) {
             final file = item.file;
-            if (files
-                .map((e) => e?.join('/'))
-                .toList()
-                .contains(file.path.join('/'))) {
+            if (files.contains(file.uri)) {
               filteredPlayQueue.add(item);
             }
           }

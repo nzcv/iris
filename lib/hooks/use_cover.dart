@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/models/file.dart';
+import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/storages/storage.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/store/use_storage_store.dart';
@@ -24,8 +25,10 @@ FileItem? useCover(BuildContext context) {
           : playQueue[currentPlayIndex],
       [playQueue, currentPlayIndex]);
 
-  final localStorages =
-      useStorageStore().select(context, (state) => state.localStorages);
+  final localStoragesFuture =
+      useMemoized(() async => await getLocalStorages(context), []);
+  final localStorages = useFuture(localStoragesFuture).data ?? [];
+
   final storages = useStorageStore().select(context, (state) => state.storages);
 
   final List<String> dir = useMemoized(

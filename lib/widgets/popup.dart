@@ -106,7 +106,7 @@ class Popup<T> extends PopupRoute<T> {
                       child: UnconstrainedBox(
                         child: LimitedBox(
                           maxWidth: screenWidth / size - 16,
-                          maxHeight: screenHeight - 16 - 48,
+                          maxHeight: screenHeight - 18 - 48,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [Expanded(child: child)],

@@ -3,6 +3,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:iris/models/storages/storage.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/get_localizations.dart';
+import 'package:iris/utils/path_conv.dart';
+import 'package:path/path.dart' as p;
 
 Future<void> showLocalDialog(BuildContext context,
         {LocalStorage? storage}) async =>
@@ -72,9 +74,8 @@ class LocalDialog extends HookWidget {
                     border: const OutlineInputBorder(),
                     labelText: t.path,
                   ),
-                  initialValue: basePath.value.join('/'),
-                  onChanged: (value) =>
-                      basePath.value = value.trim().split('/'),
+                  initialValue: p.normalize(basePath.value.join('/')),
+                  onChanged: (value) => basePath.value = pathConv(value),
                 ),
                 const SizedBox(height: 16.0),
               ],

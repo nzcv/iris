@@ -5,7 +5,7 @@ import 'package:iris/info.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/store/use_ui_store.dart';
 import 'package:iris/utils/get_localizations.dart';
-import 'package:iris/utils/is_desktop.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:window_manager/window_manager.dart';
 

@@ -17,7 +17,7 @@ import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/pages/play_queue.dart';
-import 'package:iris/utils/is_desktop.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:iris/widgets/dark_theme.dart';
 import 'package:iris/widgets/popup.dart';

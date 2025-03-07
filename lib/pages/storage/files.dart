@@ -47,8 +47,7 @@ class Files extends HookWidget {
 
     final currentFavorite = useMemoized(
         () => favorites.firstWhereOrNull((favorite) =>
-            favorite.storageId == storage.id &&
-            favorite.path.join('/') == currentPath.join('/')),
+            favorite.storageId == storage.id && favorite.path == currentPath),
         [favorites, currentPath]);
 
     useEffect(() {

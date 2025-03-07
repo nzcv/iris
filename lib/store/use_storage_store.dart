@@ -11,13 +11,7 @@ class StorageStore extends PersistentStore<StorageState> {
   StorageStore() : super(StorageState());
 
   Storage? findById(String id) =>
-      state.localStorages.firstWhereOrNull((storage) => storage.id == id) ??
       state.storages.firstWhereOrNull((storage) => storage.id == id);
-
-  Future<void> updateLocalStorages(List<LocalStorage> storages) async {
-    set(state.copyWith(localStorages: storages));
-    await save(state);
-  }
 
   Future<void> addStorage(Storage storage) async {
     set(state.copyWith(storages: [...state.storages, storage]));

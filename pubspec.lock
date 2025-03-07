@@ -305,6 +305,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  drives_windows:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: main
+      resolved-ref: d4fa18d2c0463d3cadcf8a4cc7a501aa3ee116b8
+      url: "https://github.com/nini22P/drives_windows"
+    source: git
+    version: "0.0.1"
   dynamic_color:
     dependency: "direct main"
     description:
@@ -520,12 +529,11 @@ packages:
   fvp:
     dependency: "direct main"
     description:
-      path: "."
-      ref: master
-      resolved-ref: cbfb02ddab90a6e2182e71b93b7d6992d965ce3c
-      url: "https://github.com/wang-bin/fvp"
-    source: git
-    version: "0.29.0"
+      name: fvp
+      sha256: f5012756985f7c8c19caaea2d65baf8a6cf5fee9fe520e1fabb8bc61e1d5f468
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.30.0"
   glob:
     dependency: transitive
     description:

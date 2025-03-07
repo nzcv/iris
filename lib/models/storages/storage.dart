@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:iris/models/file.dart';
@@ -10,9 +11,12 @@ import 'package:iris/store/use_storage_store.dart';
 part 'storage.freezed.dart';
 part 'storage.g.dart';
 
+const String localStorageId = 'local';
+
 enum StorageType {
   none,
   internal,
+  network,
   usb,
   sdcard,
   webdav,
@@ -41,7 +45,7 @@ sealed class Storage with _$Storage implements _Storage {
   const Storage._();
 
   factory Storage.local({
-    @Default('local') String id,
+    @Default(localStorageId) String id,
     required StorageType type,
     required String name,
     required List<String> basePath,
@@ -66,12 +70,13 @@ sealed class Storage with _$Storage implements _Storage {
   Future<List<FileItem>> getFiles(List<String> path) async {
     switch (type) {
       case StorageType.internal:
+      case StorageType.network:
       case StorageType.usb:
       case StorageType.sdcard:
         return await getLocalFiles(this as LocalStorage, path);
       case StorageType.webdav:
         return await getWebDAVFiles(this as WebDAVStorage, path);
-      default:
+      case StorageType.none:
         return [];
     }
   }
@@ -89,36 +94,35 @@ sealed class Storage with _$Storage implements _Storage {
 
 Future<void> openInFolder(BuildContext context, FileItem file) async {
   if (file.path.isEmpty) return;
+  useStorageStore()
+      .updateCurrentPath(file.path.sublist(0, file.path.length - 1));
+
   Storage? storage = useStorageStore().findById(file.storageId);
+
   if (storage != null) {
-    useStorageStore()
-        .updateCurrentPath(file.path.sublist(0, file.path.length - 1));
     useStorageStore().updateCurrentStorage(storage);
-    if (context.mounted) {
-      replacePopup(
-        context: context,
-        child: Storages(),
-        direction: PopupDirection.right,
+  } else {
+    final localStorages = await getLocalStorages(context);
+    Storage? storage = localStorages
+        .firstWhereOrNull((element) => element.basePath[0] == file.path[0]);
+    if (storage != null) {
+      useStorageStore().updateCurrentStorage(storage);
+    } else {
+      useStorageStore().updateCurrentStorage(
+        LocalStorage(
+          type: file.storageType,
+          name: file.path[0],
+          basePath: [file.path[0]],
+        ),
       );
     }
-  } else if (file.storageType == StorageType.internal ||
-      file.storageType == StorageType.usb ||
-      file.storageType == StorageType.sdcard) {
-    useStorageStore()
-        .updateCurrentPath(file.path.sublist(0, file.path.length - 1));
-    useStorageStore().updateCurrentStorage(
-      LocalStorage(
-        type: file.storageType,
-        name: file.path[0],
-        basePath: [file.path[0]],
-      ),
+  }
+
+  if (context.mounted) {
+    replacePopup(
+      context: context,
+      child: Storages(),
+      direction: PopupDirection.right,
     );
-    if (context.mounted) {
-      replacePopup(
-        context: context,
-        child: Storages(),
-        direction: PopupDirection.right,
-      );
-    }
   }
 }

@@ -38,7 +38,7 @@ abstract class FileItem implements _$FileItem {
   factory FileItem.fromJson(Map<String, dynamic> json) =>
       _$FileItemFromJson(json);
 
-  String getID() => '$storageId:${path.join('/')}';
+  String getID() => '$storageId:$uri}';
 }
 
 @freezed
