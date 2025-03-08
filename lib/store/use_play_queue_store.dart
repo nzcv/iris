@@ -36,7 +36,9 @@ class PlayQueueStore extends PersistentStore<PlayQueueState> {
   Future<void> updateCurrentIndex(int index) async {
     set(state.copyWith(currentIndex: index));
     if (Platform.isAndroid &&
-        state.playQueue.any((e) => e.file.uri.startsWith('content://'))) {
+        state.playQueue.any((e) =>
+            globals.initUri == e.file.uri &&
+            e.file.uri.startsWith('content://'))) {
       return;
     }
     await save(state);
@@ -60,7 +62,9 @@ class PlayQueueStore extends PersistentStore<PlayQueueState> {
 
     set(state.copyWith(playQueue: [...state.playQueue, ...playQueue]));
     if (Platform.isAndroid &&
-        state.playQueue.any((e) => e.file.uri.startsWith('content://'))) {
+        state.playQueue.any((e) =>
+            globals.initUri == e.file.uri &&
+            e.file.uri.startsWith('content://'))) {
       return;
     }
     await save(state);

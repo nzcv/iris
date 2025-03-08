@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
+import 'package:iris/globals.dart' as globals;
 import 'package:iris/models/file.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/models/progress.dart';
@@ -12,6 +13,7 @@ import 'package:iris/store/use_history_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/logger.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:path_provider/path_provider.dart';
@@ -82,7 +84,7 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
       () => playQueue.indexWhere((element) => element.index == currentIndex),
       [playQueue, currentIndex]);
 
-  final FileItem? currentFile = useMemoized(
+  final FileItem? file = useMemoized(
       () => playQueue.isEmpty || currentPlayIndex < 0
           ? null
           : playQueue[currentPlayIndex].file,
@@ -114,9 +116,9 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
       [tracks?.subtitle]);
 
   final List<Subtitle>? externalSubtitles = useMemoized(
-      () => [...currentFile?.subtitles ?? []]..removeWhere(
+      () => [...file?.subtitles ?? []]..removeWhere(
           (subtitle) => subtitles.any((item) => item.title == subtitle.name)),
-      [currentFile?.subtitles, subtitles]);
+      [file?.subtitles, subtitles]);
 
   final positionStream = useStream(player.stream.position);
 
@@ -151,27 +153,31 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
   }
 
   useEffect(() {
-    if (currentFile == null || playQueue.isEmpty) {
+    if (file == null || playQueue.isEmpty) {
       player.stop();
     } else {
-      init(currentFile);
+      init(file);
     }
     return () {
-      if (currentFile != null && player.state.duration != Duration.zero) {
-        if (Platform.isAndroid && currentFile.uri.startsWith('content://')) {
-          return;
-        }
+      if (isAndroid &&
+          globals.initUri == file?.uri &&
+          globals.initUri != null &&
+          globals.initUri!.startsWith('content://')) {
+        return;
+      }
+
+      if (file != null && player.state.duration != Duration.zero) {
         logger(
-            'Save progress: ${currentFile.name}, position: ${player.state.position}, duration: ${player.state.duration}');
+            'Save progress: ${file.name}, position: ${player.state.position}, duration: ${player.state.duration}');
         useHistoryStore().add(Progress(
           dateTime: DateTime.now().toUtc(),
           position: player.state.position,
           duration: player.state.duration,
-          file: currentFile,
+          file: file,
         ));
       }
     };
-  }, [currentFile]);
+  }, [file]);
 
   useEffect(() {
     () async {
@@ -180,15 +186,15 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
         return;
       }
       // 查询播放进度
-      if (currentFile != null && currentFile.type == ContentType.video) {
-        Progress? progress = history[currentFile.getID()];
+      if (file != null && file.type == ContentType.video) {
+        Progress? progress = history[file.getID()];
         if (progress != null) {
           if (!alwaysPlayFromBeginning &&
               (progress.duration.inMilliseconds -
                       progress.position.inMilliseconds) >
                   5000) {
             logger(
-                'Resume progress: ${currentFile.name} position: ${progress.position} duration: ${progress.duration}');
+                'Resume progress: ${file.name} position: ${progress.position} duration: ${progress.duration}');
             await player.seek(progress.position);
           }
         }
@@ -255,17 +261,21 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
   void updateSeeking(bool value) => seeking.value = value;
 
   Future<void> saveProgress() async {
-    if (currentFile != null && player.state.duration != Duration.zero) {
-      if (Platform.isAndroid && currentFile.uri.startsWith('content://')) {
-        return;
-      }
+    if (isAndroid &&
+        globals.initUri == file?.uri &&
+        globals.initUri != null &&
+        globals.initUri!.startsWith('content://')) {
+      return;
+    }
+
+    if (file != null && player.state.duration != Duration.zero) {
       logger(
-          'Save progress: ${currentFile.name}, position: ${player.state.position}, duration: ${player.state.duration}');
+          'Save progress: ${file.name}, position: ${player.state.position}, duration: ${player.state.duration}');
       useHistoryStore().add(Progress(
         dateTime: DateTime.now().toUtc(),
         position: player.state.position,
         duration: player.state.duration,
-        file: currentFile,
+        file: file,
       ));
     }
   }
@@ -274,10 +284,8 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
 
   Future<void> play() async {
     await useAppStore().updateAutoPlay(true);
-    if (duration == Duration.zero &&
-        currentFile != null &&
-        !isInitializing.value) {
-      await init(currentFile);
+    if (duration == Duration.zero && file != null && !isInitializing.value) {
+      await init(file);
     }
     await player.play();
   }

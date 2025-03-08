@@ -1,8 +1,9 @@
 import 'dart:io';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:fvp/fvp.dart';
+import 'package:iris/globals.dart' as globals;
 import 'package:iris/models/file.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/models/progress.dart';
@@ -13,6 +14,8 @@ import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/check_data_source_type.dart';
 import 'package:iris/utils/logger.dart';
+import 'package:iris/utils/platform.dart';
+import 'package:saf_util/saf_util.dart';
 import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -57,26 +60,22 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   Future<void> init() async => initValue.value = true;
 
-  final controller = useMemoized(() {
+  final controllerFuture = useMemoized(() async {
     if (file == null) return VideoPlayerController.networkUrl(Uri.parse(''));
     isInitializing.value = true;
     final storage = useStorageStore().findById(file.storageId);
     final auth = storage?.getAuth();
     logger('Open file: $file');
     switch (checkDataSourceType(file)) {
-      case DataSourceType.network:
-        return VideoPlayerController.networkUrl(
-          Uri.parse(file.uri),
-          httpHeaders: auth != null ? {'authorization': auth} : {},
-        );
       case DataSourceType.file:
         return VideoPlayerController.file(
           File(file.uri),
           httpHeaders: auth != null ? {'authorization': auth} : {},
         );
       case DataSourceType.contentUri:
+        final isExists = await SafUtil().exists(file.uri, false);
         return VideoPlayerController.contentUri(
-          Uri.parse(file.uri),
+          isExists ? Uri.parse(file.uri) : Uri.parse(''),
         );
       default:
         return VideoPlayerController.networkUrl(
@@ -85,6 +84,9 @@ FvpPlayer useFvpPlayer(BuildContext context) {
         );
     }
   }, [file, initValue.value]);
+
+  final controller = useFuture(controllerFuture).data ??
+      VideoPlayerController.networkUrl(Uri.parse(''));
 
   useEffect(() {
     () async {
@@ -158,12 +160,21 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   }, [duration]);
 
   useEffect(() {
-    if (externalSubtitle.value == null || externalSubtitles.isEmpty) {
-      controller.setExternalSubtitle('');
-    } else if (externalSubtitle.value! < externalSubtitles.length) {
-      controller
-          .setExternalSubtitle(externalSubtitles[externalSubtitle.value!].uri);
-    }
+    () async {
+      if (externalSubtitle.value == null || externalSubtitles.isEmpty) {
+        controller.setExternalSubtitle('');
+      } else if (externalSubtitle.value! < externalSubtitles.length) {
+        final isExists = await SafUtil()
+            .exists(externalSubtitles[externalSubtitle.value!].uri, false);
+        if (!isExists) {
+          externalSubtitle.value = null;
+        } else {
+          controller.setExternalSubtitle(
+              externalSubtitles[externalSubtitle.value!].uri);
+        }
+      }
+    }();
+
     return;
   }, [externalSubtitles, externalSubtitle.value]);
 
@@ -212,20 +223,23 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   useEffect(() {
     return () {
-      if (currentPlay != null &&
+      if (isAndroid &&
+          globals.initUri == file?.uri &&
+          globals.initUri != null &&
+          globals.initUri!.startsWith('content://')) {
+        return;
+      }
+
+      if (file != null &&
           controller.value.isInitialized &&
           controller.value.duration.inSeconds != 0) {
-        if (Platform.isAndroid &&
-            currentPlay.file.uri.startsWith('content://')) {
-          return;
-        }
         logger(
-            'Save progress: ${currentPlay.file.name}, position: ${controller.value.position}, duration: ${controller.value.duration}');
+            'Save progress: ${file.name}, position: ${controller.value.position}, duration: ${controller.value.duration}');
         useHistoryStore().add(Progress(
           dateTime: DateTime.now().toUtc(),
           position: controller.value.position,
           duration: controller.value.duration,
-          file: currentPlay.file,
+          file: file,
         ));
       }
     };
@@ -276,10 +290,14 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   }
 
   Future<void> saveProgress() async {
+    if (isAndroid &&
+        globals.initUri == file?.uri &&
+        globals.initUri != null &&
+        globals.initUri!.startsWith('content://')) {
+      return;
+    }
+
     if (file != null && duration != Duration.zero) {
-      if (Platform.isAndroid && file.uri.startsWith('content://')) {
-        return;
-      }
       logger(
           'Save progress: ${file.name}, position: $position, duration: $duration');
       useHistoryStore().add(Progress(

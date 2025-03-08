@@ -20,68 +20,6 @@ import 'package:iris/models/file.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:saf_util/saf_util.dart';
 
-Future<List<FileItem>> getLocalFiles(
-    LocalStorage storage, List<String> path) async {
-  final directory = Directory(p.normalize(path.join('/')));
-
-  List<FileItem> files = [];
-  try {
-    final entities = directory.list();
-
-    await for (final entity in entities) {
-      final isDir = entity is Directory;
-      int size = 0;
-      DateTime? lastModified;
-      if (!isDir) {
-        final file = File(entity.path);
-        try {
-          size = await file.length();
-          lastModified = await file.lastModified();
-        } on PathAccessException catch (e) {
-          logger(
-              'PathAccessException when getting file info for ${entity.path}: $e');
-        } catch (e) {
-          logger('Error getting file info for ${entity.path}: $e');
-        }
-      }
-
-      if (isDir) {
-        final dir = Directory(entity.path);
-        try {
-          final stat = await dir.stat();
-          lastModified = stat.modified;
-        } on PathAccessException catch (e) {
-          logger(
-              'PathAccessException when getting directory info for ${entity.path}: $e');
-        } catch (e) {
-          logger('Error getting directory info for ${entity.path}: $e');
-        }
-      }
-
-      final subtitles = await findLocalSubtitle(entity.path);
-
-      files.add(FileItem(
-        storageId: storage.id,
-        storageType: storage.type,
-        name: p.basename(entity.path),
-        uri: entity.path,
-        path: [...path, p.basename(entity.path)],
-        isDir: isDir,
-        size: size,
-        lastModified: lastModified,
-        type:
-            isDir ? ContentType.dir : checkContentType(p.basename(entity.path)),
-        subtitles: subtitles,
-      ));
-    }
-  } catch (e) {
-    logger('Error reading directory $path : $e');
-    return [];
-  }
-
-  return files;
-}
-
 Future<List<LocalStorage>> getLocalStorages(
   BuildContext context,
 ) async {
@@ -242,7 +180,69 @@ Future<void> pickLocalFile() async {
   }
 }
 
-Future<void> pickAndroidFile() async {
+Future<List<FileItem>> getLocalFiles(
+    LocalStorage storage, List<String> path) async {
+  final directory = Directory(p.normalize(path.join('/')));
+
+  List<FileItem> files = [];
+  try {
+    final entities = directory.list();
+
+    await for (final entity in entities) {
+      final isDir = entity is Directory;
+      int size = 0;
+      DateTime? lastModified;
+      if (!isDir) {
+        final file = File(entity.path);
+        try {
+          size = await file.length();
+          lastModified = await file.lastModified();
+        } on PathAccessException catch (e) {
+          logger(
+              'PathAccessException when getting file info for ${entity.path}: $e');
+        } catch (e) {
+          logger('Error getting file info for ${entity.path}: $e');
+        }
+      }
+
+      if (isDir) {
+        final dir = Directory(entity.path);
+        try {
+          final stat = await dir.stat();
+          lastModified = stat.modified;
+        } on PathAccessException catch (e) {
+          logger(
+              'PathAccessException when getting directory info for ${entity.path}: $e');
+        } catch (e) {
+          logger('Error getting directory info for ${entity.path}: $e');
+        }
+      }
+
+      final subtitles = await findLocalSubtitle(entity.path);
+
+      files.add(FileItem(
+        storageId: storage.id,
+        storageType: storage.type,
+        name: p.basename(entity.path),
+        uri: entity.path,
+        path: [...path, p.basename(entity.path)],
+        isDir: isDir,
+        size: size,
+        lastModified: lastModified,
+        type:
+            isDir ? ContentType.dir : checkContentType(p.basename(entity.path)),
+        subtitles: subtitles,
+      ));
+    }
+  } catch (e) {
+    logger('Error reading directory $path : $e');
+    return [];
+  }
+
+  return files;
+}
+
+Future<void> pickContentFile() async {
   final file = await SafUtil().pickFile(mimeTypes: ['video/*', 'audio/*']);
   if (file != null) {
     await useAppStore().updateAutoPlay(true);
@@ -262,7 +262,7 @@ Future<void> pickAndroidFile() async {
   }
 }
 
-Future<List<FileItem>> getAndroidFiles(String uri) async {
+Future<List<FileItem>> getContentFiles(String uri) async {
   final list = await SafUtil().list(uri);
 
   return await Future.wait(list

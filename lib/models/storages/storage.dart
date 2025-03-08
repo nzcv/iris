@@ -75,7 +75,7 @@ sealed class Storage with _$Storage implements _Storage {
       case StorageType.usb:
       case StorageType.sdcard:
         if (isAndroid && path[0].startsWith('content://')) {
-          return await getAndroidFiles(path.join('%2F'));
+          return await getContentFiles(path.join('%2F'));
         } else {
           return await getLocalFiles(this as LocalStorage, path);
         }

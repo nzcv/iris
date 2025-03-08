@@ -95,7 +95,6 @@ class Storages extends HookWidget {
                             () async {
                               if (isAndroid) {
                                 final dir = await SafUtil().pickDirectory(
-                                  writePermission: true,
                                   persistablePermission: true,
                                 );
                                 if (dir != null && context.mounted) {
@@ -136,13 +135,13 @@ class Storages extends HookWidget {
                       },
                       itemBuilder: (BuildContext context) {
                         return [
-                          PopupMenuItem<StorageType>(
-                            value: StorageType.internal,
-                            child: Text(t.local_storage),
-                          ),
                           const PopupMenuItem<StorageType>(
                             value: StorageType.webdav,
                             child: Text('WebDAV'),
+                          ),
+                          PopupMenuItem<StorageType>(
+                            value: StorageType.internal,
+                            child: Text(t.local_storage),
                           ),
                         ];
                       },

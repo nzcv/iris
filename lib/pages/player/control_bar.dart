@@ -458,11 +458,10 @@ class ControlBar extends HookWidget {
                         ),
                         onTap: () async {
                           showControl();
-                          if (isDesktop) {
-                            await pickLocalFile();
-                          }
                           if (Platform.isAndroid) {
-                            await pickAndroidFile();
+                            await pickContentFile();
+                          } else {
+                            await pickLocalFile();
                           }
                           showControl();
                         },
