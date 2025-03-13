@@ -8,7 +8,7 @@ import 'package:iris/pages/storage/files.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/path_conv.dart';
-import 'package:iris/pages/dialog/show_local_dialog.dart';
+import 'package:iris/pages/dialog/show_folder_dialog.dart';
 import 'package:iris/pages/dialog/show_webdav_dialog.dart';
 import 'package:iris/pages/storage/storages_list.dart';
 import 'package:iris/utils/platform.dart';
@@ -98,7 +98,7 @@ class Storages extends HookWidget {
                                   persistablePermission: true,
                                 );
                                 if (dir != null && context.mounted) {
-                                  showLocalDialog(
+                                  showFolderDialog(
                                     context,
                                     storage: LocalStorage(
                                       type: value,
@@ -114,7 +114,7 @@ class Storages extends HookWidget {
 
                                 if (selectedDirectory != null &&
                                     context.mounted) {
-                                  showLocalDialog(
+                                  showFolderDialog(
                                     context,
                                     storage: LocalStorage(
                                       type: value,
@@ -141,7 +141,7 @@ class Storages extends HookWidget {
                           ),
                           PopupMenuItem<StorageType>(
                             value: StorageType.internal,
-                            child: Text(t.local_storage),
+                            child: Text(t.folder),
                           ),
                         ];
                       },

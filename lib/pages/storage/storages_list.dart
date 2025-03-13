@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/storages/storage.dart';
-import 'package:iris/pages/dialog/show_local_dialog.dart';
+import 'package:iris/pages/dialog/show_folder_dialog.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/pages/dialog/show_webdav_dialog.dart';
@@ -83,7 +83,7 @@ class StoragesList extends HookWidget {
                         showWebDAVDialog(context,
                             storage: allStorages[index] as WebDAVStorage);
                       } else if (allStorages[index] is LocalStorage) {
-                        showLocalDialog(context,
+                        showFolderDialog(context,
                             storage: allStorages[index] as LocalStorage);
                       }
                       break;
