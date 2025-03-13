@@ -161,16 +161,25 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   useEffect(() {
     () async {
-      if (externalSubtitle.value == null || externalSubtitles.isEmpty) {
+      final currentExternalSubtitle = externalSubtitle.value;
+      if (currentExternalSubtitle == null || externalSubtitles.isEmpty) {
         controller.setExternalSubtitle('');
       } else if (externalSubtitle.value! < externalSubtitles.length) {
-        final isExists = await SafUtil()
-            .exists(externalSubtitles[externalSubtitle.value!].uri, false);
-        if (!isExists) {
-          externalSubtitle.value = null;
-        } else {
+        bool isExists = true;
+
+        if (Platform.isAndroid &&
+            externalSubtitles[currentExternalSubtitle]
+                .uri
+                .startsWith('content://')) {
+          isExists = await SafUtil()
+              .exists(externalSubtitles[currentExternalSubtitle].uri, false);
+        }
+
+        if (isExists) {
           controller.setExternalSubtitle(
-              externalSubtitles[externalSubtitle.value!].uri);
+              externalSubtitles[currentExternalSubtitle].uri);
+        } else {
+          externalSubtitle.value = null;
         }
       }
     }();

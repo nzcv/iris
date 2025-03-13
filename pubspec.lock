@@ -310,7 +310,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: e6ef0f3de41b10e0f283648b7b45ff0baa084b9a
+      resolved-ref: "7bca74761a9bbc0b1c41b4f81186d1fc0aa9a079"
       url: "https://github.com/nini22P/drives_windows"
     source: git
     version: "0.0.1"
