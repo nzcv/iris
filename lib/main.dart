@@ -8,11 +8,10 @@ import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:iris/info.dart';
 import 'package:iris/models/file.dart';
-import 'package:iris/pages/home_page.dart';
+import 'package:iris/pages/home/home_page.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/theme.dart';
-import 'package:iris/utils/data_migration.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/request_storage_permission.dart';
@@ -28,10 +27,6 @@ void main(List<String> arguments) async {
   globals.arguments = arguments;
 
   WidgetsFlutterBinding.ensureInitialized();
-
-  if (Platform.isWindows) {
-    await dataMigration();
-  }
 
   MediaKit.ensureInitialized();
 
