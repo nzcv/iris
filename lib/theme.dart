@@ -21,9 +21,9 @@ ThemeData baseTheme(BuildContext context) {
 }
 
 ColorScheme customColorScheme =
-    ColorScheme.fromSeed(seedColor: Colors.deepOrange);
+    ColorScheme.fromSeed(seedColor: Color(0xFFB3BCDF));
 ColorScheme customDarkColorScheme = ColorScheme.fromSeed(
-    seedColor: Colors.deepOrange, brightness: Brightness.dark);
+    seedColor: Color(0xFFB3BCDF), brightness: Brightness.dark);
 
 class CustomTheme {
   final ThemeData light;
