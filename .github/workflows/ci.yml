@@ -33,8 +33,8 @@ jobs:
         run: |
           # Create a directory to hold the files
           mkdir Iris
-          # Move the build output to the Iris directory
-          Move-Item -Path "build\windows\x64\runner\Release\*" -Destination "Iris" -Force
+          # Copy the build output to the Iris directory
+          Copy-Item -Path "build\windows\x64\runner\Release\*" -Destination "Iris" -Force
           # Create a ZIP file
           Compress-Archive -Path "Iris" -DestinationPath "Iris-windows.zip"
       - name: Upload artifact
