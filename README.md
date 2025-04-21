@@ -19,6 +19,7 @@ English | [中文](./README_CN.md)
 ## Download
 
 ### Windows
+- [Iris-windows-installer.exe](https://github.com/nini22P/Iris/releases/latest/download/Iris-windows-installer.exe)
 - [Iris-windows.zip](https://github.com/nini22P/Iris/releases/latest/download/Iris-windows.zip)
 
 ### Android

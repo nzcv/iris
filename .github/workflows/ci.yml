@@ -3,6 +3,7 @@ on:
   push:
     branches: 
       - main
+      - dev
     paths-ignore:
       - README.md
       - README_CN.md
@@ -41,6 +42,13 @@ jobs:
         with:
           name: Iris-windows
           path: Iris-windows.zip
+      - name: Create installer
+        run: iscc inno.iss
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Iris-windows-installer
+          path: build\windows\x64\runner\Release\Iris-windows-installer.exe
 
   build-android:
     name: Build Android
@@ -134,6 +142,7 @@ jobs:
           prerelease: false
           files: |
             artifacts/Iris-windows.zip
+            artifacts/Iris-windows-installer.exe
             artifacts/Iris-android-armeabi-v7a.apk
             artifacts/Iris-android-arm64-v8a.apk
             artifacts/Iris-android-x86_64.apk
