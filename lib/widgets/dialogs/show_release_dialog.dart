@@ -28,8 +28,20 @@ class ReleaseDialog extends HookWidget {
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
 
+    final updateScriptIsExists = useState(false);
+
+    useEffect(() {
+      if (isWindows) {
+        String resolvedExecutablePath = Platform.resolvedExecutable;
+        String path = p.dirname(resolvedExecutablePath);
+        String batFilePath = p.join(path, 'iris-updater.bat');
+        updateScriptIsExists.value = File(batFilePath).existsSync();
+      }
+      return null;
+    }, []);
+
     void update() async {
-      if (Platform.isWindows) {
+      if (isWindows) {
         String resolvedExecutablePath = Platform.resolvedExecutable;
         String path = p.dirname(resolvedExecutablePath);
         String batFilePath = p.join(path, 'iris-updater.bat');
@@ -81,7 +93,7 @@ class ReleaseDialog extends HookWidget {
         //   ),
         // ),
         Visibility(
-          visible: isDesktop,
+          visible: isDesktop && updateScriptIsExists.value,
           child: TextButton(
             onPressed: update,
             child: Text(
