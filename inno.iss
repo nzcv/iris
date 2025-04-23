@@ -8,6 +8,8 @@
 #define MyAppExeName "iris.exe"
 #define MyAppAssocName MyAppPublisher + "." + MyAppName + ".AssocFile"
 #define MyAppDesc "Iris Media Player"
+#define MySetupMutex "iris_player"
+#define MyProcessName "iris"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -37,6 +39,8 @@ OutputDir=build\windows\x64\runner\Release
 OutputBaseFilename=Iris-windows-installer
 SolidCompression=yes
 WizardStyle=modern
+CloseApplications=force
+SetupMutex={#MySetupMutex}
 
 [Languages]
 Name: "english"; MessagesFile: "windows\inno-languages\English.isl"
@@ -150,10 +154,6 @@ Root: HKLM; Subkey: "Software\{#MyAppPublisher}\{#MyAppName}\Capabilities"; Valu
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName}"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueName: "Path"; ValueData: "{app}"
 
-[UninstallDelete]
-Type: filesandordirs; Name: "{app}\*"
-Type: filesandordirs; Name: "{app}"
-
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
@@ -161,3 +161,74 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
+[Code]
+function ReadFileContent(const FileName: String): String;
+var
+  StringList: TStringList;
+begin
+  Result := '';
+  StringList := TStringList.Create;
+  try
+    StringList.LoadFromFile(FileName);
+    Result := StringList.Text;
+  finally
+    StringList.Free;
+  end;
+end;
+
+function GetProcessPIDs(const ProcessName: string): String;
+var
+  ResultCode: Integer;
+  Cmd: String;
+  OutputFile: String;
+begin
+  OutputFile := ExpandConstant('{tmp}\..\pid_output.txt');
+  Cmd := '-Command "Get-Process -Name ''' + ProcessName + ''' | ForEach-Object { if ($_.Path -and  (Test-Path (Join-Path (Split-Path $_.Path) ''libass.dll''))) { $_.Id } } > ''' + OutputFile + '''"';
+  if Exec('powershell.exe', Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+  begin
+    Result := ReadFileContent(OutputFile);
+  end
+  else
+  begin
+    Result := '';
+  end;
+  if FileExists(OutputFile) then
+      DeleteFile(OutputFile);
+end;
+
+function InitializeUninstall(): Boolean;
+var
+  ErrorCode: Integer;
+  UserResponse: Integer;
+  PIDs: String;
+  PIDList: TStringList;
+  i: Integer;
+begin
+  PIDs := GetProcessPIDs('{#MyProcessName}');
+
+  if PIDs <> '' then
+  begin
+    UserResponse := MsgBox(FmtMessage(CustomMessage('CloseRunningAppToContinueUninstall'), ['{#MyAppName}']), mbConfirmation, MB_YESNO);
+
+    if UserResponse = IDNO then
+    begin
+      Result := False;
+      Exit;
+    end
+    else
+    begin
+      PIDList := TStringList.Create;
+      try
+        PIDList.CommaText := PIDs;
+        for i := 0 to PIDList.Count - 1 do
+        begin
+          ShellExec('open', 'taskkill.exe', '/f /pid ' + PIDList[i], '', SW_HIDE, ewNoWait, ErrorCode);
+        end;
+      finally
+        PIDList.Free;
+      end;
+    end;
+  end;
+
+  Result := True;
+end;

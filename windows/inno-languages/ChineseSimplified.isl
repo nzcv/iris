@@ -401,3 +401,5 @@ AssocingFileExtension=正在将 %2 文件扩展名与 %1 建立关联...
 AutoStartProgramGroupDescription=启动：
 AutoStartProgram=自动启动 %1
 AddonHostProgramNotFound=您选择的文件夹中无法找到 %1。%n%n您要继续吗？
+
+CloseRunningAppToContinueUninstall=%1 当前正在运行。需要先将其关闭才能继续卸载。是否立即关闭？
