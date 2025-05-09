@@ -43,8 +43,8 @@ CloseApplications=force
 SetupMutex={#MySetupMutex}
 
 [Languages]
-Name: "english"; MessagesFile: "windows\inno-languages\English.isl"
-Name: "chinesesimplified"; MessagesFile: "windows\inno-languages\ChineseSimplified.isl"
+Name: "english"; MessagesFile: "windows\inno-languages\English.isl"; LicenseFile: "LICENSE"
+Name: "chinesesimplified"; MessagesFile: "windows\inno-languages\ChineseSimplified.isl"; LicenseFile: "LICENSE"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
