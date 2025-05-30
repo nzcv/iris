@@ -102,7 +102,7 @@ jobs:
 
   release:
     name: Release
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     needs: [build-windows, build-android]
     steps:
@@ -121,9 +121,6 @@ jobs:
           VERSION="${{ steps.yq.outputs.result }}"
           TAG_NAME="v${VERSION%%+*}"
           echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_OUTPUT"
-          echo "Creating new tag $TAG_NAME..."
-          git tag "$TAG_NAME"
-          git push origin "$TAG_NAME"
       - name: Eextract log
         run: python extract_log.py ${{ steps.create_tag.outputs.TAG_NAME }}
       - name: Download artifact
