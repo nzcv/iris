@@ -302,11 +302,15 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
           : await player.seek(newPosition);
 
   Future<void> backward(int seconds) async {
-    await seekTo(Duration(seconds: position.value.inSeconds - seconds));
+    if (file?.type == ContentType.video) {
+      await seekTo(Duration(seconds: position.value.inSeconds - seconds));
+    }
   }
 
   Future<void> forward(int seconds) async {
-    await seekTo(Duration(seconds: position.value.inSeconds + seconds));
+    if (file?.type == ContentType.video) {
+      await seekTo(Duration(seconds: position.value.inSeconds + seconds));
+    }
   }
 
   Future<void> stepBackward() async {

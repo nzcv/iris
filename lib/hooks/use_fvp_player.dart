@@ -289,13 +289,17 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   }
 
   Future<void> stepBackward() async {
-    await controller.step(frames: -1);
-    logger('Step backward');
+    if (file?.type == ContentType.video) {
+      await controller.step(frames: -1);
+      logger('Step backward');
+    }
   }
 
   Future<void> stepForward() async {
-    await controller.step(frames: 1);
-    logger('Step forward');
+    if (file?.type == ContentType.video) {
+      await controller.step(frames: 1);
+      logger('Step forward');
+    }
   }
 
   Future<void> saveProgress() async {
