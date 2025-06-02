@@ -19,8 +19,7 @@ import 'package:iris/widgets/dialogs/show_open_link_dialog.dart';
 import 'package:iris/pages/home/history.dart';
 import 'package:iris/pages/player/play_queue.dart';
 import 'package:iris/pages/player/audio.dart';
-import 'package:iris/pages/player/control_bar_slider.dart';
-import 'package:iris/pages/player/fvp_video.dart';
+import 'package:iris/pages/player/control_bar/control_bar_slider.dart';
 import 'package:iris/widgets/bottom_sheets/show_open_link_bottom_sheet.dart';
 import 'package:iris/pages/settings/settings.dart';
 import 'package:iris/pages/player/subtitle_and_audio_track.dart';
@@ -37,8 +36,9 @@ import 'package:iris/utils/format_duration_to_minutes.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:iris/widgets/custom_app_bar.dart';
-import 'package:iris/pages/player/control_bar.dart';
+import 'package:iris/pages/player/control_bar/control_bar.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:video_player/video_player.dart';
 import 'package:window_manager/window_manager.dart';
 
 enum MediaType {
@@ -750,7 +750,14 @@ class IrisPlayer extends HookWidget {
                           width: videoViewSize.width,
                           height: videoViewSize.height,
                           child: player is FvpPlayer
-                              ? FvpVideo(player: player)
+                              ? FittedBox(
+                                  fit: fit,
+                                  child: SizedBox(
+                                    width: player.width,
+                                    height: player.height,
+                                    child: VideoPlayer(player.controller),
+                                  ),
+                                )
                               : player is MediaKitPlayer
                                   ? Video(
                                       key: ValueKey(currentPlay?.file.uri),
