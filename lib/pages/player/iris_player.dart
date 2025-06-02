@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
+import 'package:iris/globals.dart';
 import 'package:iris/hooks/use_app_lifecycle.dart';
 import 'package:iris/hooks/use_brightness.dart';
 import 'package:iris/hooks/use_cover.dart';
@@ -411,6 +412,10 @@ class IrisPlayer extends HookWidget {
             break;
           case LogicalKeyboardKey.minus:
             await player.stepBackward();
+            break;
+          case LogicalKeyboardKey.contextMenu:
+            showControl();
+            moreMenuKey.currentState?.showButtonMenu();
             break;
           default:
             break;
