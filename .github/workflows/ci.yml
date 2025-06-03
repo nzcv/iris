@@ -32,23 +32,23 @@ jobs:
       - name: Create ZIP archive
         run: |
           # Create a directory to hold the files
-          mkdir Iris
-          # Copy the build output to the Iris directory
-          Copy-Item -Path "build\windows\x64\runner\Release\*" -Destination "Iris" -Force
+          mkdir IRIS
+          # Copy the build output to the IRIS directory
+          Copy-Item -Path "build\windows\x64\runner\Release\*" -Destination "IRIS" -Force
           # Create a ZIP file
-          Compress-Archive -Path "Iris" -DestinationPath "Iris-windows.zip"
+          Compress-Archive -Path "IRIS" -DestinationPath "IRIS-windows.zip"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Iris-windows
-          path: Iris-windows.zip
+          name: IRIS-windows
+          path: IRIS-windows.zip
       - name: Create installer
         run: iscc inno.iss
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: Iris-windows-installer
-          path: build\windows\x64\runner\Release\Iris-windows-installer.exe
+          name: IRIS-windows-installer
+          path: build\windows\x64\runner\Release\IRIS-windows-installer.exe
 
   build-android:
     name: Build Android
@@ -79,26 +79,26 @@ jobs:
       - name: Build Flutter application for Android
         run: flutter build apk --split-per-abi
       - name: Rename armeabi-v7a APK
-        run: mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk Iris-android-armeabi-v7a.apk
+        run: mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk IRIS-android-armeabi-v7a.apk
       - name: Rename arm64-v8a APK
-        run: mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk Iris-android-arm64-v8a.apk
+        run: mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk IRIS-android-arm64-v8a.apk
       - name: Rename x86_64 APK
-        run: mv build/app/outputs/flutter-apk/app-x86_64-release.apk Iris-android-x86_64.apk
+        run: mv build/app/outputs/flutter-apk/app-x86_64-release.apk IRIS-android-x86_64.apk
       - name: Upload armeabi-v7a APK
         uses: actions/upload-artifact@v4
         with:
-          name: Iris-android-armeabi-v7a
-          path: Iris-android-armeabi-v7a.apk
+          name: IRIS-android-armeabi-v7a
+          path: IRIS-android-armeabi-v7a.apk
       - name: Upload arm64-v8a APK
         uses: actions/upload-artifact@v4
         with:
-          name: Iris-android-arm64-v8a
-          path: Iris-android-arm64-v8a.apk
+          name: IRIS-android-arm64-v8a
+          path: IRIS-android-arm64-v8a.apk
       - name: Upload x86_64 APK
         uses: actions/upload-artifact@v4
         with:
-          name: Iris-android-x86_64
-          path: Iris-android-x86_64.apk
+          name: IRIS-android-x86_64
+          path: IRIS-android-x86_64.apk
 
   release:
     name: Release
@@ -138,8 +138,8 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/Iris-windows.zip
-            artifacts/Iris-windows-installer.exe
-            artifacts/Iris-android-armeabi-v7a.apk
-            artifacts/Iris-android-arm64-v8a.apk
-            artifacts/Iris-android-x86_64.apk
+            artifacts/IRIS-windows.zip
+            artifacts/IRIS-windows-installer.exe
+            artifacts/IRIS-android-armeabi-v7a.apk
+            artifacts/IRIS-android-arm64-v8a.apk
+            artifacts/IRIS-android-x86_64.apk

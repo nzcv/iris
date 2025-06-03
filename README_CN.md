@@ -1,8 +1,8 @@
 <img height="100px" width="100px" alt="icon" src="./assets/images/icon.svg"/>
 
-# Iris - 轻量级视频播放器
+# IRIS - 轻量级视频播放器
 
-![ci](https://github.com/nini22P/Iris/actions/workflows/ci.yml/badge.svg)
+![ci](https://github.com/nini22P/iris/actions/workflows/ci.yml/badge.svg)
 <a href="https://afdian.com/a/nini22P"><img alt="爱发电" style="height: 30px;" src="https://pic1.afdiancdn.com/static/img/welcome/button-sponsorme.png"></a>
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nini22p)
 
@@ -19,15 +19,15 @@
 ## 下载
 
 ### Windows
-- [Iris-windows-installer.exe](https://github.com/nini22P/Iris/releases/latest/download/Iris-windows-installer.exe)
-- [Iris-windows.zip](https://github.com/nini22P/Iris/releases/latest/download/Iris-windows.zip)
+- [IRIS-windows-installer.exe](https://github.com/nini22P/iris/releases/latest/download/IRIS-windows-installer.exe)
+- [IRIS-windows.zip](https://github.com/nini22P/iris/releases/latest/download/IRIS-windows.zip)
 
 ### Android
 | 设备架构         | 下载链接                                                                 |
 |------------------|--------------------------------------------------------------------------|
-| arm64-v8a        | [Iris-android-arm64-v8a.apk](https://github.com/nini22P/Iris/releases/latest/download/Iris-android-arm64-v8a.apk) |
-| armeabi-v7a      | [Iris-android-armeabi-v7a.apk](https://github.com/nini22P/Iris/releases/latest/download/Iris-android-armeabi-v7a.apk) |
-| x86_64           | [Iris-android-x86_64.apk](https://github.com/nini22P/Iris/releases/latest/download/Iris-android-x86_64.apk) |
+| arm64-v8a        | [IRIS-android-arm64-v8a.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-arm64-v8a.apk) |
+| armeabi-v7a      | [IRIS-android-armeabi-v7a.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-armeabi-v7a.apk) |
+| x86_64           | [IRIS-android-x86_64.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-x86_64.apk) |
 
 ## 键位和手势
 
@@ -76,7 +76,7 @@
 
 ## 贡献
 
-欢迎任何形式的贡献！如果您有建议、bug 报告或想要添加新功能，请提交 [issue](https://github.com/nini22P/Iris/issues) 或者直接提交 Pull Request。
+欢迎任何形式的贡献！如果您有建议、bug 报告或想要添加新功能，请提交 [issue](https://github.com/nini22P/iris/issues) 或者直接提交 Pull Request。
 
 ## 赞助
 

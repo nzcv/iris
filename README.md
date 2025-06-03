@@ -1,8 +1,8 @@
 <img height="100px" width="100px" alt="icon" src="./assets/images/icon.svg"/>
 
-# Iris - A lightweight video player
+# IRIS - A lightweight video player
 
-![ci](https://github.com/nini22P/Iris/actions/workflows/ci.yml/badge.svg)
+![ci](https://github.com/nini22P/iris/actions/workflows/ci.yml/badge.svg)
 <a href="https://afdian.com/a/nini22P"><img alt="Afdian" style="height: 30px;" src="https://pic1.afdiancdn.com/static/img/welcome/button-sponsorme.png"></a>
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nini22p)
 
@@ -19,15 +19,15 @@ English | [中文](./README_CN.md)
 ## Download
 
 ### Windows
-- [Iris-windows-installer.exe](https://github.com/nini22P/Iris/releases/latest/download/Iris-windows-installer.exe)
-- [Iris-windows.zip](https://github.com/nini22P/Iris/releases/latest/download/Iris-windows.zip)
+- [IRIS-windows-installer.exe](https://github.com/nini22P/iris/releases/latest/download/IRIS-windows-installer.exe)
+- [IRIS-windows.zip](https://github.com/nini22P/iris/releases/latest/download/IRIS-windows.zip)
 
 ### Android
 | Architecture      | Download Link                                                            |
 |-------------------|-------------------------------------------------------------------------|
-| arm64-v8a         | [Iris-android-arm64-v8a.apk](https://github.com/nini22P/Iris/releases/latest/download/Iris-android-arm64-v8a.apk) |
-| armeabi-v7a       | [Iris-android-armeabi-v7a.apk](https://github.com/nini22P/Iris/releases/latest/download/Iris-android-armeabi-v7a.apk) |
-| x86_64            | [Iris-android-x86_64.apk](https://github.com/nini22P/Iris/releases/latest/download/Iris-android-x86_64.apk) |
+| arm64-v8a         | [IRIS-android-arm64-v8a.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-arm64-v8a.apk) |
+| armeabi-v7a       | [IRIS-android-armeabi-v7a.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-armeabi-v7a.apk) |
+| x86_64            | [IRIS-android-x86_64.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-x86_64.apk) |
 
 ## Keyboard and Gesture Controls
 
@@ -76,7 +76,7 @@ English | [中文](./README_CN.md)
 
 ## Contribution
 
-Contributions of any kind are welcome! If you have suggestions, bug reports, or want to add new features, please submit an [issue](https://github.com/nini22P/Iris/issues) or directly submit a Pull Request.
+Contributions of any kind are welcome! If you have suggestions, bug reports, or want to add new features, please submit an [issue](https://github.com/nini22P/iris/issues) or directly submit a Pull Request.
 
 ## Sponsorship
 
