@@ -4,9 +4,14 @@ import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/store/use_app_store.dart';
 
 class VolumeSlider extends HookWidget {
-  const VolumeSlider({super.key, required this.showControl});
+  const VolumeSlider({
+    super.key,
+    required this.showControl,
+    this.color,
+  });
 
   final void Function() showControl;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -18,18 +23,15 @@ class VolumeSlider extends HookWidget {
         width: 128,
         child: SliderTheme(
           data: SliderTheme.of(context).copyWith(
-            thumbColor: Theme.of(context).colorScheme.onSurfaceVariant,
+            thumbColor: color,
+            activeTrackColor: color?.withAlpha(222),
+            inactiveTrackColor: color?.withAlpha(99),
             thumbShape: RoundSliderThumbShape(
               enabledThumbRadius: 5.6,
             ),
-            disabledThumbColor:
-                Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(222),
             overlayShape: const RoundSliderOverlayShape(
               overlayRadius: 4,
             ),
-            activeTrackColor: Theme.of(context).colorScheme.onSurfaceVariant,
-            inactiveTrackColor:
-                Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(99),
             trackHeight: 3.6,
           ),
           child: Slider(
@@ -41,7 +43,6 @@ class VolumeSlider extends HookWidget {
             },
             min: 0,
             max: 100,
-            activeColor: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ),

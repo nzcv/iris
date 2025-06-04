@@ -15,10 +15,15 @@ class CustomAppBar extends HookWidget {
     this.title,
     required this.player,
     this.actions,
+    this.color,
+    this.overlayColor,
   });
+
   final String? title;
   final MediaPlayer player;
   final List<Widget>? actions;
+  final Color? color;
+  final WidgetStateProperty<Color?>? overlayColor;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +61,7 @@ class CustomAppBar extends HookWidget {
                   style: TextStyle(
                     fontSize: 16,
                     overflow: TextOverflow.ellipsis,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: color,
                   ),
                 ),
               ),
@@ -98,8 +103,10 @@ class CustomAppBar extends HookWidget {
                                       ? Icons.push_pin_rounded
                                       : Icons.push_pin_outlined,
                                   size: 18,
+                                  color: color,
                                 ),
                                 onPressed: useUiStore().toggleIsAlwaysOnTop,
+                                style: ButtonStyle(overlayColor: overlayColor),
                               ),
                             ),
                             Visibility(
@@ -113,6 +120,7 @@ class CustomAppBar extends HookWidget {
                                       ? Icons.close_fullscreen_rounded
                                       : Icons.open_in_full_rounded,
                                   size: 18,
+                                  color: color,
                                 ),
                                 onPressed: () async {
                                   if (isFullScreen) {
@@ -122,13 +130,18 @@ class CustomAppBar extends HookWidget {
                                     await windowManager.setFullScreen(true);
                                   }
                                 },
+                                style: ButtonStyle(overlayColor: overlayColor),
                               ),
                             ),
                             Visibility(
                               visible: !isFullScreen,
                               child: IconButton(
                                 onPressed: () => windowManager.minimize(),
-                                icon: const Icon(Icons.remove_rounded),
+                                icon: Icon(
+                                  Icons.remove_rounded,
+                                  color: color,
+                                ),
+                                style: ButtonStyle(overlayColor: overlayColor),
                               ),
                             ),
                             Visibility(
@@ -143,17 +156,20 @@ class CustomAppBar extends HookWidget {
                                   }
                                 },
                                 icon: isMaximized
-                                    ? const RotatedBox(
+                                    ? RotatedBox(
                                         quarterTurns: 2,
                                         child: Icon(
                                           Icons.filter_none_rounded,
                                           size: 18,
+                                          color: color,
                                         ),
                                       )
-                                    : const Icon(
+                                    : Icon(
                                         Icons.crop_din_rounded,
                                         size: 20,
+                                        color: color,
                                       ),
+                                style: ButtonStyle(overlayColor: overlayColor),
                               ),
                             ),
                           ],
@@ -165,7 +181,10 @@ class CustomAppBar extends HookWidget {
                         await player.saveProgress();
                         windowManager.close();
                       },
-                      icon: const Icon(Icons.close_rounded),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: color,
+                      ),
                       style: ButtonStyle(
                         overlayColor: WidgetStateProperty.resolveWith<Color?>(
                             (Set<WidgetState> states) {

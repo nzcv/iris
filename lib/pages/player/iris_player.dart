@@ -28,7 +28,6 @@ import 'package:iris/store/use_ui_store.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/platform.dart';
-import 'package:iris/widgets/dark_theme.dart';
 import 'package:iris/widgets/popup.dart';
 import 'package:iris/pages/storages/storages.dart';
 import 'package:iris/store/use_app_store.dart';
@@ -119,6 +118,24 @@ class IrisPlayer extends HookWidget {
             ? MediaType.audio
             : MediaType.video,
         [player]);
+
+    final contentColor = useMemoized(
+        () => Theme.of(context).brightness == Brightness.dark
+            ? Theme.of(context).colorScheme.onSurface
+            : Theme.of(context).colorScheme.surface,
+        [context]);
+
+    final overlayColor = useMemoized(
+        () =>
+            WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+              if (states.contains(WidgetState.pressed)) {
+                return contentColor.withValues(alpha: 0.2);
+              } else if (states.contains(WidgetState.hovered)) {
+                return contentColor.withValues(alpha: 0.2);
+              }
+              return null;
+            }),
+        [contentColor]);
 
     useEffect(() {
       if (isDesktop) {
@@ -921,12 +938,11 @@ class IrisPlayer extends HookWidget {
                   right: -28,
                   bottom: -16,
                   height: 32,
-                  child: DarkTheme(
-                    child: ControlBarSlider(
-                      player: player,
-                      showControl: showControl,
-                      disabled: true,
-                    ),
+                  child: ControlBarSlider(
+                    player: player,
+                    showControl: showControl,
+                    disabled: true,
+                    color: contentColor,
                   ),
                 ),
               if (isShowProgress.value &&
@@ -1016,14 +1032,12 @@ class IrisPlayer extends HookWidget {
                         windowManager.startDragging();
                       }
                     },
-                    child: DarkTheme(
-                      child: CustomAppBar(
-                        title: title,
-                        player: player,
-                        actions: [
-                          const SizedBox(width: 8),
-                        ],
-                      ),
+                    child: CustomAppBar(
+                      title: title,
+                      player: player,
+                      actions: [const SizedBox(width: 8)],
+                      color: contentColor,
+                      overlayColor: overlayColor,
                     ),
                   ),
                 ),
@@ -1054,6 +1068,8 @@ class IrisPlayer extends HookWidget {
                           player: player,
                           showControl: showControl,
                           showControlForHover: showControlForHover,
+                          color: contentColor,
+                          overlayColor: overlayColor,
                         ),
                       ),
                     ),
