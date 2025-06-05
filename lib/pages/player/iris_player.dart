@@ -35,7 +35,7 @@ import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/utils/format_duration_to_minutes.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/resize_window.dart';
-import 'package:iris/widgets/custom_app_bar.dart';
+import 'package:iris/widgets/title_bar.dart';
 import 'package:iris/pages/player/control_bar/control_bar.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:video_player/video_player.dart';
@@ -57,7 +57,7 @@ class IrisPlayer extends HookWidget {
 
     useAppLifecycle(player);
     useOrientation(context, player);
-    final cover = useCover(context);
+    final cover = useCover(context, player);
 
     final isHover = useState(false);
     final isTouch = useState(false);
@@ -1032,7 +1032,7 @@ class IrisPlayer extends HookWidget {
                         windowManager.startDragging();
                       }
                     },
-                    child: CustomAppBar(
+                    child: TitleBar(
                       title: title,
                       player: player,
                       actions: [const SizedBox(width: 8)],

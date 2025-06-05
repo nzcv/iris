@@ -7,7 +7,7 @@
 #define MyAppURL "https://github.com/nini22P/iris"
 #define MyAppExeName "iris.exe"
 #define MyAppAssocName MyAppPublisher + "." + MyAppName + ".AssocFile"
-#define MyAppDesc "IRIS media player"
+#define MyAppDesc "IRIS player"
 #define MySetupMutex "iris_player"
 #define MyProcessName "iris"
 

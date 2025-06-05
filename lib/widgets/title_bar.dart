@@ -9,8 +9,8 @@ import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:window_manager/window_manager.dart';
 
-class CustomAppBar extends HookWidget {
-  const CustomAppBar({
+class TitleBar extends HookWidget {
+  const TitleBar({
     super.key,
     this.title,
     required this.player,
