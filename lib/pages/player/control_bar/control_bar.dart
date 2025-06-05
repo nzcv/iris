@@ -6,6 +6,7 @@ import 'package:iris/globals.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/store/app_state.dart';
+import 'package:iris/store/use_ui_store.dart';
 import 'package:iris/widgets/dialogs/show_open_link_dialog.dart';
 import 'package:iris/widgets/dialogs/show_rate_dialog.dart';
 import 'package:iris/pages/player/control_bar/control_bar_slider.dart';
@@ -22,7 +23,6 @@ import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:iris/widgets/popup.dart';
 import 'package:iris/pages/storages/storages.dart';
-import 'package:window_manager/window_manager.dart';
 
 class ControlBar extends HookWidget {
   const ControlBar({
@@ -47,6 +47,8 @@ class ControlBar extends HookWidget {
     final rate = useAppStore().select(context, (state) => state.rate);
     final volume = useAppStore().select(context, (state) => state.volume);
     final isMuted = useAppStore().select(context, (state) => state.isMuted);
+    final isFullScreen =
+        useUiStore().select(context, (state) => state.isFullScreen);
     final int playQueueLength =
         usePlayQueueStore().select(context, (state) => state.playQueue.length);
     final playQueue =
@@ -379,36 +381,25 @@ class ControlBar extends HookWidget {
                 ),
                 Visibility(
                   visible: isDesktop,
-                  child: FutureBuilder<bool>(
-                    future: () async {
-                      return (isDesktop && await windowManager.isFullScreen());
-                    }(),
-                    builder:
-                        (BuildContext context, AsyncSnapshot<bool> snapshot) {
-                      final isFullScreen = snapshot.data ?? false;
-                      return IconButton(
-                        tooltip: isFullScreen
-                            ? '${t.exit_fullscreen} ( Escape, F11, Enter )'
-                            : '${t.enter_fullscreen} ( F11, Enter )',
-                        icon: Icon(
-                          isFullScreen
-                              ? Icons.close_fullscreen_rounded
-                              : Icons.open_in_full_rounded,
-                          size: 19,
-                          color: color,
-                        ),
-                        onPressed: () async {
-                          showControl();
-                          if (isFullScreen) {
-                            await windowManager.setFullScreen(false);
-                            await resizeWindow(player.aspect);
-                          } else {
-                            await windowManager.setFullScreen(true);
-                          }
-                        },
-                        style: ButtonStyle(overlayColor: overlayColor),
-                      );
+                  child: IconButton(
+                    tooltip: isFullScreen
+                        ? '${t.exit_fullscreen} ( Escape, F11, Enter )'
+                        : '${t.enter_fullscreen} ( F11, Enter )',
+                    icon: Icon(
+                      isFullScreen
+                          ? Icons.close_fullscreen_rounded
+                          : Icons.open_in_full_rounded,
+                      size: 19,
+                      color: color,
+                    ),
+                    onPressed: () async {
+                      showControl();
+                      if (isFullScreen) {
+                        await resizeWindow(player.aspect);
+                      }
+                      useUiStore().updateFullScreen(!isFullScreen);
                     },
+                    style: ButtonStyle(overlayColor: overlayColor),
                   ),
                 ),
                 PopupMenuButton(

@@ -10,6 +10,7 @@ import 'package:iris/globals.dart';
 import 'package:iris/hooks/use_app_lifecycle.dart';
 import 'package:iris/hooks/use_brightness.dart';
 import 'package:iris/hooks/use_cover.dart';
+import 'package:iris/hooks/use_full_screen.dart';
 import 'package:iris/hooks/use_orientation.dart';
 import 'package:iris/hooks/use_volume.dart';
 import 'package:iris/info.dart';
@@ -56,6 +57,7 @@ class IrisPlayer extends HookWidget {
     final MediaPlayer player = playerHooks(context);
 
     useAppLifecycle(player);
+    useFullScreen(context);
     useOrientation(context, player);
     final cover = useCover(context, player);
 
@@ -83,6 +85,9 @@ class IrisPlayer extends HookWidget {
     final fit = useAppStore().select(context, (state) => state.fit);
     final autoResize =
         useAppStore().select(context, (state) => state.autoResize);
+
+    final isFullScreen =
+        useUiStore().select(context, (state) => state.isFullScreen);
 
     final playQueue =
         usePlayQueueStore().select(context, (state) => state.playQueue);
@@ -406,15 +411,15 @@ class IrisPlayer extends HookWidget {
             break;
           // 退出全屏
           case LogicalKeyboardKey.escape:
-            if (await windowManager.isFullScreen()) {
-              windowManager.setFullScreen(false);
+            if (isDesktop && isFullScreen) {
+              useUiStore().updateFullScreen(false);
             }
             break;
           // 全屏
           case LogicalKeyboardKey.enter:
           case LogicalKeyboardKey.f11:
             if (isDesktop) {
-              windowManager.setFullScreen(!await windowManager.isFullScreen());
+              useUiStore().updateFullScreen(!isFullScreen);
             }
             break;
           case LogicalKeyboardKey.tab:
@@ -611,12 +616,10 @@ class IrisPlayer extends HookWidget {
                         }
                       } else {
                         if (isDesktop) {
-                          if (await windowManager.isFullScreen()) {
-                            await windowManager.setFullScreen(false);
+                          if (isFullScreen) {
                             await resizeWindow(player.aspect);
-                          } else {
-                            await windowManager.setFullScreen(true);
                           }
+                          useUiStore().updateFullScreen(!isFullScreen);
                         }
                       }
                     },

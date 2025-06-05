@@ -30,6 +30,8 @@ class TitleBar extends HookWidget {
     final t = getLocalizations(context);
     final isAlwaysOnTop =
         useUiStore().select(context, (state) => state.isAlwaysOnTop);
+    final isFullScreen =
+        useUiStore().select(context, (state) => state.isFullScreen);
 
     return Container(
       padding: isDesktop
@@ -69,26 +71,18 @@ class TitleBar extends HookWidget {
                 children: [
                   ...actions ?? [],
                   if (isDesktop) ...[
-                    FutureBuilder<Map<String, bool>>(
+                    FutureBuilder<bool>(
                       future: () async {
-                        final isFullScreen =
-                            isDesktop && await windowManager.isFullScreen();
                         final isMaximized =
                             isDesktop && await windowManager.isMaximized();
 
-                        return {
-                          'isFullScreen': isFullScreen,
-                          'isMaximized': isMaximized,
-                        };
+                        return isMaximized;
                       }(),
                       builder: (
                         BuildContext context,
-                        AsyncSnapshot<Map<String, bool>> snapshot,
+                        AsyncSnapshot<bool> snapshot,
                       ) {
-                        final isFullScreen =
-                            snapshot.data?['isFullScreen'] ?? false;
-                        final isMaximized =
-                            snapshot.data?['isMaximized'] ?? false;
+                        final isMaximized = snapshot.data ?? false;
 
                         return Row(
                           children: [
@@ -124,11 +118,9 @@ class TitleBar extends HookWidget {
                                 ),
                                 onPressed: () async {
                                   if (isFullScreen) {
-                                    await windowManager.setFullScreen(false);
                                     await resizeWindow(player.aspect);
-                                  } else {
-                                    await windowManager.setFullScreen(true);
                                   }
+                                  useUiStore().updateFullScreen(!isFullScreen);
                                 },
                                 style: ButtonStyle(overlayColor: overlayColor),
                               ),

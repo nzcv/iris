@@ -12,6 +12,13 @@ class UiStore extends Store<UiState> {
       set(state.copyWith(isAlwaysOnTop: !state.isAlwaysOnTop));
     }
   }
+
+  Future<void> updateFullScreen(bool bool) async {
+    if (isDesktop) {
+      windowManager.setFullScreen(!state.isFullScreen);
+      set(state.copyWith(isFullScreen: !state.isFullScreen));
+    }
+  }
 }
 
 UiStore useUiStore() => create(() => UiStore());
