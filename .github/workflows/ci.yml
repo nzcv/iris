@@ -39,15 +39,22 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: IRIS-windows
+          name: IRIS-windows.zip
           path: IRIS-windows.zip
       - name: Create installer
         run: iscc inno.iss
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: IRIS-windows-installer
+          name: IRIS-windows-installer.exe
           path: build\windows\x64\runner\Release\IRIS-windows-installer.exe
+      - name: Create store msix
+        run: dart run msix:create --store true --output-name IRIS-windows-store
+      - name: Upload msix
+        uses: actions/upload-artifact@v4
+        with:
+          name: IRIS-windows-store.msix
+          path: build\windows\x64\runner\Release\IRIS-windows-store.msix
 
   build-android:
     runs-on: ubuntu-latest
@@ -85,17 +92,17 @@ jobs:
       - name: Upload armeabi-v7a APK
         uses: actions/upload-artifact@v4
         with:
-          name: IRIS-android-armeabi-v7a
+          name: IRIS-android-armeabi-v7a.apk
           path: IRIS-android-armeabi-v7a.apk
       - name: Upload arm64-v8a APK
         uses: actions/upload-artifact@v4
         with:
-          name: IRIS-android-arm64-v8a
+          name: IRIS-android-arm64-v8a.apk
           path: IRIS-android-arm64-v8a.apk
       - name: Upload x86_64 APK
         uses: actions/upload-artifact@v4
         with:
-          name: IRIS-android-x86_64
+          name: IRIS-android-x86_64.apk
           path: IRIS-android-x86_64.apk
 
   release:
