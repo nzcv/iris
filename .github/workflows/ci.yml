@@ -41,6 +41,8 @@ jobs:
         with:
           name: IRIS-windows.zip
           path: IRIS-windows.zip
+      - name: Remove updater
+        run: Remove-Item -Path build\windows\x64\runner\Release\iris-updater.bat -Force
       - name: Create installer
         run: iscc inno.iss
       - name: Upload installer
@@ -48,8 +50,14 @@ jobs:
         with:
           name: IRIS-windows-installer.exe
           path: build\windows\x64\runner\Release\IRIS-windows-installer.exe
-      - name: Create store msix
-        run: dart run msix:create --store true --output-name IRIS-windows-store
+      - name: Clean up
+        run: Remove-Item -Path build\windows\x64\runner\Release\ -Recurse -Force
+      - name: Build store msix
+        run: dart run msix:build --store true
+      - name: Remove updater
+        run: Remove-Item -Path build\windows\x64\runner\Release\iris-updater.bat -Force
+      - name: Pack store msix
+        run: dart run msix:pack --store true --output-name IRIS-windows-store
       - name: Upload msix
         uses: actions/upload-artifact@v4
         with:
