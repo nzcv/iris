@@ -3,7 +3,7 @@
 # IRIS - A lightweight video player
 
 ![ci](https://github.com/nini22P/iris/actions/workflows/ci.yml/badge.svg)
-`<a href="https://afdian.com/a/nini22P"><img alt="Afdian" style="height: 30px;" src="https://pic1.afdiancdn.com/static/img/welcome/button-sponsorme.png">``</a>`
+<a href="https://afdian.com/a/nini22P"><img alt="Afdian" style="height: 30px;" src="https://pic1.afdiancdn.com/static/img/welcome/button-sponsorme.png"></a>
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nini22p)
 
 English | [中文](./README_CN.md)
