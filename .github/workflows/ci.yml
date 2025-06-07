@@ -133,7 +133,7 @@ jobs:
         id: tag_name
         run: |
           VERSION="${{ steps.yq.outputs.result }}"
-          TAG_NAME="v${VERSION}"
+          TAG_NAME="v${VERSION%%+*}"
           echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_OUTPUT"
       - name: Check tag
         uses: mukunku/tag-exists-action@v1.6.0
