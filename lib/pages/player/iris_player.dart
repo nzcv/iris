@@ -6,40 +6,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
+import 'package:iris/globals.dart';
 import 'package:iris/hooks/use_app_lifecycle.dart';
 import 'package:iris/hooks/use_brightness.dart';
 import 'package:iris/hooks/use_cover.dart';
+import 'package:iris/hooks/use_full_screen.dart';
 import 'package:iris/hooks/use_orientation.dart';
 import 'package:iris/hooks/use_volume.dart';
 import 'package:iris/info.dart';
 import 'package:iris/models/file.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/models/storages/local.dart';
-import 'package:iris/pages/dialog/show_open_link_dialog.dart';
-import 'package:iris/pages/history.dart';
-import 'package:iris/pages/play_queue.dart';
+import 'package:iris/widgets/dialogs/show_open_link_dialog.dart';
+import 'package:iris/pages/home/history.dart';
+import 'package:iris/pages/player/play_queue.dart';
 import 'package:iris/pages/player/audio.dart';
-import 'package:iris/pages/player/control_bar_slider.dart';
-import 'package:iris/pages/player/fvp_video.dart';
-import 'package:iris/pages/show_open_link_bottom_sheet.dart';
+import 'package:iris/pages/player/control_bar/control_bar_slider.dart';
+import 'package:iris/widgets/bottom_sheets/show_open_link_bottom_sheet.dart';
 import 'package:iris/pages/settings/settings.dart';
-import 'package:iris/pages/subtitle_and_audio_track.dart';
+import 'package:iris/pages/player/subtitle_and_audio_track.dart';
 import 'package:iris/store/use_ui_store.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:iris/utils/logger.dart';
-import 'package:iris/utils/path_conv.dart';
-import 'package:iris/widgets/dark_theme.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:iris/widgets/popup.dart';
-import 'package:iris/pages/storage/storages.dart';
+import 'package:iris/pages/storages/storages.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/utils/format_duration_to_minutes.dart';
 import 'package:iris/utils/get_localizations.dart';
-import 'package:iris/utils/is_desktop.dart';
 import 'package:iris/utils/resize_window.dart';
-import 'package:iris/widgets/custom_app_bar.dart';
-import 'package:iris/pages/player/control_bar.dart';
+import 'package:iris/widgets/title_bar.dart';
+import 'package:iris/pages/player/control_bar/control_bar.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:video_player/video_player.dart';
 import 'package:window_manager/window_manager.dart';
 
 enum MediaType {
@@ -57,8 +57,9 @@ class IrisPlayer extends HookWidget {
     final MediaPlayer player = playerHooks(context);
 
     useAppLifecycle(player);
+    useFullScreen(context);
     useOrientation(context, player);
-    final cover = useCover(context);
+    final cover = useCover(context, player);
 
     final isHover = useState(false);
     final isTouch = useState(false);
@@ -84,6 +85,9 @@ class IrisPlayer extends HookWidget {
     final fit = useAppStore().select(context, (state) => state.fit);
     final autoResize =
         useAppStore().select(context, (state) => state.autoResize);
+
+    final isFullScreen =
+        useUiStore().select(context, (state) => state.isFullScreen);
 
     final playQueue =
         usePlayQueueStore().select(context, (state) => state.playQueue);
@@ -119,6 +123,24 @@ class IrisPlayer extends HookWidget {
             ? MediaType.audio
             : MediaType.video,
         [player]);
+
+    final contentColor = useMemoized(
+        () => Theme.of(context).brightness == Brightness.dark
+            ? Theme.of(context).colorScheme.onSurface
+            : Theme.of(context).colorScheme.surface,
+        [context]);
+
+    final overlayColor = useMemoized(
+        () =>
+            WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+              if (states.contains(WidgetState.pressed)) {
+                return contentColor.withValues(alpha: 0.2);
+              } else if (states.contains(WidgetState.hovered)) {
+                return contentColor.withValues(alpha: 0.2);
+              }
+              return null;
+            }),
+        [contentColor]);
 
     useEffect(() {
       if (isDesktop) {
@@ -389,15 +411,15 @@ class IrisPlayer extends HookWidget {
             break;
           // 退出全屏
           case LogicalKeyboardKey.escape:
-            if (await windowManager.isFullScreen()) {
-              windowManager.setFullScreen(false);
+            if (isDesktop && isFullScreen) {
+              useUiStore().updateFullScreen(false);
             }
             break;
           // 全屏
           case LogicalKeyboardKey.enter:
           case LogicalKeyboardKey.f11:
             if (isDesktop) {
-              windowManager.setFullScreen(!await windowManager.isFullScreen());
+              useUiStore().updateFullScreen(!isFullScreen);
             }
             break;
           case LogicalKeyboardKey.tab:
@@ -412,6 +434,10 @@ class IrisPlayer extends HookWidget {
             break;
           case LogicalKeyboardKey.minus:
             await player.stepBackward();
+            break;
+          case LogicalKeyboardKey.contextMenu:
+            showControl();
+            moreMenuKey.currentState?.showButtonMenu();
             break;
           default:
             break;
@@ -490,22 +516,19 @@ class IrisPlayer extends HookWidget {
         final files = details.files
             .map((file) => checkContentType(file.path) == ContentType.video ||
                     checkContentType(file.path) == ContentType.audio
-                ? pathConv(file.path)
+                ? file.path
                 : null)
             .where((element) => element != null)
-            .toList();
+            .toList() as List<String>;
         if (files.isNotEmpty) {
           final firstFile = files[0];
-          if (firstFile == null || firstFile.isEmpty) return;
+          if (firstFile.isEmpty) return;
           final playQueue = await getLocalPlayQueue(firstFile);
           if (playQueue == null || playQueue.playQueue.isEmpty) return;
           final List<PlayQueueItem> filteredPlayQueue = [];
           for (final item in playQueue.playQueue) {
             final file = item.file;
-            if (files
-                .map((e) => e?.join('/'))
-                .toList()
-                .contains(file.path.join('/'))) {
+            if (files.contains(file.uri)) {
               filteredPlayQueue.add(item);
             }
           }
@@ -593,12 +616,10 @@ class IrisPlayer extends HookWidget {
                         }
                       } else {
                         if (isDesktop) {
-                          if (await windowManager.isFullScreen()) {
-                            await windowManager.setFullScreen(false);
+                          if (isFullScreen) {
                             await resizeWindow(player.aspect);
-                          } else {
-                            await windowManager.setFullScreen(true);
                           }
+                          useUiStore().updateFullScreen(!isFullScreen);
                         }
                       }
                     },
@@ -754,7 +775,14 @@ class IrisPlayer extends HookWidget {
                           width: videoViewSize.width,
                           height: videoViewSize.height,
                           child: player is FvpPlayer
-                              ? FvpVideo(player: player)
+                              ? FittedBox(
+                                  fit: fit,
+                                  child: SizedBox(
+                                    width: player.width,
+                                    height: player.height,
+                                    child: VideoPlayer(player.controller),
+                                  ),
+                                )
                               : player is MediaKitPlayer
                                   ? Video(
                                       key: ValueKey(currentPlay?.file.uri),
@@ -913,12 +941,11 @@ class IrisPlayer extends HookWidget {
                   right: -28,
                   bottom: -16,
                   height: 32,
-                  child: DarkTheme(
-                    child: ControlBarSlider(
-                      player: player,
-                      showControl: showControl,
-                      disabled: true,
-                    ),
+                  child: ControlBarSlider(
+                    player: player,
+                    showControl: showControl,
+                    disabled: true,
+                    color: contentColor,
                   ),
                 ),
               if (isShowProgress.value &&
@@ -1008,14 +1035,12 @@ class IrisPlayer extends HookWidget {
                         windowManager.startDragging();
                       }
                     },
-                    child: DarkTheme(
-                      child: CustomAppBar(
-                        title: title,
-                        player: player,
-                        actions: [
-                          const SizedBox(width: 8),
-                        ],
-                      ),
+                    child: TitleBar(
+                      title: title,
+                      player: player,
+                      actions: [const SizedBox(width: 8)],
+                      color: contentColor,
+                      overlayColor: overlayColor,
                     ),
                   ),
                 ),
@@ -1046,6 +1071,8 @@ class IrisPlayer extends HookWidget {
                           player: player,
                           showControl: showControl,
                           showControlForHover: showControlForHover,
+                          color: contentColor,
+                          overlayColor: overlayColor,
                         ),
                       ),
                     ),

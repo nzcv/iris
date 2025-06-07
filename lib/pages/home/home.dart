@@ -7,8 +7,8 @@ import 'package:iris/models/store/app_state.dart';
 import 'package:iris/pages/player/iris_player.dart';
 import 'package:iris/store/use_app_store.dart';
 
-class HomePage extends HookWidget {
-  const HomePage({super.key});
+class Home extends HookWidget {
+  const Home({super.key});
 
   @override
   Widget build(BuildContext context) {

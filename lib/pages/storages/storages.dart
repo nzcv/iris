@@ -2,16 +2,18 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
-import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/storages/storage.dart';
-import 'package:iris/pages/storage/favorites.dart';
-import 'package:iris/pages/storage/files.dart';
+import 'package:iris/pages/storages/favorites.dart';
+import 'package:iris/pages/storages/files.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/path_conv.dart';
-import 'package:iris/pages/dialog/show_local_dialog.dart';
-import 'package:iris/pages/dialog/show_webdav_dialog.dart';
-import 'package:iris/pages/storage/storages_list.dart';
+import 'package:iris/widgets/dialogs/show_folder_dialog.dart';
+import 'package:iris/widgets/dialogs/show_ftp_dialog.dart';
+import 'package:iris/widgets/dialogs/show_webdav_dialog.dart';
+import 'package:iris/pages/storages/storages_list.dart';
+import 'package:iris/utils/platform.dart';
+import 'package:saf_util/saf_util.dart';
 
 class ITab {
   final String title;
@@ -31,15 +33,6 @@ class Storages extends HookWidget {
     final t = getLocalizations(context);
     final currentStorage =
         useStorageStore().select(context, (state) => state.currentStorage);
-
-    final getLocalStoragesFuture =
-        useMemoized(() => getLocalStorages(context), []);
-    final localStorages = useFuture(getLocalStoragesFuture).data ?? [];
-
-    useEffect(() {
-      useStorageStore().updateLocalStorages(localStorages);
-      return;
-    }, [localStorages]);
 
     List<ITab> tabs = [
       ITab(title: t.storage, child: const StoragesList()),
@@ -97,40 +90,66 @@ class Storages extends HookWidget {
                       onSelected: (StorageType value) {
                         switch (value) {
                           case StorageType.internal:
+                          case StorageType.network:
                           case StorageType.usb:
                           case StorageType.sdcard:
                             () async {
-                              String? selectedDirectory =
-                                  await FilePicker.platform.getDirectoryPath();
-                              if (selectedDirectory != null &&
-                                  context.mounted) {
-                                showLocalDialog(
-                                  context,
-                                  storage: LocalStorage(
-                                    type: value,
-                                    name: pathConv(selectedDirectory).last,
-                                    basePath: pathConv(selectedDirectory),
-                                  ),
+                              if (isAndroid) {
+                                final dir = await SafUtil().pickDirectory(
+                                  persistablePermission: true,
                                 );
+                                if (dir != null && context.mounted) {
+                                  showFolderDialog(
+                                    context,
+                                    storage: LocalStorage(
+                                      type: value,
+                                      name: dir.name,
+                                      basePath: [dir.uri],
+                                    ),
+                                  );
+                                }
+                              } else {
+                                String? selectedDirectory = await FilePicker
+                                    .platform
+                                    .getDirectoryPath();
+
+                                if (selectedDirectory != null &&
+                                    context.mounted) {
+                                  showFolderDialog(
+                                    context,
+                                    storage: LocalStorage(
+                                      type: value,
+                                      name: pathConv(selectedDirectory).last,
+                                      basePath: pathConv(selectedDirectory),
+                                    ),
+                                  );
+                                }
                               }
                             }();
                             break;
                           case StorageType.webdav:
                             showWebDAVDialog(context);
                             break;
-                          default:
+                          case StorageType.ftp:
+                            showFTPDialog(context);
+                            break;
+                          case StorageType.none:
                             break;
                         }
                       },
                       itemBuilder: (BuildContext context) {
                         return [
-                          // PopupMenuItem<StorageType>(
-                          //   value: StorageType.internal,
-                          //   child: Text(t.local_storage),
-                          // ),
+                          PopupMenuItem<StorageType>(
+                            value: StorageType.internal,
+                            child: Text(t.folder),
+                          ),
                           const PopupMenuItem<StorageType>(
                             value: StorageType.webdav,
                             child: Text('WebDAV'),
+                          ),
+                          PopupMenuItem<StorageType>(
+                            value: StorageType.ftp,
+                            child: Text('FTP'),
                           ),
                         ];
                       },

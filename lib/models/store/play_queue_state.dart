@@ -6,7 +6,7 @@ part 'play_queue_state.freezed.dart';
 part 'play_queue_state.g.dart';
 
 @freezed
-class PlayQueueState with _$PlayQueueState {
+abstract class PlayQueueState with _$PlayQueueState {
   const factory PlayQueueState({
     @Default([]) List<PlayQueueItem> playQueue,
     @Default(0) int currentIndex,

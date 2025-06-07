@@ -6,7 +6,7 @@ part 'storage_state.freezed.dart';
 part 'storage_state.g.dart';
 
 @freezed
-class Favorite with _$Favorite {
+abstract class Favorite with _$Favorite {
   factory Favorite({
     required String storageId,
     required List<String> path,
@@ -17,9 +17,8 @@ class Favorite with _$Favorite {
 }
 
 @freezed
-class StorageState with _$StorageState {
+abstract class StorageState with _$StorageState {
   factory StorageState({
-    @Default([]) List<LocalStorage> localStorages,
     @Default([]) List<Storage> storages,
     @Default([]) List<Favorite> favorites,
     @Default(null) Storage? currentStorage,

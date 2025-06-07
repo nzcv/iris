@@ -9,7 +9,7 @@ Future<String> getExecutableDirPath() async {
 
 Future<String> getTempPath() async {
   final directory = await getTemporaryDirectory();
-  final String tempPath = p.join(directory.path, 'Iris');
+  final String tempPath = p.join(directory.path, 'IRIS');
   if (!Directory(tempPath).existsSync()) {
     Directory(tempPath).createSync(recursive: true);
   }

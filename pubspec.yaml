@@ -1,7 +1,7 @@
 name: iris
 description: "A lightweight video player"
 publish_to: 'none'
-version: 1.3.4+3
+version: 1.4.0+3
 
 environment:
   sdk: ^3.5.4
@@ -13,9 +13,9 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
-  file_picker: ^8.1.4
+  file_picker: ^10.1.9
   flutter_breadcrumb: ^1.0.1
-  flutter_hooks: ^0.20.5
+  flutter_hooks: ^0.21.2
   flutter_secure_storage: ^8.1.0
   flutter_zustand: ^0.0.5
   media_kit: ^1.1.11
@@ -26,7 +26,7 @@ dependencies:
   package_info_plus: ^8.1.1
   provider: ^6.1.2
   webdav_client: ^1.2.2
-  window_manager: ^0.4.3
+  window_manager: ^0.5.0
   url_launcher: ^6.3.1
   scrollable_positioned_list: ^0.3.8
   google_fonts: ^6.2.1
@@ -37,36 +37,54 @@ dependencies:
   http: ^1.2.2
   collection: ^1.19.0
   json_annotation: ^4.9.0
-  freezed_annotation: ^2.4.4
+  freezed_annotation: ^3.0.0
   disks_desktop: ^1.0.1
   android_x_storage: ^1.0.2
-  permission_handler: ^11.3.1
-  desktop_drop: ^0.5.0
+  permission_handler: ^12.0.0+1
+  desktop_drop: ^0.6.0
   app_links: ^6.3.3
   device_info_plus: ^11.2.1
-  saf_util: ^0.6.2
-  screen_brightness: ^0.2.2
+  saf_util: ^0.10.0
+  screen_brightness: ^2.1.4
   flutter_volume_controller: ^1.3.3
-  # fvp: ^0.29.0
-  fvp:
-    git:
-      url: https://github.com/wang-bin/fvp
-      ref: master
+  fvp: ^0.32.1
   video_player: ^2.9.2
   wakelock_plus: ^1.2.10
   popover: ^0.3.1
+  pure_ftp: ^0.7.5
+  drives_windows:
+    git:
+      url: https://github.com/nini22P/drives_windows
+      ref: main
+  media_stream:
+    git:
+      url: https://github.com/nini22P/media_stream
+      ref: main
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   flutter_oss_licenses: ^3.0.4
   build_runner: ^2.4.14
-  freezed: ^2.5.8
+  freezed: ^3.0.6
   json_serializable: ^6.9.3
+  msix: ^3.16.9
 
 flutter:
   generate: true
   uses-material-design: true
   assets:
     - assets/images/
+
+msix_config:
+  display_name: IRIS player
+  identity_name: 22P.IRISplayer
+  publisher_display_name: 22P
+  publisher: CN=9740B6B2-E777-4F52-8ECD-C4A577A73010
+  msix_version: 1.4.0.0
+  logo_path: assets/images/icon.png
+  trimLogo: false
+  languages: en-us, zh-cn
+  execution_alias: iris
+  file_extension: .3gp, .avi, .dpx, .dv, .f4v, .flv, .he264, .hevc, .h265, .mkv, .mp4, .mpeg, .mpg, .mov, .nsv, .rm, .rmvb, .ts, .vob, .webm, .wmv, .aac, .aiff, .alac, .cda, .dsd, .flac, .m4a, .midi, .mp3, .ogg, .opus, .raw, .wav, .wma

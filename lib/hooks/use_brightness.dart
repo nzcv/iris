@@ -10,7 +10,7 @@ ValueNotifier<double?> useBrightness(bool isGesture) {
     try {
       () async {
         if (!isGesture) return;
-        brightness.value = await ScreenBrightness().current;
+        brightness.value = await ScreenBrightness.instance.application;
       }();
     } catch (e) {
       logger('Error getting brightness: $e');
@@ -21,7 +21,8 @@ ValueNotifier<double?> useBrightness(bool isGesture) {
   useEffect(() {
     try {
       if (brightness.value != null && isGesture) {
-        ScreenBrightness().setScreenBrightness(brightness.value!);
+        ScreenBrightness.instance
+            .setApplicationScreenBrightness(brightness.value!);
       }
     } catch (e) {
       logger('Error setting brightness: $e');
@@ -33,7 +34,7 @@ ValueNotifier<double?> useBrightness(bool isGesture) {
   useEffect(
     () => () {
       try {
-        ScreenBrightness().resetScreenBrightness();
+        ScreenBrightness.instance.resetApplicationScreenBrightness();
       } catch (e) {
         logger('Error resetting brightness: $e');
       }

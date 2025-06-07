@@ -3,7 +3,7 @@ import 'package:path/path.dart' as p;
 
 List<String> pathConv(String path) {
   try {
-    String normalizedPath = p.normalize(path);
+    String normalizedPath = p.normalize(path.trim());
 
     if (normalizedPath.isEmpty || normalizedPath == '.') {
       return [];
@@ -13,11 +13,21 @@ List<String> pathConv(String path) {
       return ['/'];
     }
 
-    return normalizedPath
+    final List<String> result = normalizedPath
         .replaceAll('\\', '/')
         .split('/')
         .where((element) => element.isNotEmpty)
         .toList();
+
+    if (path.startsWith('\\\\')) {
+      return ['\\\\${result[0]}', ...result.sublist(1)];
+    }
+
+    if (path.startsWith('/')) {
+      return ['/', ...result];
+    }
+
+    return result;
   } on FormatException catch (e) {
     logger("Error decoding: $e");
     return [];

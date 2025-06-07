@@ -1,8 +1,8 @@
 @echo off
-title Iris Updater
+title IRIS Updater
 setlocal enabledelayedexpansion
 
-set "api_url=https://api.github.com/repos/nini22P/Iris/releases/latest"
+set "api_url=https://api.github.com/repos/nini22P/iris/releases/latest"
 set "download_folder=%~dp0temps"
 
 :: Try to delete the download folder if it exists
@@ -35,42 +35,42 @@ goto :end
 
 :version_found
 
-set "download_url=https://github.com/nini22P/Iris/releases/latest/download/Iris-windows.zip"
-set "zip_file=%download_folder%\Iris-windows.zip"
+set "download_url=https://github.com/nini22P/iris/releases/latest/download/IRIS-windows.zip"
+set "zip_file=%download_folder%\IRIS-windows.zip"
 set "extract_folder=%download_folder%"
 
-title Download Iris !version_tag!
+title Download IRIS !version_tag!
 
 where curl >nul 2>nul
 if %errorlevel% equ 0 (
-    echo Download Iris !version_tag!
+    echo Download IRIS !version_tag!
     curl -L -o "%zip_file%" "%download_url%"
     if %errorlevel% neq 0 (
         echo Error downloading file with curl.
         exit /b 1
     )
 ) else (
-    echo Download Iris !version_tag!
+    echo Download IRIS !version_tag!
     powershell -Command "try { Invoke-WebRequest -Uri '%download_url%' -OutFile '%zip_file%' } catch { Write-Host 'Error downloading file: ' $_.Exception.Message; exit 1 }"
 )
 
 if not exist "%zip_file%" (
-    echo Error: Failed to download Iris-windows.zip.
+    echo Error: Failed to download IRIS-windows.zip.
     goto :end
 )
 
-echo Extracting Iris-windows.zip...
+echo Extracting IRIS-windows.zip...
 powershell -Command "try { Add-Type -Assembly 'System.IO.Compression.FileSystem'; [System.IO.Compression.ZipFile]::ExtractToDirectory('%zip_file%', '%extract_folder%'); } catch { Write-Host 'Error extracting zip: ' $_.Exception.Message; exit 1 }"
 
-:: Check if Iris folder exists before moving
-if not exist "%extract_folder%\Iris" (
-    echo Error: "Iris" folder not found within the extracted files.
+:: Check if IRIS folder exists before moving
+if not exist "%extract_folder%\IRIS" (
+    echo Error: "IRIS" folder not found within the extracted files.
     goto :cleanup
 )
 
 echo Starting file move and cleanup...
 :: Start a new cmd window to perform move and cleanup, then current bat will close
-start cmd /c "timeout /t 2 /nobreak && xcopy temps\Iris\* .\ /E /I /Y && rd /s /q temps && start iris"
+start cmd /c "timeout /t 2 /nobreak && xcopy temps\IRIS\* .\ /E /I /Y && rd /s /q temps && start iris"
 
 :cleanup
 exit

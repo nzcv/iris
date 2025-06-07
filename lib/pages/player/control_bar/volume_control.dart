@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
-import 'package:iris/pages/player/volume_slider.dart';
+import 'package:iris/pages/player/control_bar/volume_slider.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:popover/popover.dart';
@@ -31,10 +31,14 @@ class VolumeControl extends HookWidget {
     super.key,
     required this.showControl,
     this.showVolumeText = true,
+    this.color,
+    this.overlayColor,
   });
 
   final void Function() showControl;
   final bool showVolumeText;
+  final Color? color;
+  final WidgetStateProperty<Color?>? overlayColor;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +75,7 @@ class VolumeControl extends HookWidget {
                       ? Icons.volume_down_rounded
                       : Icons.volume_up_rounded,
               size: 20,
+              color: color,
             ),
             onPressed: () {
               showControl();
@@ -80,9 +85,13 @@ class VolumeControl extends HookWidget {
                 useAppStore().toggleMute();
               }
             },
+            style: ButtonStyle(overlayColor: overlayColor),
           ),
           Expanded(
-            child: VolumeSlider(showControl: showControl),
+            child: VolumeSlider(
+              showControl: showControl,
+              color: color,
+            ),
           ),
           if (showVolumeText) const SizedBox(width: 8),
           if (showVolumeText) Text('${volume >= 100 ? '' : '  '}$volume'),

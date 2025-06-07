@@ -9,12 +9,14 @@ class ControlBarSlider extends HookWidget {
     required this.player,
     required this.showControl,
     this.disabled = false,
+    this.color,
   });
 
   final MediaPlayer player;
 
   final void Function() showControl;
   final bool disabled;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,7 @@ class ControlBarSlider extends HookWidget {
               child: Text(
                 formatDurationToMinutes(player.position),
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: color,
                   height: 2,
                 ),
               ),
@@ -36,55 +38,41 @@ class ControlBarSlider extends HookWidget {
             Expanded(
               child: Stack(
                 children: [
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        thumbShape: const RoundSliderThumbShape(
-                          disabledThumbRadius: 0,
-                          elevation: 0,
-                          pressedElevation: 0,
-                        ),
-                        overlayShape: const RoundSliderOverlayShape(
-                          overlayRadius: 12,
-                        ),
-                        trackShape: const RoundedActiveTrackShape(),
-                        trackHeight: 3,
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      disabledActiveTrackColor: color?.withAlpha(111),
+                      thumbShape: const RoundSliderThumbShape(
+                        disabledThumbRadius: 0,
+                        elevation: 0,
+                        pressedElevation: 0,
                       ),
-                      child: Slider(
-                        value: player.buffer.inSeconds.toDouble() >
-                                player.duration.inSeconds.toDouble()
-                            ? 0
-                            : player.buffer.inSeconds.toDouble(),
-                        min: 0,
-                        max: player.duration.inSeconds.toDouble(),
-                        onChanged: null,
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 12,
                       ),
+                      trackShape: const RoundedActiveTrackShape(),
+                      trackHeight: 3,
+                    ),
+                    child: Slider(
+                      value: player.buffer.inSeconds.toDouble() >
+                              player.duration.inSeconds.toDouble()
+                          ? 0
+                          : player.buffer.inSeconds.toDouble(),
+                      min: 0,
+                      max: player.duration.inSeconds.toDouble(),
+                      onChanged: null,
                     ),
                   ),
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      thumbColor:
-                          Theme.of(context).colorScheme.onSurfaceVariant,
+                      thumbColor: color,
+                      activeTrackColor: color?.withAlpha(222),
+                      inactiveTrackColor: color?.withAlpha(99),
                       thumbShape: RoundSliderThumbShape(
                         enabledThumbRadius: disabled ? 0 : 6,
                       ),
-                      disabledThumbColor: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant
-                          .withAlpha(222),
                       overlayShape: const RoundSliderOverlayShape(
                         overlayRadius: 12,
                       ),
-                      activeTrackColor:
-                          Theme.of(context).colorScheme.onSurfaceVariant,
-                      inactiveTrackColor: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant
-                          .withAlpha(99),
                       trackShape:
                           disabled ? const RoundedActiveTrackShape() : null,
                       trackHeight: 4,
@@ -124,7 +112,7 @@ class ControlBarSlider extends HookWidget {
               child: Text(
                 formatDurationToMinutes(player.duration),
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: color,
                   height: 2,
                 ),
               ),

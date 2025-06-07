@@ -1,8 +1,9 @@
-name: CI
+name: ci
 on:
   push:
     branches: 
       - main
+      - dev
     paths-ignore:
       - README.md
       - README_CN.md
@@ -15,7 +16,6 @@ on:
 
 jobs:
   build-windows:
-    name: Build Windows
     runs-on: windows-latest
     steps:
       - name: Clone repository
@@ -31,26 +31,40 @@ jobs:
       - name: Create ZIP archive
         run: |
           # Create a directory to hold the files
-          mkdir Iris
-          # Move the build output to the Iris directory
-          Move-Item -Path "build\windows\x64\runner\Release\*" -Destination "Iris" -Force
+          mkdir IRIS
+          # Copy the build output to the IRIS directory
+          Copy-Item -Path "build\windows\x64\runner\Release\*" -Destination "IRIS" -Force
           # Create a ZIP file
-          Compress-Archive -Path "Iris" -DestinationPath "Iris-windows.zip"
+          Compress-Archive -Path "IRIS" -DestinationPath "IRIS-windows.zip"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Iris-windows
-          path: Iris-windows.zip
-      - name: Rename ZIP archive
-        run: Rename-Item -Path "Iris-windows.zip" -NewName "Iris_windows.zip"
-      - name: Upload artifact
+          name: IRIS-windows.zip
+          path: IRIS-windows.zip
+      - name: Remove updater
+        run: Remove-Item -Path build\windows\x64\runner\Release\iris-updater.bat -Force
+      - name: Create installer
+        run: iscc inno.iss
+      - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: Iris_windows
-          path: Iris_windows.zip
+          name: IRIS-windows-installer.exe
+          path: build\windows\x64\runner\Release\IRIS-windows-installer.exe
+      - name: Clean up
+        run: Remove-Item -Path build\windows\x64\runner\Release\ -Recurse -Force
+      - name: Build store msix
+        run: dart run msix:build --store true
+      - name: Remove updater
+        run: Remove-Item -Path build\windows\x64\runner\Release\iris-updater.bat -Force
+      - name: Pack store msix
+        run: dart run msix:pack --store true --output-name IRIS-windows-store
+      - name: Upload msix
+        uses: actions/upload-artifact@v4
+        with:
+          name: IRIS-windows-store.msix
+          path: build\windows\x64\runner\Release\IRIS-windows-store.msix
 
   build-android:
-    name: Build Android
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
@@ -78,32 +92,33 @@ jobs:
       - name: Build Flutter application for Android
         run: flutter build apk --split-per-abi
       - name: Rename armeabi-v7a APK
-        run: mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk Iris-android-armeabi-v7a.apk
+        run: mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk IRIS-android-armeabi-v7a.apk
       - name: Rename arm64-v8a APK
-        run: mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk Iris-android-arm64-v8a.apk
+        run: mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk IRIS-android-arm64-v8a.apk
       - name: Rename x86_64 APK
-        run: mv build/app/outputs/flutter-apk/app-x86_64-release.apk Iris-android-x86_64.apk
+        run: mv build/app/outputs/flutter-apk/app-x86_64-release.apk IRIS-android-x86_64.apk
       - name: Upload armeabi-v7a APK
         uses: actions/upload-artifact@v4
         with:
-          name: Iris-android-armeabi-v7a
-          path: Iris-android-armeabi-v7a.apk
+          name: IRIS-android-armeabi-v7a.apk
+          path: IRIS-android-armeabi-v7a.apk
       - name: Upload arm64-v8a APK
         uses: actions/upload-artifact@v4
         with:
-          name: Iris-android-arm64-v8a
-          path: Iris-android-arm64-v8a.apk
+          name: IRIS-android-arm64-v8a.apk
+          path: IRIS-android-arm64-v8a.apk
       - name: Upload x86_64 APK
         uses: actions/upload-artifact@v4
         with:
-          name: Iris-android-x86_64
-          path: Iris-android-x86_64.apk
+          name: IRIS-android-x86_64.apk
+          path: IRIS-android-x86_64.apk
 
   release:
-    name: Release
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [build-windows, build-android]
+    needs:
+      - build-windows
+      - build-android
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -114,34 +129,39 @@ jobs:
           cmd: yq '.version' 'pubspec.yaml'
       - name: Print version
         run: echo ${{ steps.yq.outputs.result }}
-      - name: Create Tag
-        id: create_tag
+      - name: Prepare tag name
+        id: tag_name
         run: |
           VERSION="${{ steps.yq.outputs.result }}"
-          TAG_NAME="v${VERSION%%+*}"
+          TAG_NAME="v${VERSION}"
           echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_OUTPUT"
-          echo "Creating new tag $TAG_NAME..."
-          git tag "$TAG_NAME"
-          git push origin "$TAG_NAME"
+      - name: Check tag
+        uses: mukunku/tag-exists-action@v1.6.0
+        id: check-tag
+        with:
+          tag: ${{ steps.tag_name.outputs.TAG_NAME }}
       - name: Eextract log
-        run: python extract_log.py ${{ steps.create_tag.outputs.TAG_NAME }}
+        if: steps.check-tag.outputs.exists == 'false'
+        run: python extract_log.py ${{ steps.tag_name.outputs.TAG_NAME }}
       - name: Download artifact
+        if: steps.check-tag.outputs.exists == 'false'
         uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
       - name: Release
+        if: steps.check-tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.create_tag.outputs.TAG_NAME }}
-          body_path: CHANGELOG_${{ steps.create_tag.outputs.TAG_NAME }}.md
+          tag_name: ${{ steps.tag_name.outputs.TAG_NAME }}
+          body_path: CHANGELOG_${{ steps.tag_name.outputs.TAG_NAME }}.md
           draft: false
           prerelease: false
           files: |
-            artifacts/Iris-windows.zip
-            artifacts/Iris_windows.zip
-            artifacts/Iris-android-armeabi-v7a.apk
-            artifacts/Iris-android-arm64-v8a.apk
-            artifacts/Iris-android-x86_64.apk
+            artifacts/IRIS-windows.zip
+            artifacts/IRIS-windows-installer.exe
+            artifacts/IRIS-android-armeabi-v7a.apk
+            artifacts/IRIS-android-arm64-v8a.apk
+            artifacts/IRIS-android-x86_64.apk

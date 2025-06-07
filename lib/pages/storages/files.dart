@@ -19,7 +19,7 @@ import 'package:iris/utils/file_size_convert.dart';
 import 'package:iris/utils/files_sort.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/request_storage_permission.dart';
-import 'package:iris/widgets/custom_chip.dart';
+import 'package:iris/widgets/app_chip.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -47,8 +47,7 @@ class Files extends HookWidget {
 
     final currentFavorite = useMemoized(
         () => favorites.firstWhereOrNull((favorite) =>
-            favorite.storageId == storage.id &&
-            favorite.path.join('/') == currentPath.join('/')),
+            favorite.storageId == storage.id && favorite.path == currentPath),
         [favorites, currentPath]);
 
     useEffect(() {
@@ -218,7 +217,7 @@ class Files extends HookWidget {
                                                   progress.position
                                                       .inMilliseconds) <=
                                               5000) {
-                                            return CustomChip(text: '100%');
+                                            return AppChip(text: '100%');
                                           }
                                           final String progressString =
                                               (progress.position
@@ -227,7 +226,7 @@ class Files extends HookWidget {
                                                           .inMilliseconds *
                                                       100)
                                                   .toStringAsFixed(0);
-                                          return CustomChip(
+                                          return AppChip(
                                               text: '$progressString %');
                                         } else {
                                           return const SizedBox();
@@ -246,7 +245,7 @@ class Files extends HookWidget {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 const SizedBox(width: 4),
-                                                CustomChip(
+                                                AppChip(
                                                   text: subtitleType,
                                                   primary: true,
                                                 ),
@@ -309,7 +308,12 @@ class Files extends HookWidget {
             builder: (index) {
               return BreadCrumbItem(
                 content: TextButton(
-                  child: Text([storage.name, ...currentPath.sublist(1)][index]),
+                  child: Text([
+                    storage.basePath.length > 1
+                        ? currentPath.first
+                        : storage.name,
+                    ...currentPath.sublist(1),
+                  ][index]),
                   onPressed: () {
                     useStorageStore()
                         .updateCurrentPath(currentPath.sublist(0, index + 1));
@@ -446,7 +450,11 @@ class Files extends HookWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  currentPath.length > 1 ? currentPath.last : storage.name,
+                  currentPath.length > 1
+                      ? currentPath.last
+                      : storage.basePath.length > 1
+                          ? currentPath.first
+                          : storage.name,
                   maxLines: 1,
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,

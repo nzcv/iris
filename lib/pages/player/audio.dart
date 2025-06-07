@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:iris/models/file.dart';
+import 'package:iris/models/storages/storage.dart';
 import 'package:iris/store/use_storage_store.dart';
 
 class Audio extends HookWidget {
@@ -29,7 +30,7 @@ class Audio extends HookWidget {
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
             child: cover != null
-                ? cover?.storageId == 'local'
+                ? cover?.storageId == localStorageId
                     ? Image.file(
                         File(cover!.uri),
                         fit: BoxFit.cover,
@@ -58,7 +59,7 @@ class Audio extends HookWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: cover != null
-                      ? cover!.storageId == 'local'
+                      ? cover!.storageId == localStorageId
                           ? Image.file(
                               File(cover!.uri),
                               fit: BoxFit.contain,

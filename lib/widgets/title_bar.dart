@@ -5,26 +5,33 @@ import 'package:iris/info.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/store/use_ui_store.dart';
 import 'package:iris/utils/get_localizations.dart';
-import 'package:iris/utils/is_desktop.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:window_manager/window_manager.dart';
 
-class CustomAppBar extends HookWidget {
-  const CustomAppBar({
+class TitleBar extends HookWidget {
+  const TitleBar({
     super.key,
     this.title,
     required this.player,
     this.actions,
+    this.color,
+    this.overlayColor,
   });
+
   final String? title;
   final MediaPlayer player;
   final List<Widget>? actions;
+  final Color? color;
+  final WidgetStateProperty<Color?>? overlayColor;
 
   @override
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
     final isAlwaysOnTop =
         useUiStore().select(context, (state) => state.isAlwaysOnTop);
+    final isFullScreen =
+        useUiStore().select(context, (state) => state.isFullScreen);
 
     return Container(
       padding: isDesktop
@@ -56,7 +63,7 @@ class CustomAppBar extends HookWidget {
                   style: TextStyle(
                     fontSize: 16,
                     overflow: TextOverflow.ellipsis,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: color,
                   ),
                 ),
               ),
@@ -64,26 +71,18 @@ class CustomAppBar extends HookWidget {
                 children: [
                   ...actions ?? [],
                   if (isDesktop) ...[
-                    FutureBuilder<Map<String, bool>>(
+                    FutureBuilder<bool>(
                       future: () async {
-                        final isFullScreen =
-                            isDesktop && await windowManager.isFullScreen();
                         final isMaximized =
                             isDesktop && await windowManager.isMaximized();
 
-                        return {
-                          'isFullScreen': isFullScreen,
-                          'isMaximized': isMaximized,
-                        };
+                        return isMaximized;
                       }(),
                       builder: (
                         BuildContext context,
-                        AsyncSnapshot<Map<String, bool>> snapshot,
+                        AsyncSnapshot<bool> snapshot,
                       ) {
-                        final isFullScreen =
-                            snapshot.data?['isFullScreen'] ?? false;
-                        final isMaximized =
-                            snapshot.data?['isMaximized'] ?? false;
+                        final isMaximized = snapshot.data ?? false;
 
                         return Row(
                           children: [
@@ -98,8 +97,10 @@ class CustomAppBar extends HookWidget {
                                       ? Icons.push_pin_rounded
                                       : Icons.push_pin_outlined,
                                   size: 18,
+                                  color: color,
                                 ),
                                 onPressed: useUiStore().toggleIsAlwaysOnTop,
+                                style: ButtonStyle(overlayColor: overlayColor),
                               ),
                             ),
                             Visibility(
@@ -113,22 +114,26 @@ class CustomAppBar extends HookWidget {
                                       ? Icons.close_fullscreen_rounded
                                       : Icons.open_in_full_rounded,
                                   size: 18,
+                                  color: color,
                                 ),
                                 onPressed: () async {
                                   if (isFullScreen) {
-                                    await windowManager.setFullScreen(false);
                                     await resizeWindow(player.aspect);
-                                  } else {
-                                    await windowManager.setFullScreen(true);
                                   }
+                                  useUiStore().updateFullScreen(!isFullScreen);
                                 },
+                                style: ButtonStyle(overlayColor: overlayColor),
                               ),
                             ),
                             Visibility(
                               visible: !isFullScreen,
                               child: IconButton(
                                 onPressed: () => windowManager.minimize(),
-                                icon: const Icon(Icons.remove_rounded),
+                                icon: Icon(
+                                  Icons.remove_rounded,
+                                  color: color,
+                                ),
+                                style: ButtonStyle(overlayColor: overlayColor),
                               ),
                             ),
                             Visibility(
@@ -143,17 +148,20 @@ class CustomAppBar extends HookWidget {
                                   }
                                 },
                                 icon: isMaximized
-                                    ? const RotatedBox(
+                                    ? RotatedBox(
                                         quarterTurns: 2,
                                         child: Icon(
                                           Icons.filter_none_rounded,
                                           size: 18,
+                                          color: color,
                                         ),
                                       )
-                                    : const Icon(
+                                    : Icon(
                                         Icons.crop_din_rounded,
                                         size: 20,
+                                        color: color,
                                       ),
+                                style: ButtonStyle(overlayColor: overlayColor),
                               ),
                             ),
                           ],
@@ -165,7 +173,10 @@ class CustomAppBar extends HookWidget {
                         await player.saveProgress();
                         windowManager.close();
                       },
-                      icon: const Icon(Icons.close_rounded),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: color,
+                      ),
                       style: ButtonStyle(
                         overlayColor: WidgetStateProperty.resolveWith<Color?>(
                             (Set<WidgetState> states) {

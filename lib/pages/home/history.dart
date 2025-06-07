@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
@@ -9,39 +11,36 @@ import 'package:iris/store/use_history_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/utils/file_size_convert.dart';
 import 'package:iris/utils/get_localizations.dart';
-import 'package:iris/widgets/custom_chip.dart';
+import 'package:iris/widgets/app_chip.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-class PlayQueue extends HookWidget {
-  const PlayQueue({super.key});
+class History extends HookWidget {
+  const History({super.key});
 
   @override
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
-    final playQueue =
-        usePlayQueueStore().select(context, (state) => state.playQueue);
-    final currentIndex =
-        usePlayQueueStore().select(context, (state) => state.currentIndex);
+    final Map<String, Progress> history =
+        useHistoryStore().select(context, (state) => state.history);
 
-    final int currentPlayIndex = useMemoized(
-        () => playQueue.indexWhere((element) => element.index == currentIndex),
-        [playQueue, currentIndex]);
+    final List<MapEntry<String, Progress>> historyList = useMemoized(() {
+      final entries = history.entries.toList();
+      entries.sort((a, b) => b.value.dateTime.compareTo(a.value.dateTime));
+      return entries.sublist(0, min(entries.length, 100));
+    }, [history]);
 
-    ItemScrollController itemScrollController = ItemScrollController();
-    ScrollOffsetController scrollOffsetController = ScrollOffsetController();
-    ItemPositionsListener itemPositionsListener =
-        ItemPositionsListener.create();
-    ScrollOffsetListener scrollOffsetListener = ScrollOffsetListener.create();
+    Future<void> play(int index) async {
+      await useAppStore().updateAutoPlay(true);
 
-    useEffect(() {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (itemScrollController.isAttached && playQueue.isNotEmpty) {
-          itemScrollController.jumpTo(
-              index: currentPlayIndex - 3 < 0 ? 0 : currentPlayIndex - 1);
-        }
-      });
-      return;
-    }, []);
+      final playQueue = historyList
+          .asMap()
+          .map((index, entry) => MapEntry(
+              index, PlayQueueItem(file: entry.value.file, index: index)))
+          .values
+          .toList();
+
+      usePlayQueueStore().update(playQueue: playQueue, index: index);
+    }
 
     return Column(
       children: [
@@ -53,12 +52,8 @@ class PlayQueue extends HookWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: ScrollablePositionedList.builder(
-              itemCount: playQueue.length,
+              itemCount: historyList.length,
               itemBuilder: (context, index) => ListTile(
-                autofocus: currentPlayIndex == index,
-                tileColor: currentPlayIndex == index
-                    ? Theme.of(context).hoverColor
-                    : null,
                 contentPadding: const EdgeInsets.fromLTRB(12, 0, 8, 0),
                 visualDensity:
                     const VisualDensity(horizontal: -4, vertical: -4),
@@ -71,47 +66,38 @@ class PlayQueue extends HookWidget {
                 ),
                 minLeadingWidth: 14,
                 title: Text(
-                  playQueue[index].file.name,
+                  historyList[index].value.file.name,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: currentPlayIndex == index
-                      ? TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        )
-                      : null,
                 ),
                 subtitle: Row(
                   children: [
-                    if (playQueue[index].file.size > 0)
-                      Text("${fileSizeConvert(playQueue[index].file.size)} MB",
-                          style: TextStyle(
-                              fontSize: 13,
-                              color: currentPlayIndex == index
-                                  ? Theme.of(context).colorScheme.primary
-                                  : null)),
+                    if (historyList[index].value.file.size > 0)
+                      Text(
+                          "${fileSizeConvert(historyList[index].value.file.size)} MB"),
                     const Spacer(),
                     () {
                       final Progress? progress = useHistoryStore()
-                          .findById(playQueue[index].file.getID());
+                          .findById(historyList[index].value.file.getID());
                       if (progress != null &&
                           progress.file.type == ContentType.video) {
                         if ((progress.duration.inMilliseconds -
                                 progress.position.inMilliseconds) <=
                             5000) {
-                          return CustomChip(text: '100%');
+                          return AppChip(text: '100%');
                         }
                         final String progressString =
                             (progress.position.inMilliseconds /
                                     progress.duration.inMilliseconds *
                                     100)
                                 .toStringAsFixed(0);
-                        return CustomChip(text: '$progressString %');
+                        return AppChip(text: '$progressString %');
                       } else {
                         return const SizedBox();
                       }
                     }(),
-                    ...playQueue[index]
+                    ...historyList[index]
+                        .value
                         .file
                         .subtitles
                         .map((subtitle) =>
@@ -123,7 +109,7 @@ class PlayQueue extends HookWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const SizedBox(width: 4),
-                              CustomChip(
+                              AppChip(
                                 text: subtitleType,
                                 primary: true,
                               ),
@@ -137,41 +123,40 @@ class PlayQueue extends HookWidget {
                   constraints: const BoxConstraints(minWidth: 200),
                   onSelected: (value) async {
                     switch (value) {
+                      case FileOptions.addToPlayQueue:
+                        usePlayQueueStore()
+                            .add([historyList[index].value.file]);
+                        break;
                       case FileOptions.remove:
-                        usePlayQueueStore().remove(playQueue[index]);
+                        useHistoryStore().remove(historyList[index].value);
                         break;
                       case FileOptions.openInFolder:
-                        await openInFolder(context, playQueue[index].file);
-                        break;
-                      default:
+                        await openInFolder(
+                            context, historyList[index].value.file);
                         break;
                     }
                   },
                   itemBuilder: (context) => [
                     PopupMenuItem(
+                      value: FileOptions.addToPlayQueue,
+                      child: Text(t.add_to_play_queue),
+                    ),
+                    PopupMenuItem(
                       value: FileOptions.remove,
                       child: Text(t.remove),
                     ),
-                    if (playQueue[index].file.path.isNotEmpty)
+                    if (historyList[index].value.file.path.isNotEmpty)
                       PopupMenuItem(
                         value: FileOptions.openInFolder,
                         child: Text(t.open_in_folder),
                       ),
                   ],
                 ),
-                onTap: () async {
-                  await useAppStore().updateAutoPlay(true);
-                  usePlayQueueStore()
-                      .updateCurrentIndex(playQueue[index].index);
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
+                onTap: () {
+                  play(index);
+                  Navigator.of(context).pop();
                 },
               ),
-              itemScrollController: itemScrollController,
-              scrollOffsetController: scrollOffsetController,
-              itemPositionsListener: itemPositionsListener,
-              scrollOffsetListener: scrollOffsetListener,
             ),
           ),
         ),
@@ -184,7 +169,7 @@ class PlayQueue extends HookWidget {
           child: Row(
             children: [
               Text(
-                t.play_queue,
+                t.history,
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               const Spacer(),

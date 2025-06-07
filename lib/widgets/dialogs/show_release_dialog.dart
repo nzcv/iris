@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:iris/utils/file_size_convert.dart';
-import 'package:iris/utils/is_desktop.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -28,8 +28,20 @@ class ReleaseDialog extends HookWidget {
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
 
+    final updateScriptIsExists = useState(false);
+
+    useEffect(() {
+      if (isWindows) {
+        String resolvedExecutablePath = Platform.resolvedExecutable;
+        String path = p.dirname(resolvedExecutablePath);
+        String batFilePath = p.join(path, 'iris-updater.bat');
+        updateScriptIsExists.value = File(batFilePath).existsSync();
+      }
+      return null;
+    }, []);
+
     void update() async {
-      if (Platform.isWindows) {
+      if (isWindows) {
         String resolvedExecutablePath = Platform.resolvedExecutable;
         String path = p.dirname(resolvedExecutablePath);
         String batFilePath = p.join(path, 'iris-updater.bat');
@@ -81,7 +93,7 @@ class ReleaseDialog extends HookWidget {
         //   ),
         // ),
         Visibility(
-          visible: isDesktop,
+          visible: isDesktop && updateScriptIsExists.value,
           child: TextButton(
             onPressed: update,
             child: Text(

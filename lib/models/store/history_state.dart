@@ -6,7 +6,7 @@ part 'history_state.freezed.dart';
 part 'history_state.g.dart';
 
 @freezed
-class HistoryState with _$HistoryState {
+abstract class HistoryState with _$HistoryState {
   const factory HistoryState({
     @Default({}) Map<String, Progress> history,
   }) = _HistoryState;

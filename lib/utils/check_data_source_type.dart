@@ -10,10 +10,12 @@ DataSourceType checkDataSourceType(FileItem file) {
 
   switch (file.storageType) {
     case StorageType.internal:
+    case StorageType.network:
     case StorageType.sdcard:
     case StorageType.usb:
       return DataSourceType.file;
     case StorageType.webdav:
+    case StorageType.ftp:
     case StorageType.none:
       return DataSourceType.network;
   }

@@ -5,18 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:iris/info.dart';
+import 'package:iris/l10n/app_localizations.dart';
 import 'package:iris/models/file.dart';
-import 'package:iris/pages/home_page.dart';
+import 'package:iris/pages/home/home.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/theme.dart';
-import 'package:iris/utils/data_migration.dart';
-import 'package:iris/utils/is_desktop.dart';
 import 'package:iris/utils/logger.dart';
+import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/request_storage_permission.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:media_stream/media_stream.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saf_util/saf_util.dart';
 import 'package:window_manager/window_manager.dart';
@@ -28,10 +28,6 @@ void main(List<String> arguments) async {
   globals.arguments = arguments;
 
   WidgetsFlutterBinding.ensureInitialized();
-
-  if (Platform.isWindows) {
-    await dataMigration();
-  }
 
   MediaKit.ensureInitialized();
 
@@ -46,6 +42,9 @@ void main(List<String> arguments) async {
     },
     if (Platform.isAndroid)
       'subtitleFontFile': 'assets/fonts/NotoSansCJKsc-Medium.otf',
+    'global': {
+      'log': 'debug',
+    }
   });
 
   final appLinks = AppLinks();
@@ -74,6 +73,9 @@ void main(List<String> arguments) async {
       await windowManager.focus();
     });
   }
+
+  MediaStream mediaStream = MediaStream();
+  mediaStream.startServer();
 
   runApp(const StoreScope(child: MyApp()));
 }
@@ -152,7 +154,7 @@ class MyApp extends HookWidget {
         theme: theme.light,
         darkTheme: theme.dark,
         themeMode: themeMode,
-        home: const HomePage(),
+        home: const Home(),
         locale: language == 'system' || language == 'auto'
             ? null
             : Locale(language),

@@ -46,6 +46,7 @@ const allDependencies = <Package>[
   _dio,
   _dio_web_adapter,
   _disks_desktop,
+  _drives_windows,
   _dynamic_color,
   _equatable,
   _fake_async,
@@ -206,6 +207,7 @@ const dependencies = <Package>[
   _desktop_drop,
   _device_info_plus,
   _disks_desktop,
+  _drives_windows,
   _dynamic_color,
   _file_picker,
   _flutter,
@@ -3149,6 +3151,40 @@ OTHER DEALINGS IN THE SOFTWARE.''',
     dependencies: [PackageRef('flutter'), PackageRef('equatable'), PackageRef('path')]
   );
 
+/// drives_windows 0.0.1
+const _drives_windows = Package(
+    name: 'drives_windows',
+    description: 'A Flutter plugin get drives and network shortcuts on Windows',
+    homepage: 'https://github.com/nini22P/drives_windows',
+    repository: 'https://github.com/nini22P/drives_windows',
+    authors: [],
+    version: '0.0.1',
+    license: '''MIT License
+
+Copyright (c) 2025 22
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.''',
+    isMarkdown: false,
+    isSdk: false,
+    dependencies: [PackageRef('ffi'), PackageRef('flutter'), PackageRef('path'), PackageRef('win32')]
+  );
+
 /// dynamic_color 1.7.0
 const _dynamic_color = Package(
     name: 'dynamic_color',
@@ -4437,13 +4473,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
     dependencies: [PackageRef('async'), PackageRef('path')]
   );
 
-/// fvp 0.29.0
+/// fvp 0.30.0
 const _fvp = Package(
     name: 'fvp',
     description: 'video_player plugin and backend APIs. Support all desktop/mobile platforms with hardware decoders, optimal renders. Supports most formats via FFmpeg',
     homepage: 'https://github.com/wang-bin/fvp',
     authors: [],
-    version: '0.29.0',
+    version: '0.30.0',
     license: '''BSD-3-Clause License
 
 Copyright 2022 Wang Bin. All rights reserved.
