@@ -30,7 +30,7 @@ Future<List<Subtitle>> findSubtitle(
           name: subTitleName.isEmpty ? fileName : subTitleName,
           uri: isAndroid && baseUri.startsWith('content://')
               ? '$baseUri${Uri.encodeComponent('/$fileName')}'
-              : '$baseUri/$fileName',
+              : '$baseUri/${Uri.encodeQueryComponent(fileName)}',
         ));
       }
     }
