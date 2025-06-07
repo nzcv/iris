@@ -6,6 +6,7 @@ import 'package:iris/models/storages/storage.dart';
 import 'package:iris/widgets/dialogs/show_folder_dialog.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/get_localizations.dart';
+import 'package:iris/widgets/dialogs/show_ftp_dialog.dart';
 import 'package:iris/widgets/dialogs/show_webdav_dialog.dart';
 import 'package:path/path.dart' as p;
 
@@ -55,6 +56,11 @@ class StoragesList extends HookWidget {
                         subtitle =
                             'http${storage.https ? 's' : ''}://${storage.host}${storage.basePath.join('/')}';
                         break;
+                      case StorageType.ftp:
+                        final storage = allStorages[index] as FTPStorage;
+                        subtitle =
+                            'ftp://${storage.host}${storage.basePath.join('/')}';
+                        break;
                       case StorageType.none:
                         break;
                     }
@@ -79,12 +85,24 @@ class StoragesList extends HookWidget {
                 onSelected: (value) {
                   switch (value) {
                     case StorageOptions.edit:
-                      if (allStorages[index] is WebDAVStorage) {
-                        showWebDAVDialog(context,
-                            storage: allStorages[index] as WebDAVStorage);
-                      } else if (allStorages[index] is LocalStorage) {
-                        showFolderDialog(context,
-                            storage: allStorages[index] as LocalStorage);
+                      switch (allStorages[index].type) {
+                        case StorageType.internal:
+                        case StorageType.network:
+                        case StorageType.usb:
+                        case StorageType.sdcard:
+                          showFolderDialog(context,
+                              storage: allStorages[index] as LocalStorage);
+                          break;
+                        case StorageType.webdav:
+                          showWebDAVDialog(context,
+                              storage: allStorages[index] as WebDAVStorage);
+                          break;
+                        case StorageType.ftp:
+                          showFTPDialog(context,
+                              storage: allStorages[index] as FTPStorage);
+                          break;
+                        case StorageType.none:
+                          break;
                       }
                       break;
                     case StorageOptions.remove:

@@ -48,6 +48,11 @@ class Favorites extends HookWidget {
           } else if (storage is WebDAVStorage) {
             return Text(
                 'http${storage.https ? 's' : ''}://${storage.host}${favorites[index].path.join('/')}');
+          } else if (storage is FTPStorage) {
+            return Text(
+                'ftp://${storage.host}${favorites[index].path.join('/').replaceFirst('//', '/')}');
+          } else {
+            return null;
           }
         }(),
         onTap: () {

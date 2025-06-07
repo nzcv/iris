@@ -9,6 +9,7 @@ import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/path_conv.dart';
 import 'package:iris/widgets/dialogs/show_folder_dialog.dart';
+import 'package:iris/widgets/dialogs/show_ftp_dialog.dart';
 import 'package:iris/widgets/dialogs/show_webdav_dialog.dart';
 import 'package:iris/pages/storages/storages_list.dart';
 import 'package:iris/utils/platform.dart';
@@ -129,19 +130,26 @@ class Storages extends HookWidget {
                           case StorageType.webdav:
                             showWebDAVDialog(context);
                             break;
+                          case StorageType.ftp:
+                            showFTPDialog(context);
+                            break;
                           case StorageType.none:
                             break;
                         }
                       },
                       itemBuilder: (BuildContext context) {
                         return [
+                          PopupMenuItem<StorageType>(
+                            value: StorageType.internal,
+                            child: Text(t.folder),
+                          ),
                           const PopupMenuItem<StorageType>(
                             value: StorageType.webdav,
                             child: Text('WebDAV'),
                           ),
                           PopupMenuItem<StorageType>(
-                            value: StorageType.internal,
-                            child: Text(t.folder),
+                            value: StorageType.ftp,
+                            child: Text('FTP'),
                           ),
                         ];
                       },

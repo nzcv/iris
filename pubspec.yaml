@@ -51,9 +51,14 @@ dependencies:
   video_player: ^2.9.2
   wakelock_plus: ^1.2.10
   popover: ^0.3.1
+  pure_ftp: ^0.7.5
   drives_windows:
     git:
       url: https://github.com/nini22P/drives_windows
+      ref: main
+  media_stream:
+    git:
+      url: https://github.com/nini22P/media_stream
       ref: main
 
 dev_dependencies:

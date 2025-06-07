@@ -16,6 +16,7 @@ import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/request_storage_permission.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:media_stream/media_stream.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saf_util/saf_util.dart';
 import 'package:window_manager/window_manager.dart';
@@ -41,6 +42,9 @@ void main(List<String> arguments) async {
     },
     if (Platform.isAndroid)
       'subtitleFontFile': 'assets/fonts/NotoSansCJKsc-Medium.otf',
+    'global': {
+      'log': 'debug',
+    }
   });
 
   final appLinks = AppLinks();
@@ -69,6 +73,9 @@ void main(List<String> arguments) async {
       await windowManager.focus();
     });
   }
+
+  MediaStream mediaStream = MediaStream();
+  mediaStream.startServer();
 
   runApp(const StoreScope(child: MyApp()));
 }

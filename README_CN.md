@@ -3,76 +3,80 @@
 # IRIS - 轻量级视频播放器
 
 ![ci](https://github.com/nini22P/iris/actions/workflows/ci.yml/badge.svg)
-<a href="https://afdian.com/a/nini22P"><img alt="爱发电" style="height: 30px;" src="https://pic1.afdiancdn.com/static/img/welcome/button-sponsorme.png"></a>
+`<a href="https://afdian.com/a/nini22P"><img alt="爱发电" style="height: 30px;" src="https://pic1.afdiancdn.com/static/img/welcome/button-sponsorme.png">``</a>`
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nini22p)
 
 [English](./README.md) | 中文
 
 ## 特性
 
-- [x] 基于 [Media Kit](https://github.com/media-kit/media-kit) | [FVP](https://github.com/wang-bin/fvp)，可播放多种视频格式
-- [x] 支持本地存储、WebDAV
-- [x] 可切换字幕和音轨
-- [x] 播放队列支持随机和重复
-- [x] 完善的手势支持
+- [X] 基于 [Media Kit](https://github.com/media-kit/media-kit) | [FVP](https://github.com/wang-bin/fvp)，可播放多种视频格式
+- [X] 支持本地存储、WebDAV 和 FTP
+- [X] 可切换字幕和音轨
+- [X] 播放队列支持随机和重复
+- [X] 完善的手势支持
 
 ## 下载
 
 ### Windows
+
 - [IRIS-windows-installer.exe](https://github.com/nini22P/iris/releases/latest/download/IRIS-windows-installer.exe)
 - [IRIS-windows.zip](https://github.com/nini22P/iris/releases/latest/download/IRIS-windows.zip)
 
 ### Android
-| 设备架构         | 下载链接                                                                 |
-|------------------|--------------------------------------------------------------------------|
-| arm64-v8a        | [IRIS-android-arm64-v8a.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-arm64-v8a.apk) |
-| armeabi-v7a      | [IRIS-android-armeabi-v7a.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-armeabi-v7a.apk) |
-| x86_64           | [IRIS-android-x86_64.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-x86_64.apk) |
+
+| 设备架构    | 下载链接                                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| arm64-v8a   | [IRIS-android-arm64-v8a.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-arm64-v8a.apk)     |
+| armeabi-v7a | [IRIS-android-armeabi-v7a.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-armeabi-v7a.apk) |
+| x86_64      | [IRIS-android-x86_64.apk](https://github.com/nini22P/iris/releases/latest/download/IRIS-android-x86_64.apk)           |
 
 ## 键位和手势
 
 ### 键位操作
-| 键位                 | 描述                                   |
-|----------------------|----------------------------------------|
-| `Space`              | 播放 / 暂停 / 选择文件                  |
-| `Arrow Left`         | 快退 10 秒                             |
-| `Arrow Right`        | 快进 10 秒                             |
-| `Arrow Up`           | 提升音量                               |
-| `Arrow Down`         | 降低音量                               |
-| `Ctrl + Arrow Left`  | 上一个                                 |
-| `Ctrl + Arrow Right` | 下一个                                 |
-| `Ctrl + X`           | 随机                                   |
-| `Ctrl + R`           | 重复                                   |
-| `Ctrl + V`           | 视频缩放                               |
-| `Ctrl + M`           | 静音                                   |
-| `S`                  | 字幕和音轨                             |
-| `P`                  | 播放队列                               |
-| `F`                  | 存储                                   |
-| `Ctrl + O`           | 打开文件                               |
-| `Ctrl + L`           | 打开链接                               |
-| `Ctrl + C`           | 关闭当前媒体文件                        |
-| `Ctrl + H`           | 播放历史                               |
-| `Ctrl + P`           | 设置                                   |
-| `+`                  | 帧进                                   |
-| `-`                  | 帧退                                   |
-| `Enter`              | 进入全屏 / 退出全屏 / 选择文件           |
-| `F11`                | 进入全屏 / 退出全屏                     |
-| `Esc`                | 退出当前菜单 / 返回上一级 / 关闭全屏    |
-| `F10`                | 切换窗口置顶                           |
-| `Alt + X`            | 退出应用                               |
+
+| 键位                   | 描述                                 |
+| ---------------------- | ------------------------------------ |
+| `Space`              | 播放 / 暂停 / 选择文件               |
+| `Arrow Left`         | 快退 10 秒                           |
+| `Arrow Right`        | 快进 10 秒                           |
+| `Arrow Up`           | 提升音量                             |
+| `Arrow Down`         | 降低音量                             |
+| `Ctrl + Arrow Left`  | 上一个                               |
+| `Ctrl + Arrow Right` | 下一个                               |
+| `Ctrl + X`           | 随机                                 |
+| `Ctrl + R`           | 重复                                 |
+| `Ctrl + V`           | 视频缩放                             |
+| `Ctrl + M`           | 静音                                 |
+| `S`                  | 字幕和音轨                           |
+| `P`                  | 播放队列                             |
+| `F`                  | 存储                                 |
+| `Ctrl + O`           | 打开文件                             |
+| `Ctrl + L`           | 打开链接                             |
+| `Ctrl + C`           | 关闭当前媒体文件                     |
+| `Ctrl + H`           | 播放历史                             |
+| `Ctrl + P`           | 设置                                 |
+| `+`                  | 帧进                                 |
+| `-`                  | 帧退                                 |
+| `Enter`              | 进入全屏 / 退出全屏 / 选择文件       |
+| `F11`                | 进入全屏 / 退出全屏                  |
+| `Esc`                | 退出当前菜单 / 返回上一级 / 关闭全屏 |
+| `F10`                | 切换窗口置顶                         |
+| `Alt + X`            | 退出应用                             |
 
 ### 手势操作
-| 手势               | 描述                                   |
-|--------------------|----------------------------------------|
-| 单击               | 选择项目或打开菜单                      |
-| 双击屏幕中心        | 播放 / 暂停                            |
-| 双击屏幕左侧        | 快退 10 秒                             |
-| 双击屏幕右侧        | 快进 10 秒                             |
-| 左右滑动            | 调整播放进度                           |
-| 屏幕左侧上下滑动    | 调整屏幕亮度                           |
-| 屏幕右侧上下滑动    | 调整设备音量                           |
-| 长按               | 启动倍速播放                           |
-| 长按后左右滑动      | 调整倍速播放的速度                     |
+
+| 手势             | 描述               |
+| ---------------- | ------------------ |
+| 单击             | 选择项目或打开菜单 |
+| 双击屏幕中心     | 播放 / 暂停        |
+| 双击屏幕左侧     | 快退 10 秒         |
+| 双击屏幕右侧     | 快进 10 秒         |
+| 左右滑动         | 调整播放进度       |
+| 屏幕左侧上下滑动 | 调整屏幕亮度       |
+| 屏幕右侧上下滑动 | 调整设备音量       |
+| 长按             | 启动倍速播放       |
+| 长按后左右滑动   | 调整倍速播放的速度 |
 
 ## 贡献
 
