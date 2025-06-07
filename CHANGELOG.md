@@ -1,3 +1,20 @@
+## v1.4.0
+
+### Changelog
+
+* Supports FTP storage
+* Supports adding local folders to the storage list
+* Storage list support remote disk and network shortcuts on Windows
+* Add Windows installer
+
+### 更新日志
+
+* 支持 FTP 存储
+* 支持添加本地文件夹到存储列表
+* Windows 版本存储列表支持远程磁盘和网络快捷方式
+* 添加 Windows 版本安装器
+
+
 ## v1.3.4
 
 ### Changelog
