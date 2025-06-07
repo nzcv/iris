@@ -59,7 +59,7 @@ class StoragesList extends HookWidget {
                       case StorageType.ftp:
                         final storage = allStorages[index] as FTPStorage;
                         subtitle =
-                            'ftp://${storage.host}${storage.basePath.join('/')}';
+                            'ftp://${storage.username.isNotEmpty ? '${storage.username}@' : ''}${storage.host}:${storage.port}${storage.basePath.join('/')}';
                         break;
                       case StorageType.none:
                         break;

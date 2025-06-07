@@ -50,7 +50,7 @@ class Favorites extends HookWidget {
                 'http${storage.https ? 's' : ''}://${storage.host}${favorites[index].path.join('/')}');
           } else if (storage is FTPStorage) {
             return Text(
-                'ftp://${storage.host}${favorites[index].path.join('/').replaceFirst('//', '/')}');
+                'ftp://${storage.username.isNotEmpty ? '${storage.username}@' : ''}${storage.host}:${storage.port}${favorites[index].path.join('/').replaceFirst('//', '/')}');
           } else {
             return null;
           }

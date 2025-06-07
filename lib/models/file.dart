@@ -20,7 +20,7 @@ enum FileOptions {
 }
 
 @freezed
-abstract class FileItem implements _$FileItem {
+abstract class FileItem with _$FileItem {
   const FileItem._();
   const factory FileItem({
     @Default('') String storageId,
@@ -42,7 +42,7 @@ abstract class FileItem implements _$FileItem {
 }
 
 @freezed
-class Subtitle with _$Subtitle {
+abstract class Subtitle with _$Subtitle {
   const factory Subtitle({
     required String name,
     required String uri,
@@ -53,7 +53,7 @@ class Subtitle with _$Subtitle {
 }
 
 @freezed
-class PlayQueueItem with _$PlayQueueItem {
+abstract class PlayQueueItem with _$PlayQueueItem {
   const factory PlayQueueItem({
     required FileItem file,
     required int index,

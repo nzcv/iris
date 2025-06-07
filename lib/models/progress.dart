@@ -6,7 +6,7 @@ part 'progress.freezed.dart';
 part 'progress.g.dart';
 
 @freezed
-class Progress with _$Progress {
+abstract class Progress with _$Progress {
   const factory Progress({
     required DateTime dateTime,
     required Duration position,

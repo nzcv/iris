@@ -33,7 +33,7 @@ enum ScreenOrientation {
 }
 
 @freezed
-class AppState with _$AppState {
+abstract class AppState with _$AppState {
   const factory AppState({
     @Default(false) bool autoPlay,
     @Default(false) bool shuffle,
