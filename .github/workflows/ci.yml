@@ -33,7 +33,7 @@ jobs:
           # Create a directory to hold the files
           mkdir IRIS
           # Copy the build output to the IRIS directory
-          Copy-Item -Path "build\windows\x64\runner\Release\*" -Destination "IRIS" -Force
+          Copy-Item -Path "build\windows\x64\runner\Release\*" -Destination "IRIS" -Recurse -Force
           # Create a ZIP file
           Compress-Archive -Path "IRIS" -DestinationPath "IRIS-windows.zip"
       - name: Upload artifact
@@ -133,7 +133,7 @@ jobs:
         id: tag_name
         run: |
           VERSION="${{ steps.yq.outputs.result }}"
-          TAG_NAME="v${VERSION}"
+          TAG_NAME="v${VERSION%%+*}"
           echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_OUTPUT"
       - name: Check tag
         uses: mukunku/tag-exists-action@v1.6.0
