@@ -7,6 +7,7 @@ import 'package:iris/globals.dart' as globals;
 import 'package:iris/models/file.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/models/progress.dart';
+import 'package:iris/models/storages/storage.dart';
 import 'package:iris/models/store/app_state.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_history_store.dart';
@@ -15,6 +16,7 @@ import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/check_data_source_type.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/platform.dart';
+import 'package:media_stream/media_stream.dart';
 import 'package:saf_util/saf_util.dart';
 import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -60,6 +62,9 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   Future<void> init() async => initValue.value = true;
 
+  MediaStream mediaStream = MediaStream();
+  final streamUrl = mediaStream.url;
+
   final controllerFuture = useMemoized(() async {
     if (file == null) return VideoPlayerController.networkUrl(Uri.parse(''));
     isInitializing.value = true;
@@ -79,7 +84,9 @@ FvpPlayer useFvpPlayer(BuildContext context) {
         );
       default:
         return VideoPlayerController.networkUrl(
-          Uri.parse(file.uri),
+          Uri.parse(file.storageType == StorageType.ftp
+              ? '$streamUrl/${file.uri}'
+              : file.uri),
           httpHeaders: auth != null ? {'authorization': auth} : {},
         );
     }
@@ -167,17 +174,21 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       } else if (externalSubtitle.value! < externalSubtitles.length) {
         bool isExists = true;
 
+        final uri = file?.storageType == StorageType.ftp
+            ? '$streamUrl/${externalSubtitles[currentExternalSubtitle].uri}'
+            : externalSubtitles[currentExternalSubtitle].uri;
+
+        logger('External subtitle uri: $uri');
+
         if (Platform.isAndroid &&
             externalSubtitles[currentExternalSubtitle]
                 .uri
                 .startsWith('content://')) {
-          isExists = await SafUtil()
-              .exists(externalSubtitles[currentExternalSubtitle].uri, false);
+          isExists = await SafUtil().exists(uri, false);
         }
 
         if (isExists) {
-          controller.setExternalSubtitle(
-              externalSubtitles[currentExternalSubtitle].uri);
+          controller.setExternalSubtitle(uri);
         } else {
           externalSubtitle.value = null;
         }

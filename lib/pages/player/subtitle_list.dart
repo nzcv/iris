@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:fvp/fvp.dart';
+import 'package:iris/models/file.dart';
 import 'package:iris/models/player.dart';
+import 'package:iris/models/storages/storage.dart';
+import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:media_stream/media_stream.dart';
 
 class SubtitleList extends HookWidget {
   const SubtitleList({super.key, required this.player});
@@ -16,6 +21,24 @@ class SubtitleList extends HookWidget {
     final t = getLocalizations(context);
 
     final focusNode = useFocusNode();
+
+    MediaStream mediaStream = MediaStream();
+    final streamUrl = mediaStream.url;
+
+    final playQueue =
+        usePlayQueueStore().select(context, (state) => state.playQueue);
+    final currentIndex =
+        usePlayQueueStore().select(context, (state) => state.currentIndex);
+
+    final int currentPlayIndex = useMemoized(
+        () => playQueue.indexWhere((element) => element.index == currentIndex),
+        [playQueue, currentIndex]);
+
+    final PlayQueueItem? currentPlay = useMemoized(
+        () => playQueue.isEmpty || currentPlayIndex < 0
+            ? null
+            : playQueue[currentPlayIndex],
+        [playQueue, currentPlayIndex]);
 
     useEffect(() {
       focusNode.requestFocus();
@@ -67,9 +90,13 @@ class SubtitleList extends HookWidget {
                   ),
                   onTap: () {
                     logger('Set external subtitle: $subtitle');
+                    final uri = currentPlay?.file.storageType == StorageType.ftp
+                        ? '$streamUrl/${subtitle.uri}'
+                        : subtitle.uri;
+                    logger('External subtitle uri: $uri');
                     (player as MediaKitPlayer).player.setSubtitleTrack(
                           SubtitleTrack.uri(
-                            subtitle.uri,
+                            uri,
                             title: subtitle.name,
                           ),
                         );

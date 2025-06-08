@@ -7,6 +7,7 @@ import 'package:iris/globals.dart' as globals;
 import 'package:iris/models/file.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/models/progress.dart';
+import 'package:iris/models/storages/storage.dart';
 import 'package:iris/models/store/app_state.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_history_store.dart';
@@ -16,6 +17,7 @@ import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/platform.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:media_stream/media_stream.dart';
 import 'package:path_provider/path_provider.dart';
 
 MediaKitPlayer useMediaKitPlayer(BuildContext context) {
@@ -130,6 +132,9 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
 
   final isInitializing = useState(false);
 
+  MediaStream mediaStream = MediaStream();
+  final streamUrl = mediaStream.url;
+
   Future<void> init(FileItem file) async {
     if (file.uri == '') return;
     isInitializing.value = true;
@@ -140,7 +145,9 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
       logger('Open file: $file');
       await player.open(
         Media(
-          file.uri,
+          file.storageType == StorageType.ftp
+              ? '$streamUrl/${file.uri}'
+              : file.uri,
           httpHeaders: auth != null ? {'authorization': auth} : {},
         ),
         play: autoPlay,
@@ -202,9 +209,13 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
       // 设置字幕
       if (externalSubtitles!.isNotEmpty) {
         logger('Set external subtitle: ${externalSubtitles[0]}');
+        final uri = file?.storageType == StorageType.ftp
+            ? '$streamUrl/${externalSubtitles[0].uri}'
+            : externalSubtitles[0].uri;
+        logger('External subtitle uri: $uri');
         await player.setSubtitleTrack(
           SubtitleTrack.uri(
-            externalSubtitles[0].uri,
+            uri,
             title: externalSubtitles[0].name,
           ),
         );

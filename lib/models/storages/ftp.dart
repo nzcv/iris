@@ -33,7 +33,7 @@ Future<List<FileItem>> getFTPFiles(
     await client.disconnect();
 
     final baseUri =
-        'http://localhost:8760/ftp?host=${storage.host}&port=${storage.port}&path=${path.join('/').replaceFirst('//', '/')}';
+        'ftp?host=${storage.host}&port=${storage.port}&path=${path.join('/').replaceFirst('//', '/')}';
 
     return await Future.wait(files.map(
       (file) async => FileItem(
