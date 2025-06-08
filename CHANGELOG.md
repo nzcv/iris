@@ -1,3 +1,13 @@
+## v1.4.1
+
+### Changelog
+
+* Dynamic FTP streaming url
+
+### 更新日志
+
+* FTP 串流使用动态 url
+
 ## v1.4.0
 
 ### Changelog
