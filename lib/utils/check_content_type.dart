@@ -58,6 +58,7 @@ class Formats {
     'svg',
     'tiff',
     'webp',
+    'png',
   ];
 }
 
