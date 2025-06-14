@@ -40,7 +40,7 @@ Future<List<FileItem>> getFTPFiles(
         storageId: storage.id,
         storageType: StorageType.ftp,
         name: file.name,
-        uri: '$baseUri/${Uri.encodeQueryComponent(file.name)}',
+        uri: Uri.encodeFull('$baseUri/${file.name}'),
         path: [...path, file.name],
         isDir: file.isDirectory,
         size: file.isDirectory ? 0 : file.info?.size ?? 0,
