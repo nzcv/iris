@@ -66,7 +66,7 @@ Future<List<FileItem>> getWebDAVFiles(
         storageId: id,
         storageType: StorageType.webdav,
         name: '${file.name}',
-        uri: '$baseUri/${file.name}',
+        uri: Uri.encodeFull('$baseUri/${file.name}'),
         path: [...path, '${file.name}'],
         isDir: file.isDir ?? false,
         size: file.size ?? 0,

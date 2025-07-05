@@ -279,6 +279,7 @@ Future<List<FileItem>> getContentFiles(String uri) async {
               list.map((e) => e.name).toList(),
               file.name,
               uri,
+              encodeUri: false,
             ),
           ))
       .toList());

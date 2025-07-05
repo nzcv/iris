@@ -60,6 +60,9 @@ FileItem? useCover(
 
     return images.firstWhereOrNull(
             (image) => image.name.split('.').first.toLowerCase() == 'cover') ??
+        images.firstWhereOrNull((image) =>
+            image.name.toLowerCase().startsWith('cover') ||
+            image.name.toLowerCase().startsWith('folder')) ??
         images.firstOrNull;
   }, [currentPlay?.file, dir, player.isPlaying]);
 

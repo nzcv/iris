@@ -2,28 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/info.dart';
-import 'package:iris/models/player.dart';
 import 'package:iris/store/use_ui_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/platform.dart';
-import 'package:iris/utils/resize_window.dart';
 import 'package:window_manager/window_manager.dart';
 
 class TitleBar extends HookWidget {
   const TitleBar({
     super.key,
     this.title,
-    required this.player,
     this.actions,
     this.color,
     this.overlayColor,
+    this.saveProgress,
+    this.resizeWindow,
   });
 
   final String? title;
-  final MediaPlayer player;
   final List<Widget>? actions;
   final Color? color;
   final WidgetStateProperty<Color?>? overlayColor;
+  final Future<void> Function()? saveProgress;
+  final Future<void> Function()? resizeWindow;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +118,7 @@ class TitleBar extends HookWidget {
                                 ),
                                 onPressed: () async {
                                   if (isFullScreen) {
-                                    await resizeWindow(player.aspect);
+                                    await resizeWindow?.call();
                                   }
                                   useUiStore().updateFullScreen(!isFullScreen);
                                 },
@@ -142,7 +142,7 @@ class TitleBar extends HookWidget {
                                 onPressed: () async {
                                   if (isMaximized) {
                                     await windowManager.unmaximize();
-                                    await resizeWindow(player.aspect);
+                                    await resizeWindow?.call();
                                   } else {
                                     await windowManager.maximize();
                                   }
@@ -170,7 +170,7 @@ class TitleBar extends HookWidget {
                     ),
                     IconButton(
                       onPressed: () async {
-                        await player.saveProgress();
+                        await saveProgress?.call();
                         windowManager.close();
                       },
                       icon: Icon(

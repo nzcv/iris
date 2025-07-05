@@ -1037,10 +1037,11 @@ class IrisPlayer extends HookWidget {
                     },
                     child: TitleBar(
                       title: title,
-                      player: player,
                       actions: [const SizedBox(width: 8)],
                       color: contentColor,
                       overlayColor: overlayColor,
+                      saveProgress: () => player.saveProgress(),
+                      resizeWindow: () => resizeWindow(player.aspect),
                     ),
                   ),
                 ),
