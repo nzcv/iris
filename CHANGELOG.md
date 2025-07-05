@@ -1,3 +1,16 @@
+## v1.4.2
+
+### Changelog
+
+* Fix audio cover issue
+* Improve uri handling
+
+### 更新日志
+
+* 修复音频封面问题
+* 改进 uri 处理
+
+
 ## v1.4.1
 
 ### Changelog
@@ -7,6 +20,7 @@
 ### 更新日志
 
 * FTP 串流使用动态 url
+
 
 ## v1.4.0
 
