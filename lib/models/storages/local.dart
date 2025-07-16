@@ -84,9 +84,22 @@ Future<List<LocalStorage>> getLocalStorages(
     return storages;
   } else if (isAndroid) {
     final androidXStorage = AndroidXStorage();
-    final external = await androidXStorage.getExternalStorageDirectory();
-    final sdcard = await androidXStorage.getSDCardStorageDirectory();
-    final usbs = await androidXStorage.getUSBStorageDirectories();
+    final external =
+        await androidXStorage.getExternalStorageDirectory().catchError((error) {
+      logger('Error getting external storage: $error');
+      return null;
+    });
+    final sdcard =
+        await androidXStorage.getSDCardStorageDirectory().catchError((error) {
+      logger('Error getting SD card: $error');
+      return null;
+    });
+    final usbs =
+        await androidXStorage.getUSBStorageDirectories().catchError((error) {
+      logger('Error getting USB storages: $error');
+      return <String?>[];
+    });
+
     List<LocalStorage> storages = [];
 
     if (external != null) {
