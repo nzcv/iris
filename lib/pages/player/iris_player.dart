@@ -75,6 +75,7 @@ class IrisPlayer extends HookWidget {
 
     final controlHideTimer = useRef<Timer?>(null);
     final progressHideTimer = useRef<Timer?>(null);
+    final systemUiHideTimer = useRef<Timer?>(null);
 
     final brightness = useBrightness(isLeftGesture.value);
     final volume = useVolume(isRightGesture.value);
@@ -189,6 +190,17 @@ class IrisPlayer extends HookWidget {
       );
     }
 
+    void startSystemUiHideTimer() {
+      systemUiHideTimer.value = Timer(
+        const Duration(seconds: 3),
+        () {
+          if (!isShowControl.value && mediaType == MediaType.video) {
+            SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+          }
+        },
+      );
+    }
+
     void resetControlHideTimer() {
       controlHideTimer.value?.cancel();
       startControlHideTimer();
@@ -197,6 +209,11 @@ class IrisPlayer extends HookWidget {
     void resetBottomProgressTimer() {
       progressHideTimer.value?.cancel();
       startProgressHideTimer();
+    }
+
+    void resetSystemUiHideTimer() {
+      systemUiHideTimer.value?.cancel();
+      startSystemUiHideTimer();
     }
 
     void showControl() {
@@ -247,21 +264,20 @@ class IrisPlayer extends HookWidget {
     useEffect(() {
       if (isShowControl.value || mediaType != MediaType.video) {
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+        systemUiHideTimer.value?.cancel();
       } else {
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
       }
       return;
-    }, [isShowControl.value, currentPlay?.file.type]);
+    }, [isShowControl.value, mediaType]);
 
     useEffect(() {
       SystemChrome.setSystemUIChangeCallback((value) async {
         if (value) {
-          showControl();
+          resetSystemUiHideTimer();
         }
       });
-      return () {
-        SystemChrome.setSystemUIChangeCallback(null);
-      };
+      return null;
     }, []);
 
     void onKeyEvent(KeyEvent event) async {
@@ -1052,7 +1068,7 @@ class IrisPlayer extends HookWidget {
                 curve: Curves.easeInOutCubicEmphasized,
                 bottom: isShowControl.value || mediaType != MediaType.video
                     ? 0
-                    : -96,
+                    : -128,
                 left: 0,
                 right: 0,
                 child: Align(
