@@ -54,7 +54,7 @@ class TitleBar extends HookWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Image.asset(
-                'assets/images/icon_transparent.png',
+                'assets/images/logo_transparent.png',
                 width: 32,
                 height: 32,
               ),

@@ -1,4 +1,4 @@
-<img height="100px" width="100px" alt="icon" src="./assets/images/icon.png"/>
+<img height="100px" width="100px" alt="logo" src="./assets/images/logo.png"/>
 
 # IRIS - A lightweight video player
 
