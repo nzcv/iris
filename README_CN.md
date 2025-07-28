@@ -1,4 +1,4 @@
-<img height="100px" width="100px" alt="icon" src="./assets/images/icon.svg"/>
+<img height="100px" width="100px" alt="icon" src="./assets/images/icon.png"/>
 
 # IRIS - 轻量级视频播放器
 
