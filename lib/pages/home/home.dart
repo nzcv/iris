@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/hooks/use_fvp_player.dart';
@@ -30,6 +31,13 @@ class Home extends HookWidget {
       }
     }();
 
-    return Scaffold(body: player);
+    return AnnotatedRegion(
+      value: const SystemUiOverlayStyle(
+        statusBarIconBrightness: Brightness.light,
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+      ),
+      child: Scaffold(body: player),
+    );
   }
 }

@@ -86,14 +86,6 @@ class MyApp extends HookWidget {
   @override
   Widget build(BuildContext context) {
     useEffect(() {
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-      ));
-      return null;
-    }, []);
-
-    useEffect(() {
       () async {
         globals.storagePermissionStatus = Platform.isAndroid
             ? await isAndroid11OrHigher()
