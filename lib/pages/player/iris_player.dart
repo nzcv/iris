@@ -48,14 +48,12 @@ enum MediaType {
 }
 
 class IrisPlayer extends HookWidget {
-  const IrisPlayer({super.key, required this.playerHooks});
+  const IrisPlayer({super.key, required this.player});
 
-  final MediaPlayer Function(BuildContext) playerHooks;
+  final MediaPlayer player;
 
   @override
   Widget build(BuildContext context) {
-    final MediaPlayer player = playerHooks(context);
-
     useAppLifecycle(player);
     useFullScreen(context);
     useOrientation(context, player);
@@ -796,13 +794,15 @@ class IrisPlayer extends HookWidget {
                                   child: SizedBox(
                                     width: player.width,
                                     height: player.height,
-                                    child: VideoPlayer(player.controller),
+                                    child: VideoPlayer(
+                                        (player as FvpPlayer).controller),
                                   ),
                                 )
                               : player is MediaKitPlayer
                                   ? Video(
                                       key: ValueKey(currentPlay?.file.uri),
-                                      controller: player.controller,
+                                      controller:
+                                          (player as MediaKitPlayer).controller,
                                       controls: NoVideoControls,
                                       fit: fit == BoxFit.none
                                           ? BoxFit.contain
