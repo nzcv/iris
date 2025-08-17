@@ -20,7 +20,11 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_stream/media_stream.dart';
 import 'package:path_provider/path_provider.dart';
 
-MediaKitPlayer useMediaKitPlayer(BuildContext context) {
+MediaKitPlayer? useMediaKitPlayer(BuildContext context, bool isActive) {
+  if (!isActive) {
+    return null;
+  }
+
   final player = useMemoized(
     () => Player(
       configuration: const PlayerConfiguration(
@@ -294,7 +298,6 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
   useEffect(() => saveProgress, []);
 
   Future<void> play() async {
-    await useAppStore().updateAutoPlay(true);
     if (duration == Duration.zero && file != null && !isInitializing.value) {
       await init(file);
     }
@@ -302,31 +305,27 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
   }
 
   Future<void> pause() async {
-    await useAppStore().updateAutoPlay(false);
     await player.pause();
   }
 
-  Future<void> seekTo(Duration newPosition) async => newPosition.inSeconds < 0
-      ? await player.seek(Duration.zero)
-      : newPosition.inSeconds > duration.inSeconds
-          ? await player.seek(duration)
-          : await player.seek(newPosition);
+  Future<void> seekTo(Duration newPosition) async =>
+      newPosition.inMilliseconds < 0
+          ? await player.seek(Duration.zero)
+          : newPosition.inMilliseconds > duration.inMilliseconds
+              ? await player.seek(duration)
+              : await player.seek(newPosition);
 
   Future<void> backward(int seconds) async {
-    if (file?.type == ContentType.video) {
-      await seekTo(Duration(seconds: position.value.inSeconds - seconds));
-    }
+    await seekTo(Duration(seconds: position.value.inSeconds - seconds));
   }
 
   Future<void> forward(int seconds) async {
-    if (file?.type == ContentType.video) {
-      await seekTo(Duration(seconds: position.value.inSeconds + seconds));
-    }
+    await seekTo(Duration(seconds: position.value.inSeconds + seconds));
   }
 
   Future<void> stepBackward() async {
     final nativePlayer = player.platform;
-    if (nativePlayer is NativePlayer) {
+    if (nativePlayer is NativePlayer && file?.type == ContentType.video) {
       await nativePlayer.command(['frame-back-step']);
       logger('Step backward');
     }
@@ -334,7 +333,7 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
 
   Future<void> stepForward() async {
     final nativePlayer = player.platform;
-    if (nativePlayer is NativePlayer) {
+    if (nativePlayer is NativePlayer && file?.type == ContentType.video) {
       await nativePlayer.command(['frame-step']);
       logger('Step forward');
     }

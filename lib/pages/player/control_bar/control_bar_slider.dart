@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/models/player.dart';
+import 'package:iris/store/use_app_store.dart';
 import 'package:iris/utils/format_duration_to_minutes.dart';
 
 class ControlBarSlider extends HookWidget {
@@ -20,6 +22,8 @@ class ControlBarSlider extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final autoPlay = useAppStore().select(context, (state) => state.autoPlay);
+
     return ExcludeFocus(
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
@@ -53,12 +57,12 @@ class ControlBarSlider extends HookWidget {
                       trackHeight: 3,
                     ),
                     child: Slider(
-                      value: player.buffer.inSeconds.toDouble() >
-                              player.duration.inSeconds.toDouble()
+                      value: player.buffer.inMilliseconds.toDouble() >
+                              player.duration.inMilliseconds.toDouble()
                           ? 0
-                          : player.buffer.inSeconds.toDouble(),
+                          : player.buffer.inMilliseconds.toDouble(),
                       min: 0,
-                      max: player.duration.inSeconds.toDouble(),
+                      max: player.duration.inMilliseconds.toDouble(),
                       onChanged: null,
                     ),
                   ),
@@ -78,27 +82,27 @@ class ControlBarSlider extends HookWidget {
                       trackHeight: 4,
                     ),
                     child: Slider(
-                      value: player.position.inSeconds.toDouble() >
-                              player.duration.inSeconds.toDouble()
+                      value: player.position.inMilliseconds.toDouble() >
+                              player.duration.inMilliseconds.toDouble()
                           ? 0
-                          : player.position.inSeconds.toDouble(),
+                          : player.position.inMilliseconds.toDouble(),
                       min: 0,
-                      max: player.duration.inSeconds.toDouble(),
+                      max: player.duration.inMilliseconds.toDouble(),
                       onChangeStart: (value) {
                         player.updateSeeking(true);
+                        player.pause();
                       },
                       onChanged: (value) {
                         showControl();
                         if (player is MediaKitPlayer) {
-                          player
-                              .updatePosition(Duration(seconds: value.toInt()));
-                        } else if (player is FvpPlayer) {
-                          player.seekTo(Duration(seconds: value.toInt()));
+                          player.updatePosition(
+                              Duration(milliseconds: value.toInt()));
                         }
+                        player.seekTo(Duration(milliseconds: value.toInt()));
                       },
                       onChangeEnd: (value) async {
-                        if (player is MediaKitPlayer) {
-                          await player.seekTo(Duration(seconds: value.toInt()));
+                        if (autoPlay) {
+                          player.play();
                         }
                         player.updateSeeking(false);
                       },

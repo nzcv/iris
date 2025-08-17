@@ -129,8 +129,10 @@ class ControlBar extends HookWidget {
                       onPressed: () {
                         showControl();
                         if (player.isPlaying == true) {
+                          useAppStore().updateAutoPlay(false);
                           player.pause();
                         } else {
+                          useAppStore().updateAutoPlay(true);
                           player.play();
                         }
                       },

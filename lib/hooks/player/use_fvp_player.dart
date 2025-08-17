@@ -21,7 +21,11 @@ import 'package:saf_util/saf_util.dart';
 import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-FvpPlayer useFvpPlayer(BuildContext context) {
+FvpPlayer? useFvpPlayer(BuildContext context, bool isActive) {
+  if (!isActive) {
+    return null;
+  }
+
   final autoPlay = useAppStore().select(context, (state) => state.autoPlay);
   final rate = useAppStore().select(context, (state) => state.rate);
   final volume = useAppStore().select(context, (state) => state.volume);
@@ -116,8 +120,6 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       externalSubtitle.value = null;
     };
   }, [controller, initValue.value]);
-
-  useEffect(() => controller.dispose, []);
 
   final isPlaying =
       useListenableSelector(controller, () => controller.value.isPlaying);
@@ -277,7 +279,6 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   }, [isPlaying]);
 
   Future<void> play() async {
-    await useAppStore().updateAutoPlay(true);
     if (!controller.value.isInitialized && !isInitializing.value) {
       init();
     }
@@ -285,7 +286,6 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   }
 
   Future<void> pause() async {
-    await useAppStore().updateAutoPlay(false);
     controller.pause();
   }
 
@@ -334,6 +334,8 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   }
 
   useEffect(() => saveProgress, []);
+
+  useEffect(() => controller.dispose, []);
 
   return FvpPlayer(
     controller: controller,
