@@ -1,4 +1,3 @@
-import java.io.File
 import java.nio.file.Files
 import java.security.MessageDigest
 
@@ -21,12 +20,12 @@ android {
     ndkVersion = "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = JavaVersion.VERSION_17
     }
 
     defaultConfig {
@@ -93,7 +92,7 @@ task downloadFiles(type: Exec) {
 
              def calculatedMD5 = MessageDigest.getInstance("MD5").digest(Files.readAllBytes(destFile.toPath())).encodeHex().toString()
             if (calculatedMD5 != fileInfo.md5) {
-                throw new GradleException("MD5 verification failed for ${destFile}")
+                throw new FileNotFoundException("MD5 verification failed for ${destFile}")
             }
         }
     }

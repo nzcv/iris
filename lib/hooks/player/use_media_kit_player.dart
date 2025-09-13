@@ -20,11 +20,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_stream/media_stream.dart';
 import 'package:path_provider/path_provider.dart';
 
-MediaKitPlayer? useMediaKitPlayer(BuildContext context, bool isActive) {
-  if (!isActive) {
-    return null;
-  }
-
+MediaKitPlayer useMediaKitPlayer(BuildContext context) {
   final player = useMemoized(
     () => Player(
       configuration: const PlayerConfiguration(
@@ -71,7 +67,9 @@ MediaKitPlayer? useMediaKitPlayer(BuildContext context, bool isActive) {
         await nativePlayer.setProperty("sub-font", "NotoSansCJKsc-Medium");
       }
     }();
-    return player.dispose;
+    return () {
+      player.dispose();
+    };
   }, []);
 
   final List<PlayQueueItem> playQueue =

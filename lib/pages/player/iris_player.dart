@@ -11,7 +11,6 @@ import 'package:iris/hooks/use_full_screen.dart';
 import 'package:iris/hooks/use_gesture.dart';
 import 'package:iris/hooks/use_keyboard.dart';
 import 'package:iris/hooks/use_orientation.dart';
-import 'package:iris/hooks/player/use_player.dart';
 import 'package:iris/info.dart';
 import 'package:iris/models/file.dart';
 import 'package:iris/models/player.dart';
@@ -34,12 +33,12 @@ import 'package:video_player/video_player.dart';
 import 'package:window_manager/window_manager.dart';
 
 class IrisPlayer extends HookWidget {
-  const IrisPlayer({super.key});
+  const IrisPlayer({super.key, required this.player});
+
+  final MediaPlayer player;
 
   @override
   Widget build(BuildContext context) {
-    final player = usePlayer(context);
-
     useAppLifecycle(player);
     useFullScreen(context);
     useOrientation(context, player);
@@ -395,13 +394,15 @@ class IrisPlayer extends HookWidget {
                                       child: SizedBox(
                                         width: player.width,
                                         height: player.height,
-                                        child: VideoPlayer(player.controller),
+                                        child: VideoPlayer(
+                                            (player as FvpPlayer).controller),
                                       ),
                                     )
                                   : player is MediaKitPlayer
                                       ? Video(
                                           key: ValueKey(currentPlay?.file.uri),
-                                          controller: player.controller,
+                                          controller: (player as MediaKitPlayer)
+                                              .controller,
                                           controls: NoVideoControls,
                                           fit: fit == BoxFit.none
                                               ? BoxFit.contain
