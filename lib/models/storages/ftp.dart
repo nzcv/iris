@@ -35,6 +35,8 @@ Future<List<FileItem>> getFTPFiles(
     final baseUri =
         'ftp?host=${storage.host}&port=${storage.port}&path=${path.join('/').replaceFirst('//', '/')}';
 
+    final allFileNames = files.map((file) => file.name).toList();
+
     return await Future.wait(files.map(
       (file) async => FileItem(
         storageId: storage.id,
@@ -49,7 +51,7 @@ Future<List<FileItem>> getFTPFiles(
             : null,
         type: file.isDirectory ? ContentType.dir : checkContentType(file.name),
         subtitles: await findSubtitle(
-          files.map((file) => file.name).toList(),
+          allFileNames,
           file.name,
           baseUri,
         ),

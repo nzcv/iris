@@ -65,6 +65,15 @@ class ControlBar extends HookWidget {
         useAppStore().select(context, (state) => state.repeat);
     final BoxFit fit = useAppStore().select(context, (state) => state.fit);
 
+    final displayIsPlaying = useState(player.isPlaying);
+
+    useEffect(() {
+      if (!player.seeking) {
+        displayIsPlaying.value = player.isPlaying;
+      }
+      return null;
+    }, [player.isPlaying]);
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -118,9 +127,9 @@ class ControlBar extends HookWidget {
                   children: [
                     IconButton(
                       tooltip:
-                          '${player.isPlaying == true ? t.pause : t.play} ( Space )',
+                          '${displayIsPlaying.value ? t.pause : t.play} ( Space )',
                       icon: Icon(
-                        player.isPlaying == true
+                        displayIsPlaying.value
                             ? Icons.pause_rounded
                             : Icons.play_arrow_rounded,
                         size: 36,

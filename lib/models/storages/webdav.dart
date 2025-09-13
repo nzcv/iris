@@ -37,7 +37,9 @@ Future<bool> testWebDAV(WebDAVStorage storage) async {
 }
 
 Future<List<FileItem>> getWebDAVFiles(
-    WebDAVStorage storage, List<String> path) async {
+  WebDAVStorage storage,
+  List<String> path,
+) async {
   final id = storage.id;
   final host = storage.host;
   final port = storage.port;
@@ -62,11 +64,22 @@ Future<List<FileItem>> getWebDAVFiles(
   final String baseUri =
       'http${https ? 's' : ''}://$host:$port${path.join('/')}';
 
-  return await Future.wait(files.map((file) async => FileItem(
+  final allFileNames = files.map((f) => f.name as String).toList();
+
+  return await Future.wait(
+    files.map((file) async {
+      final fileUri = Uri(
+        scheme: https ? 'https' : 'http',
+        host: host,
+        port: int.tryParse(port),
+        pathSegments: [...path, file.name!],
+      );
+
+      return FileItem(
         storageId: id,
         storageType: StorageType.webdav,
         name: '${file.name}',
-        uri: Uri.encodeFull('$baseUri/${file.name}'),
+        uri: fileUri.toString(),
         path: [...path, '${file.name}'],
         isDir: file.isDir ?? false,
         size: file.size ?? 0,
@@ -75,10 +88,13 @@ Future<List<FileItem>> getWebDAVFiles(
             ? ContentType.dir
             : checkContentType(file.name!),
         subtitles: await findSubtitle(
-            files.map((file) => file.name as String).toList(),
-            file.name as String,
-            baseUri),
-      )));
+          allFileNames,
+          file.name as String,
+          baseUri,
+        ),
+      );
+    }),
+  );
 }
 
 String getWebDAVAuth(WebDAVStorage storage) =>
