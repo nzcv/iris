@@ -377,33 +377,28 @@ class IrisPlayer extends HookWidget {
                           ),
                         ),
                         Positioned(
-                          left: videoViewOffset.dx,
-                          top: videoViewOffset.dy,
-                          width: videoViewSize.width,
-                          height: videoViewSize.height,
-                          child: player is FvpPlayer
-                              ? FittedBox(
+                            left: videoViewOffset.dx,
+                            top: videoViewOffset.dy,
+                            width: videoViewSize.width,
+                            height: videoViewSize.height,
+                            child: switch (player) {
+                              MediaKitPlayer player => Video(
+                                  key: ValueKey(currentPlay?.file.uri),
+                                  controller: player.controller,
+                                  controls: NoVideoControls,
+                                  fit:
+                                      fit == BoxFit.none ? BoxFit.contain : fit,
+                                ),
+                              FvpPlayer player => FittedBox(
                                   fit: fit,
                                   child: SizedBox(
                                     width: player.width,
                                     height: player.height,
-                                    child: VideoPlayer(
-                                        (player as FvpPlayer).controller),
+                                    child: VideoPlayer(player.controller),
                                   ),
-                                )
-                              : player is MediaKitPlayer
-                                  ? Video(
-                                      key: ValueKey(currentPlay?.file.uri),
-                                      controller:
-                                          (player as MediaKitPlayer).controller,
-                                      controls: NoVideoControls,
-                                      fit: fit == BoxFit.none
-                                          ? BoxFit.contain
-                                          : fit,
-                                      // wakelock: mediaType == 'video',
-                                    )
-                                  : Container(),
-                        ),
+                                ),
+                              _ => Container(),
+                            }),
                         // Audio
                         if (currentPlay?.file.type == ContentType.audio)
                           Positioned(

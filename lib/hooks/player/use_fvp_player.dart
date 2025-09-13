@@ -56,127 +56,103 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   final List<Subtitle> externalSubtitles = useMemoized(
       () => currentPlay?.file.subtitles ?? [], [currentPlay?.file.subtitles]);
 
-  final initValue = useState(false);
-
   final isInitializing = useState(false);
-
-  Future<void> init() async => initValue.value = true;
 
   MediaStream mediaStream = MediaStream();
   final streamUrl = mediaStream.url;
 
-  final controllerFuture = useMemoized(() async {
-    if (file == null) return null;
-    isInitializing.value = true;
-    final storage = useStorageStore().findById(file.storageId);
-    final auth = storage?.getAuth();
-    logger('Open file: $file');
-    switch (checkDataSourceType(file)) {
-      case DataSourceType.file:
-        return VideoPlayerController.file(
-          File(file.uri),
-          httpHeaders: auth != null ? {'authorization': auth} : {},
-        );
-      case DataSourceType.contentUri:
-        final isExists = await SafUtil().exists(file.uri, false);
-        return VideoPlayerController.contentUri(
-          isExists ? Uri.parse(file.uri) : Uri.parse(''),
-        );
-      default:
-        return VideoPlayerController.networkUrl(
-          Uri.parse(file.storageType == StorageType.ftp
-              ? '$streamUrl/${file.uri}'
-              : file.uri),
-          httpHeaders: auth != null ? {'authorization': auth} : {},
-        );
-    }
-  }, [file, initValue.value]);
+  final controller = useState(VideoPlayerController.networkUrl(Uri.parse('')));
 
-  final controller = useFuture(controllerFuture).data ??
-      VideoPlayerController.networkUrl(Uri.parse(''));
+  Future<void> init() async {
+    isInitializing.value = true;
+
+    try {
+      await controller.value.initialize();
+      await controller.value.setLooping(repeat == Repeat.one ? true : false);
+      await controller.value.setPlaybackSpeed(rate);
+      await controller.value.setVolume(isMuted ? 0 : volume / 100);
+    } catch (e) {
+      logger('Error initializing player: $e');
+    }
+
+    isInitializing.value = false;
+  }
 
   useEffect(() {
     () async {
-      if (controller.dataSource.isEmpty) return;
-
-      try {
-        await controller.initialize();
-        await controller.setLooping(repeat == Repeat.one ? true : false);
-        await controller.setPlaybackSpeed(rate);
-        await controller.setVolume(isMuted ? 0 : volume / 100);
-      } catch (e) {
-        logger('Error initializing player: $e');
+      if (controller.value.value.isInitialized) {
+        logger('Dispose player');
+        controller.value.dispose();
       }
 
-      isInitializing.value = false;
+      if (file == null || file.uri.isEmpty) {
+        controller.value = VideoPlayerController.networkUrl(Uri.parse(''));
+      } else {
+        final storage = useStorageStore().findById(file.storageId);
+        final auth = storage?.getAuth();
+
+        logger('Open file: $file');
+
+        switch (checkDataSourceType(file)) {
+          case DataSourceType.file:
+            controller.value = VideoPlayerController.file(
+              File(file.uri),
+              httpHeaders: auth != null ? {'authorization': auth} : {},
+            );
+          case DataSourceType.contentUri:
+            final isExists = await SafUtil().exists(file.uri, false);
+            controller.value = VideoPlayerController.contentUri(
+              isExists ? Uri.parse(file.uri) : Uri.parse(''),
+            );
+          default:
+            controller.value = VideoPlayerController.networkUrl(
+              Uri.parse(file.storageType == StorageType.ftp
+                  ? '$streamUrl/${file.uri}'
+                  : file.uri),
+              httpHeaders: auth != null ? {'authorization': auth} : {},
+            );
+        }
+        await init();
+      }
     }();
 
-    return () {
-      if (controller.dataSource.isEmpty) return;
-      controller.dispose();
-      externalSubtitle.value = null;
-    };
-  }, [controller, initValue.value]);
+    return;
+  }, [file?.uri]);
 
   useEffect(() {
     return () {
-      if (controller.dataSource.isEmpty) return;
-      controller.dispose();
+      if (controller.value.value.isInitialized) {
+        controller.value.dispose();
+      }
     };
   }, []);
 
-  final isPlaying =
-      useListenableSelector(controller, () => controller.value.isPlaying);
-  final duration =
-      useListenableSelector(controller, () => controller.value.duration);
-  final position =
-      useListenableSelector(controller, () => controller.value.position);
-  final buffered =
-      useListenableSelector(controller, () => controller.value.buffered);
-  final size = useListenableSelector(controller, () => controller.value.size);
-  final isCompleted =
-      useListenableSelector(controller, () => controller.value.isCompleted);
+  final double aspect = useMemoized(() {
+    if (file?.type != ContentType.video) {
+      return 0;
+    }
 
-  final double aspect = useMemoized(
-      () => size.width != 0 && size.height != 0 ? size.width / size.height : 0,
-      [size.width, size.height]);
+    final width = controller.value.value.size.width;
+    final height = controller.value.value.size.height;
+
+    if (width != 0 && height != 0) {
+      return width / height;
+    } else {
+      return 0;
+    }
+  }, [
+    file?.type,
+    controller.value.value.size.width,
+    controller.value.value.size.height
+  ]);
 
   final seeking = useState(false);
 
   useEffect(() {
     () async {
-      if (duration != Duration.zero &&
-          currentPlay != null &&
-          currentPlay.file.type == ContentType.video) {
-        Progress? progress = history[currentPlay.file.getID()];
-        if (progress != null) {
-          if (!alwaysPlayFromBeginning &&
-              (progress.duration.inMilliseconds -
-                      progress.position.inMilliseconds) >
-                  5000) {
-            logger(
-                'Resume progress: ${currentPlay.file.name} position: ${progress.position} duration: ${progress.duration}');
-            await controller.seekTo(progress.position);
-          }
-        }
-      }
-
-      if (autoPlay) {
-        controller.play();
-      }
-
-      if (externalSubtitles.isNotEmpty) {
-        externalSubtitle.value = 0;
-      }
-    }();
-    return;
-  }, [duration]);
-
-  useEffect(() {
-    () async {
       final currentExternalSubtitle = externalSubtitle.value;
       if (currentExternalSubtitle == null || externalSubtitles.isEmpty) {
-        controller.setExternalSubtitle('');
+        controller.value.setExternalSubtitle('');
       } else if (externalSubtitle.value! < externalSubtitles.length) {
         bool isExists = true;
 
@@ -194,7 +170,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
         }
 
         if (isExists) {
-          controller.setExternalSubtitle(uri);
+          controller.value.setExternalSubtitle(uri);
         } else {
           externalSubtitle.value = null;
         }
@@ -207,9 +183,9 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   useEffect(() {
     () async {
       if (currentPlay != null &&
-          isCompleted &&
-          controller.value.position != Duration.zero &&
-          controller.value.duration != Duration.zero) {
+          controller.value.value.isCompleted &&
+          controller.value.value.position != Duration.zero &&
+          controller.value.value.duration != Duration.zero) {
         logger('Completed: ${currentPlay.file.name}');
         if (repeat == Repeat.one) return;
         if (currentPlayIndex == playQueue.length - 1) {
@@ -223,29 +199,58 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       }
     }();
     return;
-  }, [isCompleted]);
+  }, [controller.value.value.isCompleted]);
 
   useEffect(() {
-    if (controller.value.isInitialized) {
-      controller.setPlaybackSpeed(rate);
+    if (controller.value.value.isInitialized) {
+      controller.value.setPlaybackSpeed(rate);
     }
     return;
   }, [rate]);
 
   useEffect(() {
-    if (controller.value.isInitialized) {
-      controller.setVolume(isMuted ? 0 : volume / 100);
+    if (controller.value.value.isInitialized) {
+      controller.value.setVolume(isMuted ? 0 : volume / 100);
     }
     return;
   }, [volume, isMuted]);
 
   useEffect(() {
-    if (controller.value.isInitialized) {
+    if (controller.value.value.isInitialized) {
       logger('Set looping: $looping');
-      controller.setLooping(repeat == Repeat.one ? true : false);
+      controller.value.setLooping(repeat == Repeat.one ? true : false);
     }
     return;
   }, [looping]);
+
+  useEffect(() {
+    () async {
+      if (controller.value.value.duration != Duration.zero &&
+          file != null &&
+          file.type == ContentType.video) {
+        Progress? progress = history[file.getID()];
+        if (progress != null) {
+          if (!alwaysPlayFromBeginning &&
+              (progress.duration.inMilliseconds -
+                      progress.position.inMilliseconds) >
+                  5000) {
+            logger(
+                'Resume progress: ${file.name} position: ${progress.position} duration: ${progress.duration}');
+            await controller.value.seekTo(progress.position);
+          }
+        }
+      }
+
+      if (autoPlay) {
+        controller.value.play();
+      }
+
+      if (externalSubtitles.isNotEmpty) {
+        externalSubtitle.value = 0;
+      }
+    }();
+    return;
+  }, [controller.value.value.duration]);
 
   useEffect(() {
     return () {
@@ -257,14 +262,14 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       }
 
       if (file != null &&
-          controller.value.isInitialized &&
-          controller.value.duration.inSeconds != 0) {
+          controller.value.value.isInitialized &&
+          controller.value.value.duration.inSeconds != 0) {
         logger(
-            'Save progress: ${file.name}, position: ${controller.value.position}, duration: ${controller.value.duration}');
+            'Save progress: ${file.name}, position: ${controller.value.value.position}, duration: ${controller.value.value.duration}');
         useHistoryStore().add(Progress(
           dateTime: DateTime.now().toUtc(),
-          position: controller.value.position,
-          duration: controller.value.duration,
+          position: controller.value.value.position,
+          duration: controller.value.value.duration,
           file: file,
         ));
       }
@@ -272,7 +277,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   }, [currentPlay?.file]);
 
   useEffect(() {
-    if (isPlaying) {
+    if (controller.value.value.isPlaying) {
       logger('Enable wakelock');
       WakelockPlus.enable();
     } else {
@@ -280,39 +285,39 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       WakelockPlus.disable();
     }
     return;
-  }, [isPlaying]);
+  }, [controller.value.value.isPlaying]);
 
   Future<void> play() async {
-    if (!controller.value.isInitialized && !isInitializing.value) {
+    if (!controller.value.value.isInitialized && !isInitializing.value) {
       init();
     }
-    controller.play();
+    controller.value.play();
   }
 
   Future<void> pause() async {
-    controller.pause();
+    controller.value.pause();
   }
 
   Future<void> seekTo(Duration newPosition) async {
     logger('Seek to: $newPosition');
-    if (duration == Duration.zero) return;
+    if (controller.value.value.duration == Duration.zero) return;
     newPosition.inSeconds < 0
-        ? await controller.seekTo(Duration.zero)
-        : newPosition.inSeconds > duration.inSeconds
-            ? await controller.seekTo(duration)
-            : await controller.seekTo(newPosition);
+        ? await controller.value.seekTo(Duration.zero)
+        : newPosition.inSeconds > controller.value.value.duration.inSeconds
+            ? await controller.value.seekTo(controller.value.value.duration)
+            : await controller.value.seekTo(newPosition);
   }
 
   Future<void> stepBackward() async {
     if (file?.type == ContentType.video) {
-      await controller.step(frames: -1);
+      await controller.value.step(frames: -1);
       logger('Step backward');
     }
   }
 
   Future<void> stepForward() async {
     if (file?.type == ContentType.video) {
-      await controller.step(frames: 1);
+      await controller.value.step(frames: 1);
       logger('Step forward');
     }
   }
@@ -325,13 +330,13 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       return;
     }
 
-    if (file != null && duration != Duration.zero) {
+    if (file != null && controller.value.value.duration != Duration.zero) {
       logger(
-          'Save progress: ${file.name}, position: $position, duration: $duration');
+          'Save progress: ${file.name}, position: ${controller.value.value.position}, duration: ${controller.value.value.duration}');
       useHistoryStore().add(Progress(
         dateTime: DateTime.now().toUtc(),
-        position: position,
-        duration: duration,
+        position: controller.value.value.position,
+        duration: controller.value.value.duration,
         file: file,
       ));
     }
@@ -340,25 +345,30 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   useEffect(() => saveProgress, []);
 
   return FvpPlayer(
-    controller: controller,
+    controller: controller.value,
     isInitializing: isInitializing.value,
-    isPlaying: isPlaying,
+    isPlaying: controller.value.value.isPlaying,
     externalSubtitle: externalSubtitle,
     externalSubtitles: externalSubtitles,
-    position: duration == Duration.zero ? Duration.zero : position,
-    duration: duration,
-    buffer: buffered.isEmpty || duration == Duration.zero
+    position: controller.value.value.duration == Duration.zero
         ? Duration.zero
-        : buffered.reduce((max, curr) => curr.end > max.end ? curr : max).end,
+        : controller.value.value.position,
+    duration: controller.value.value.duration,
+    buffer: controller.value.value.buffered.isEmpty ||
+            controller.value.value.duration == Duration.zero
+        ? Duration.zero
+        : controller.value.value.buffered
+            .reduce((max, curr) => curr.end > max.end ? curr : max)
+            .end,
     aspect: aspect,
-    width: size.width,
-    height: size.height,
+    width: controller.value.value.size.width,
+    height: controller.value.value.size.height,
     play: play,
     pause: pause,
-    backward: (seconds) =>
-        seekTo(Duration(seconds: position.inSeconds - seconds)),
-    forward: (seconds) =>
-        seekTo(Duration(seconds: position.inSeconds + seconds)),
+    backward: (seconds) => seekTo(
+        Duration(seconds: controller.value.value.position.inSeconds - seconds)),
+    forward: (seconds) => seekTo(
+        Duration(seconds: controller.value.value.position.inSeconds + seconds)),
     stepBackward: stepBackward,
     stepForward: stepForward,
     seekTo: seekTo,
