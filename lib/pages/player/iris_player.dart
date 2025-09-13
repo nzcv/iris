@@ -365,271 +365,255 @@ class IrisPlayer extends HookWidget {
                     onPanUpdate: gesture.onPanUpdate,
                     onPanEnd: gesture.onPanEnd,
                     onPanCancel: gesture.onPanCancel,
-                    child: InkWell(
-                      onTap: showControl,
-                      child: Card(
-                        color: Colors.transparent,
-                        clipBehavior: Clip.hardEdge,
-                        elevation: 0,
-                        margin: EdgeInsets.zero,
-                        child: Stack(
-                          children: [
-                            Positioned(
-                              left: 0,
-                              top: 0,
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                color: Colors.black,
-                              ),
-                            ),
-                            Positioned(
-                              left: videoViewOffset.dx,
-                              top: videoViewOffset.dy,
-                              width: videoViewSize.width,
-                              height: videoViewSize.height,
-                              child: player is FvpPlayer
-                                  ? FittedBox(
-                                      fit: fit,
-                                      child: SizedBox(
-                                        width: player.width,
-                                        height: player.height,
-                                        child: VideoPlayer(
-                                            (player as FvpPlayer).controller),
-                                      ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            color: Colors.black,
+                          ),
+                        ),
+                        Positioned(
+                          left: videoViewOffset.dx,
+                          top: videoViewOffset.dy,
+                          width: videoViewSize.width,
+                          height: videoViewSize.height,
+                          child: player is FvpPlayer
+                              ? FittedBox(
+                                  fit: fit,
+                                  child: SizedBox(
+                                    width: player.width,
+                                    height: player.height,
+                                    child: VideoPlayer(
+                                        (player as FvpPlayer).controller),
+                                  ),
+                                )
+                              : player is MediaKitPlayer
+                                  ? Video(
+                                      key: ValueKey(currentPlay?.file.uri),
+                                      controller:
+                                          (player as MediaKitPlayer).controller,
+                                      controls: NoVideoControls,
+                                      fit: fit == BoxFit.none
+                                          ? BoxFit.contain
+                                          : fit,
+                                      // wakelock: mediaType == 'video',
                                     )
-                                  : player is MediaKitPlayer
-                                      ? Video(
-                                          key: ValueKey(currentPlay?.file.uri),
-                                          controller: (player as MediaKitPlayer)
-                                              .controller,
-                                          controls: NoVideoControls,
-                                          fit: fit == BoxFit.none
-                                              ? BoxFit.contain
-                                              : fit,
-                                          // wakelock: mediaType == 'video',
-                                        )
-                                      : Container(),
-                            ),
-                            // Audio
-                            if (currentPlay?.file.type == ContentType.audio)
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                right: 0,
-                                bottom: 0,
-                                child: Audio(cover: cover),
-                              ),
-                            // 播放速度
-                            if (rate != 1.0 && gesture.isLongPress)
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                right: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        12, 12, 18, 12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black54,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Transform.translate(
-                                          offset: const Offset(0, 1.5),
-                                          child: Icon(
-                                            Icons.speed_rounded,
-                                            color: Colors.white,
-                                            size: 24,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          rate.toString(),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            height: 1,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                  : Container(),
+                        ),
+                        // Audio
+                        if (currentPlay?.file.type == ContentType.audio)
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: Audio(cover: cover),
+                          ),
+                        // 播放速度
+                        if (rate != 1.0 && gesture.isLongPress)
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.fromLTRB(12, 12, 18, 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                              ),
-                            // 屏幕亮度
-                            if (gesture.isLeftGesture &&
-                                gesture.brightness != null)
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                right: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        12, 12, 18, 12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black54,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          gesture.brightness == 0
-                                              ? Icons.brightness_low_rounded
-                                              : gesture.brightness! < 1
-                                                  ? Icons
-                                                      .brightness_medium_rounded
-                                                  : Icons
-                                                      .brightness_high_rounded,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        SizedBox(
-                                          width: 100,
-                                          child: LinearProgressIndicator(
-                                            value: gesture.brightness,
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                            backgroundColor: Colors.grey,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    Colors.white),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            // 音量
-                            if (gesture.isRightGesture &&
-                                gesture.volume != null)
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                right: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        12, 12, 18, 12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black54,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          gesture.volume == 0
-                                              ? Icons.volume_mute_rounded
-                                              : gesture.volume! < 0.5
-                                                  ? Icons.volume_down_rounded
-                                                  : Icons.volume_up_rounded,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        SizedBox(
-                                          width: 100,
-                                          child: LinearProgressIndicator(
-                                            value: gesture.volume,
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                            backgroundColor: Colors.grey,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            if (isShowProgress.value &&
-                                !isShowControl.value &&
-                                currentPlay?.file.type == ContentType.video)
-                              Positioned(
-                                left: -28,
-                                right: -28,
-                                bottom: -16,
-                                height: 32,
-                                child: ControlBarSlider(
-                                  player: player,
-                                  showControl: showControl,
-                                  disabled: true,
-                                ),
-                              ),
-                            if (isShowProgress.value &&
-                                !isShowControl.value &&
-                                currentPlay?.file.type == ContentType.video)
-                              Positioned(
-                                left: 12,
-                                top: 12,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
+                                    Transform.translate(
+                                      offset: const Offset(0, 1.5),
+                                      child: Icon(
+                                        Icons.speed_rounded,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
                                     Text(
-                                      currentPlay != null ? title : '',
-                                      style: TextStyle(
+                                      rate.toString(),
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 20,
                                         height: 1,
-                                        decoration: TextDecoration.none,
-                                        shadows: const [
-                                          Shadow(
-                                            color: Colors.black,
-                                            offset: Offset(0, 0),
-                                            blurRadius: 1,
-                                          ),
-                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            if (isShowProgress.value &&
-                                !isShowControl.value &&
-                                currentPlay?.file.type == ContentType.video)
-                              Positioned(
-                                left: 12,
-                                bottom: 6,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                            ),
+                          ),
+                        // 屏幕亮度
+                        if (gesture.isLeftGesture && gesture.brightness != null)
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.fromLTRB(12, 12, 18, 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(
-                                      '${formatDurationToMinutes(player.position)} / ${formatDurationToMinutes(player.duration)}',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        height: 2,
-                                        decoration: TextDecoration.none,
-                                        shadows: const [
-                                          Shadow(
-                                            color: Colors.black,
-                                            offset: Offset(0, 0),
-                                            blurRadius: 1,
-                                          ),
-                                        ],
+                                    Icon(
+                                      gesture.brightness == 0
+                                          ? Icons.brightness_low_rounded
+                                          : gesture.brightness! < 1
+                                              ? Icons.brightness_medium_rounded
+                                              : Icons.brightness_high_rounded,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    SizedBox(
+                                      width: 100,
+                                      child: LinearProgressIndicator(
+                                        value: gesture.brightness,
+                                        borderRadius: BorderRadius.circular(4),
+                                        backgroundColor: Colors.grey,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                          ],
-                        ),
-                      ),
+                            ),
+                          ),
+                        // 音量
+                        if (gesture.isRightGesture && gesture.volume != null)
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.fromLTRB(12, 12, 18, 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      gesture.volume == 0
+                                          ? Icons.volume_mute_rounded
+                                          : gesture.volume! < 0.5
+                                              ? Icons.volume_down_rounded
+                                              : Icons.volume_up_rounded,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    SizedBox(
+                                      width: 100,
+                                      child: LinearProgressIndicator(
+                                        value: gesture.volume,
+                                        borderRadius: BorderRadius.circular(4),
+                                        backgroundColor: Colors.grey,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (isShowProgress.value &&
+                            !isShowControl.value &&
+                            currentPlay?.file.type == ContentType.video)
+                          Positioned(
+                            left: -28,
+                            right: -28,
+                            bottom: -16,
+                            height: 32,
+                            child: ControlBarSlider(
+                              player: player,
+                              showControl: showControl,
+                              disabled: true,
+                            ),
+                          ),
+                        if (isShowProgress.value &&
+                            !isShowControl.value &&
+                            currentPlay?.file.type == ContentType.video)
+                          Positioned(
+                            left: 12,
+                            top: 12,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  currentPlay != null ? title : '',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    height: 1,
+                                    decoration: TextDecoration.none,
+                                    shadows: const [
+                                      Shadow(
+                                        color: Colors.black,
+                                        offset: Offset(0, 0),
+                                        blurRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (isShowProgress.value &&
+                            !isShowControl.value &&
+                            currentPlay?.file.type == ContentType.video)
+                          Positioned(
+                            left: 12,
+                            bottom: 6,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${formatDurationToMinutes(player.position)} / ${formatDurationToMinutes(player.duration)}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    height: 2,
+                                    decoration: TextDecoration.none,
+                                    shadows: const [
+                                      Shadow(
+                                        color: Colors.black,
+                                        offset: Offset(0, 0),
+                                        blurRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

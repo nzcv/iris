@@ -9,6 +9,7 @@ import 'package:iris/pages/home/history.dart';
 import 'package:iris/pages/player/play_queue.dart';
 import 'package:iris/pages/player/subtitle_and_audio_track.dart';
 import 'package:iris/pages/settings/settings.dart';
+import 'package:iris/pages/storages/storages.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/store/use_ui_store.dart';
@@ -145,15 +146,15 @@ KeyboardEvent useKeyboard({
           usePlayQueueStore().next();
           break;
         // 存储
-        // case LogicalKeyboardKey.keyF:
-        //   showControlForHover(
-        //     showPopup(
-        //       context: context,
-        //       child: const Storages(),
-        //       direction: PopupDirection.right,
-        //     ),
-        //   );
-        //   break;
+        case LogicalKeyboardKey.keyF:
+          showControlForHover(
+            showPopup(
+              context: context,
+              child: const Storages(),
+              direction: PopupDirection.right,
+            ),
+          );
+          break;
         // 播放队列
         case LogicalKeyboardKey.keyP:
           showControlForHover(
@@ -219,7 +220,7 @@ KeyboardEvent useKeyboard({
           } else {
             showProgress();
           }
-          player.backward(10);
+          player.backward(5);
           break;
         // 快进
         case LogicalKeyboardKey.arrowRight:
@@ -228,7 +229,7 @@ KeyboardEvent useKeyboard({
           } else {
             showProgress();
           }
-          player.forward(10);
+          player.forward(5);
           break;
         // 提升音量
         case LogicalKeyboardKey.arrowUp:

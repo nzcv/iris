@@ -66,7 +66,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   final streamUrl = mediaStream.url;
 
   final controllerFuture = useMemoized(() async {
-    if (file == null) return VideoPlayerController.networkUrl(Uri.parse(''));
+    if (file == null) return null;
     isInitializing.value = true;
     final storage = useStorageStore().findById(file.storageId);
     final auth = storage?.getAuth();

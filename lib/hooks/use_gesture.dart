@@ -98,14 +98,14 @@ Gesture useGesture({
         } else {
           showProgress();
         }
-        await player.forward(10);
+        await player.forward(5);
       } else if (position < 0.25) {
         if (isShowControl.value) {
           showControl();
         } else {
           showProgress();
         }
-        player.backward(10);
+        player.backward(5);
       } else {
         if (player.isPlaying == true) {
           await useAppStore().updateAutoPlay(false);
