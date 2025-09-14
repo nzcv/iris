@@ -2,14 +2,18 @@ import 'package:collection/collection.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/models/file.dart';
+import 'package:iris/models/player.dart';
 import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/storages/storage.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/files_filter.dart';
+import 'package:provider/provider.dart';
 
-FileItem? useCover(bool isPlaying) {
+FileItem? useCover() {
   final context = useContext();
+  final isPlaying =
+      context.select<MediaPlayer, bool>((player) => player.isPlaying);
 
   final playQueue =
       usePlayQueueStore().select(context, (state) => state.playQueue);

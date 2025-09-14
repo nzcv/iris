@@ -11,8 +11,8 @@ class MediaPlayer {
   final Duration position;
   final Duration duration;
   final Duration buffer;
-  final double? width;
-  final double? height;
+  final double width;
+  final double height;
   final Future<void> Function() saveProgress;
   final Future<void> Function() play;
   final Future<void> Function() pause;

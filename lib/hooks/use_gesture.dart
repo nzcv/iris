@@ -9,6 +9,7 @@ import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/resize_window.dart';
+import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 class Gesture {
@@ -55,12 +56,24 @@ class Gesture {
 }
 
 Gesture useGesture({
-  required MediaPlayer player,
   required void Function() showControl,
   required void Function() hideControl,
   required void Function() showProgress,
 }) {
   final context = useContext();
+
+  final isPlaying =
+      context.select<MediaPlayer, bool>((player) => player.isPlaying);
+  final progress =
+      context.select<MediaPlayer, ({Duration position, Duration duration})>(
+    (player) => (position: player.position, duration: player.duration),
+  );
+
+  final play = context.read<MediaPlayer>().play;
+  final pause = context.read<MediaPlayer>().pause;
+  final forward = context.read<MediaPlayer>().forward;
+  final backward = context.read<MediaPlayer>().backward;
+  final seek = context.read<MediaPlayer>().seek;
 
   final aspectRatio =
       usePlayerUiStore().select(context, (state) => state.aspectRatio);
@@ -112,22 +125,22 @@ Gesture useGesture({
         } else {
           showProgress();
         }
-        await player.forward(5);
+        await forward(5);
       } else if (position < 0.25) {
         if (isShowControl) {
           showControl();
         } else {
           showProgress();
         }
-        player.backward(5);
+        backward(5);
       } else {
-        if (player.isPlaying == true) {
+        if (isPlaying == true) {
           await useAppStore().updateAutoPlay(false);
-          player.pause();
+          pause();
           showControl();
         } else {
           await useAppStore().updateAutoPlay(true);
-          player.play();
+          play();
         }
       }
     } else {
@@ -141,7 +154,7 @@ Gesture useGesture({
   }
 
   void onLongPressStart(LongPressStartDetails details) {
-    if (isTouch.value && player.isPlaying == true) {
+    if (isTouch.value && isPlaying == true) {
       isLongPress.value = true;
       useAppStore().updateRate(2.0);
     }
@@ -200,14 +213,14 @@ Gesture useGesture({
       // 水平滑动
       if (isHorizontalGesture.value && isSeeking) {
         double dx = details.delta.dx;
-        int seconds = (dx * 2 + player.position.inSeconds).toInt();
+        int seconds = (dx * 2 + progress.position.inSeconds).toInt();
         Duration position = Duration(
             seconds: seconds < 0
                 ? 0
-                : seconds > player.duration.inSeconds
-                    ? player.duration.inSeconds
+                : seconds > progress.duration.inSeconds
+                    ? progress.duration.inSeconds
                     : seconds);
-        player.seek(position);
+        seek(position);
         if (isShowControl) {
           showControl();
         } else {
@@ -259,7 +272,7 @@ Gesture useGesture({
     isRightGesture.value = false;
     startPosition.value = null;
     if (isSeeking) {
-      await player.seek(player.position);
+      await seek(progress.position);
       usePlayerUiStore().updateIsSeeking(false);
     }
   }
@@ -272,7 +285,7 @@ Gesture useGesture({
     startPosition.value = null;
     if (isSeeking) {
       isTouch.value = false;
-      await player.seek(player.position);
+      await seek(progress.position);
       usePlayerUiStore().updateIsSeeking(false);
     }
   }
@@ -285,10 +298,10 @@ Gesture useGesture({
   }
 
   final cursor = useMemoized(() {
-    return player.isPlaying == false
+    return isPlaying == false
         ? SystemMouseCursors.basic
         : SystemMouseCursors.none;
-  }, [player.isPlaying]);
+  }, [isPlaying]);
 
   return Gesture(
     onTapDown: onTapDown,

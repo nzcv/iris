@@ -5,17 +5,15 @@ import 'package:iris/models/player.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/format_duration_to_minutes.dart';
+import 'package:provider/provider.dart';
 
 class ControlBarSlider extends HookWidget {
   const ControlBarSlider({
     super.key,
-    required this.player,
     required this.showControl,
     this.disabled = false,
     this.color,
   });
-
-  final MediaPlayer player;
 
   final void Function() showControl;
   final bool disabled;
@@ -25,6 +23,24 @@ class ControlBarSlider extends HookWidget {
   Widget build(BuildContext context) {
     final autoPlay = useAppStore().select(context, (state) => state.autoPlay);
 
+    final progress = context.select<
+        MediaPlayer,
+        ({
+          Duration position,
+          Duration duration,
+          Duration buffer,
+        })>(
+      (player) => (
+        position: player.position,
+        duration: player.duration,
+        buffer: player.buffer
+      ),
+    );
+
+    final play = context.read<MediaPlayer>().play;
+    final pause = context.read<MediaPlayer>().pause;
+    final seek = context.read<MediaPlayer>().seek;
+
     return ExcludeFocus(
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
@@ -33,7 +49,7 @@ class ControlBarSlider extends HookWidget {
             Visibility(
               visible: !disabled,
               child: Text(
-                formatDurationToMinutes(player.position),
+                formatDurationToMinutes(progress.position),
                 style: TextStyle(
                   color: color,
                   height: 2,
@@ -58,12 +74,12 @@ class ControlBarSlider extends HookWidget {
                       trackHeight: 3,
                     ),
                     child: Slider(
-                      value: player.buffer.inMilliseconds.toDouble() >
-                              player.duration.inMilliseconds.toDouble()
+                      value: progress.buffer.inMilliseconds.toDouble() >
+                              progress.duration.inMilliseconds.toDouble()
                           ? 0
-                          : player.buffer.inMilliseconds.toDouble(),
+                          : progress.buffer.inMilliseconds.toDouble(),
                       min: 0,
-                      max: player.duration.inMilliseconds.toDouble(),
+                      max: progress.duration.inMilliseconds.toDouble(),
                       onChanged: null,
                     ),
                   ),
@@ -83,23 +99,23 @@ class ControlBarSlider extends HookWidget {
                       trackHeight: 4,
                     ),
                     child: Slider(
-                      value: player.position.inMilliseconds.toDouble() >
-                              player.duration.inMilliseconds.toDouble()
+                      value: progress.position.inMilliseconds.toDouble() >
+                              progress.duration.inMilliseconds.toDouble()
                           ? 0
-                          : player.position.inMilliseconds.toDouble(),
+                          : progress.position.inMilliseconds.toDouble(),
                       min: 0,
-                      max: player.duration.inMilliseconds.toDouble(),
+                      max: progress.duration.inMilliseconds.toDouble(),
                       onChangeStart: (value) {
                         usePlayerUiStore().updateIsSeeking(true);
-                        player.pause();
+                        pause();
                       },
                       onChanged: (value) {
                         showControl();
-                        player.seek(Duration(milliseconds: value.toInt()));
+                        seek(Duration(milliseconds: value.toInt()));
                       },
                       onChangeEnd: (value) async {
                         if (autoPlay) {
-                          player.play();
+                          play();
                         }
                         usePlayerUiStore().updateIsSeeking(false);
                       },
@@ -111,7 +127,7 @@ class ControlBarSlider extends HookWidget {
             Visibility(
               visible: !disabled,
               child: Text(
-                formatDurationToMinutes(player.duration),
+                formatDurationToMinutes(progress.duration),
                 style: TextStyle(
                   color: color,
                   height: 2,

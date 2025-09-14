@@ -5,15 +5,16 @@ import 'package:iris/models/player.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:provider/provider.dart';
 
 class AudioTrackList extends HookWidget {
-  const AudioTrackList({super.key, required this.player});
-
-  final MediaPlayer player;
+  const AudioTrackList({super.key});
 
   @override
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
+
+    final player = context.read<MediaPlayer>();
 
     final focusNode = useFocusNode();
 
@@ -25,47 +26,41 @@ class AudioTrackList extends HookWidget {
     if (player is MediaKitPlayer) {
       return ListView(
         children: [
-          ...(player as MediaKitPlayer).audios.map(
-                (audio) => ListTile(
-                  focusNode: (player as MediaKitPlayer).audio == audio
-                      ? focusNode
-                      : null,
-                  title: Text(
-                    audio == AudioTrack.auto()
-                        ? t.auto
-                        : audio == AudioTrack.no()
-                            ? t.off
-                            : audio.title ?? audio.language ?? audio.id,
-                    style: (player as MediaKitPlayer).audio == audio
-                        ? TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          )
-                        : TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                  ),
-                  tileColor: (player as MediaKitPlayer).audio == audio
-                      ? Theme.of(context).hoverColor
-                      : null,
-                  onTap: () {
-                    logger(
-                        'Set audio track: ${audio.title ?? audio.language ?? audio.id}');
-                    (player as MediaKitPlayer).player.setAudioTrack(audio);
-                    Navigator.of(context).pop();
-                  },
-                ),
+          ...player.audios.map(
+            (audio) => ListTile(
+              focusNode: player.audio == audio ? focusNode : null,
+              title: Text(
+                audio == AudioTrack.auto()
+                    ? t.auto
+                    : audio == AudioTrack.no()
+                        ? t.off
+                        : audio.title ?? audio.language ?? audio.id,
+                style: player.audio == audio
+                    ? TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      )
+                    : TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
               ),
+              tileColor:
+                  player.audio == audio ? Theme.of(context).hoverColor : null,
+              onTap: () {
+                logger(
+                    'Set audio track: ${audio.title ?? audio.language ?? audio.id}');
+                player.player.setAudioTrack(audio);
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
         ],
       );
     }
 
     if (player is FvpPlayer) {
-      final audios =
-          (player as FvpPlayer).controller.getMediaInfo()?.audio ?? [];
-      final activeAudioTracks =
-          (player as FvpPlayer).controller.getActiveAudioTracks() ?? [];
+      final audios = player.controller.getMediaInfo()?.audio ?? [];
+      final activeAudioTracks = player.controller.getActiveAudioTracks() ?? [];
       return ListView(
         children: [
           ListTile(
@@ -85,7 +80,7 @@ class AudioTrackList extends HookWidget {
                 activeAudioTracks.isEmpty ? Theme.of(context).hoverColor : null,
             onTap: () {
               logger('Set audio track: ${t.off}');
-              (player as FvpPlayer).controller.setAudioTracks([]);
+              player.controller.setAudioTracks([]);
               Navigator.of(context).pop();
             },
           ),
@@ -113,9 +108,7 @@ class AudioTrackList extends HookWidget {
               onTap: () {
                 logger(
                     'Set audio track: ${audio.metadata['title'] ?? audio.metadata['language'] ?? audios.indexOf(audio).toString()}');
-                (player as FvpPlayer)
-                    .controller
-                    .setAudioTracks([audios.indexOf(audio)]);
+                player.controller.setAudioTracks([audios.indexOf(audio)]);
                 Navigator.of(context).pop();
               },
             ),

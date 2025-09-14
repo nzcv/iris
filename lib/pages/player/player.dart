@@ -22,20 +22,27 @@ import 'package:iris/utils/platform.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/utils/get_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 class Player extends HookWidget {
-  const Player({super.key, required this.player});
-
-  final MediaPlayer player;
+  const Player({super.key});
 
   @override
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
 
-    useAppLifecycle(player.saveProgress);
+    final isPlaying =
+        context.select<MediaPlayer, bool>((player) => player.isPlaying);
+    final width = context.select<MediaPlayer, double>((player) => player.width);
+    final height =
+        context.select<MediaPlayer, double>((player) => player.height);
 
-    final cover = useCover(player.isPlaying);
+    final saveProgress = context.read<MediaPlayer>().saveProgress;
+
+    useAppLifecycle();
+
+    final cover = useCover();
 
     final playerUiStore = usePlayerUiStore();
 
@@ -167,7 +174,7 @@ class Player extends HookWidget {
 
     final showControlForHover = useCallback((Future<void> callback) async {
       try {
-        player.saveProgress();
+        saveProgress();
         showControl();
         updateIsHovering(true);
         await callback;
@@ -183,7 +190,6 @@ class Player extends HookWidget {
     }, [updateIsShowProgress, resetBottomProgressTimer]);
 
     final onKeyEvent = useKeyboard(
-      player: player,
       showControl: showControl,
       showControlForHover: showControlForHover,
       showProgress: showProgress,
@@ -203,7 +209,7 @@ class Player extends HookWidget {
         windowManager.setTitle(title);
       }
       return;
-    }, [title, player.isPlaying]);
+    }, [title, isPlaying]);
 
     useEffect(() {
       if (isShowControl || currentPlay?.file.type == ContentType.video) {
@@ -232,18 +238,12 @@ class Player extends HookWidget {
     );
 
     final videoViewSize = useMemoized(() {
-      if (fit != BoxFit.none || player.width == 0 || player.height == 0) {
+      if (fit != BoxFit.none || width == 0 || height == 0) {
         return MediaQuery.of(context).size;
       } else {
-        return Size(player.width! / scaleFactor, player.height! / scaleFactor);
+        return Size(width / scaleFactor, height / scaleFactor);
       }
-    }, [
-      fit,
-      MediaQuery.of(context).size,
-      player.width,
-      player.height,
-      scaleFactor
-    ]);
+    }, [fit, MediaQuery.of(context).size, width, height, scaleFactor]);
 
     final videoViewOffset = useMemoized(
         () => fit == BoxFit.none
@@ -285,7 +285,7 @@ class Player extends HookWidget {
         canPop: false,
         onPopInvokedWithResult: (bool didPop, Object? result) async {
           if (!didPop) {
-            await player.saveProgress();
+            await saveProgress();
             if (!canPop.value) {
               canPop.value = true;
               if (context.mounted) {
@@ -311,7 +311,6 @@ class Player extends HookWidget {
                 height: videoViewSize.height,
                 child: VideoView(
                   key: ValueKey(currentPlay?.file.uri),
-                  player: player,
                   fit: fit,
                 ),
               ),
@@ -330,7 +329,6 @@ class Player extends HookWidget {
                 right: 0,
                 bottom: 0,
                 child: ControlsOverlay(
-                  player: player,
                   currentPlay: currentPlay,
                   title: title,
                   showControl: showControl,

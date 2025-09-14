@@ -10,20 +10,17 @@ import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_stream/media_stream.dart';
+import 'package:provider/provider.dart';
 
 class SubtitleList extends HookWidget {
-  const SubtitleList({super.key, required this.player});
-
-  final MediaPlayer player;
+  const SubtitleList({super.key});
 
   @override
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
-
     final focusNode = useFocusNode();
 
-    MediaStream mediaStream = MediaStream();
-    final streamUrl = mediaStream.url;
+    final player = context.watch<MediaPlayer>();
 
     final playQueue =
         usePlayQueueStore().select(context, (state) => state.playQueue);
@@ -34,191 +31,124 @@ class SubtitleList extends HookWidget {
         () => playQueue.indexWhere((element) => element.index == currentIndex),
         [playQueue, currentIndex]);
 
-    final PlayQueueItem? currentPlay = useMemoized(
+    final file = useMemoized(
         () => playQueue.isEmpty || currentPlayIndex < 0
             ? null
-            : playQueue[currentPlayIndex],
+            : playQueue[currentPlayIndex].file,
         [playQueue, currentPlayIndex]);
 
     useEffect(() {
       focusNode.requestFocus();
-      return () => focusNode.unfocus();
+      return focusNode.unfocus;
     }, []);
 
     if (player is MediaKitPlayer) {
+      final activeSubtitle = context.select<MediaPlayer, SubtitleTrack>(
+          (p) => p is MediaKitPlayer ? p.subtitle : SubtitleTrack.no());
+      final subtitles = context.select<MediaPlayer, List<SubtitleTrack>>(
+          (p) => p is MediaKitPlayer ? p.subtitles : []);
+      final externalSubtitles = context.select<MediaPlayer, List<Subtitle>>(
+          (p) => p is MediaKitPlayer ? p.externalSubtitles : []);
+
       return ListView(
         children: [
-          ...(player as MediaKitPlayer).subtitles.map(
-                (subtitle) => ListTile(
-                  focusNode: (player as MediaKitPlayer).subtitle == subtitle
-                      ? focusNode
-                      : null,
-                  title: Text(
-                    subtitle == SubtitleTrack.no()
-                        ? t.off
-                        : subtitle.title ?? subtitle.language ?? subtitle.id,
-                    style: (player as MediaKitPlayer).subtitle == subtitle
-                        ? TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          )
-                        : TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                  ),
-                  tileColor: (player as MediaKitPlayer).subtitle == subtitle
-                      ? Theme.of(context).hoverColor
-                      : null,
-                  onTap: () {
-                    logger(
-                        'Set subtitle: ${subtitle.title ?? subtitle.language ?? subtitle.id}');
-                    (player as MediaKitPlayer)
-                        .player
-                        .setSubtitleTrack(subtitle);
-                    Navigator.of(context).pop();
-                  },
-                ),
+          ...subtitles.map((subtitle) {
+            final bool isActive = activeSubtitle == subtitle;
+            return ListTile(
+              focusNode: isActive ? focusNode : null,
+              title: Text(
+                subtitle == SubtitleTrack.no()
+                    ? t.off
+                    : subtitle.title ?? subtitle.language ?? subtitle.id,
+                style: isActive
+                    ? TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary)
+                    : TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
-          ...(player as MediaKitPlayer).externalSubtitles.map(
-                (subtitle) => ListTile(
-                  title: Text(
-                    subtitle.name,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  onTap: () {
-                    logger('Set external subtitle: $subtitle');
-                    final uri = currentPlay?.file.storageType == StorageType.ftp
-                        ? '$streamUrl/${subtitle.uri}'
-                        : subtitle.uri;
-                    logger('External subtitle uri: $uri');
-                    (player as MediaKitPlayer).player.setSubtitleTrack(
-                          SubtitleTrack.uri(
-                            uri,
-                            title: subtitle.name,
-                          ),
-                        );
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ),
+              tileColor: isActive ? Theme.of(context).hoverColor : null,
+              onTap: () {
+                logger('Set subtitle: ${subtitle.id}');
+                player.player.setSubtitleTrack(subtitle);
+                Navigator.of(context).pop();
+              },
+            );
+          }),
+          ...externalSubtitles.map((subtitle) {
+            return ListTile(
+              title: Text(subtitle.name,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              onTap: () {
+                logger('Set external subtitle: $subtitle');
+                final mediaStream = MediaStream();
+                final uri = file?.storageType == StorageType.ftp
+                    ? '${mediaStream.url}/${subtitle.uri}'
+                    : subtitle.uri;
+                player.player.setSubtitleTrack(
+                    SubtitleTrack.uri(uri, title: subtitle.name));
+                Navigator.of(context).pop();
+              },
+            );
+          }),
         ],
       );
     }
 
     if (player is FvpPlayer) {
-      final subtitles =
-          (player as FvpPlayer).controller.getMediaInfo()?.subtitle ?? [];
-      final activeSubtitles =
-          (player as FvpPlayer).controller.getActiveSubtitleTracks() ?? [];
+      final activeSubtitles = useListenableSelector(player.controller,
+          () => player.controller.getActiveSubtitleTracks() ?? []);
+      final externalSubtitleIndex = useValueListenable(player.externalSubtitle);
+
+      final subtitles = player.controller.getMediaInfo()?.subtitle ?? [];
+      final externalSubtitles = player.externalSubtitles;
+
       return ListView(
         children: [
           ListTile(
-            focusNode: (player as FvpPlayer).externalSubtitle.value == null &&
-                    activeSubtitles.isEmpty
+            selected: externalSubtitleIndex == null && activeSubtitles.isEmpty,
+            focusNode: externalSubtitleIndex == null && activeSubtitles.isEmpty
                 ? focusNode
                 : null,
-            title: Text(
-              t.off,
-              style: (player as FvpPlayer).externalSubtitle.value == null &&
-                      activeSubtitles.isEmpty
-                  ? TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    )
-                  : TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-            ),
-            tileColor: (player as FvpPlayer).externalSubtitle.value == null &&
-                    activeSubtitles.isEmpty
-                ? Theme.of(context).hoverColor
-                : null,
+            title: Text(t.off),
             onTap: () {
               logger('Set subtitle: ${t.off}');
-              (player as FvpPlayer).externalSubtitle.value = null;
-              (player as FvpPlayer).controller.setSubtitleTracks([]);
+              player.externalSubtitle.value = null;
+              player.controller.setSubtitleTracks([]);
               Navigator.of(context).pop();
             },
           ),
-          ...subtitles.map(
-            (subtitle) => ListTile(
-              focusNode: (player as FvpPlayer).externalSubtitle.value == null &&
-                      activeSubtitles.contains(subtitles.indexOf(subtitle))
-                  ? focusNode
-                  : null,
-              title: Text(
-                subtitle.metadata['title'] ??
-                    subtitle.metadata['language'] ??
-                    subtitle.index.toString(),
-                style: (player as FvpPlayer).externalSubtitle.value == null &&
-                        activeSubtitles.contains(subtitles.indexOf(subtitle))
-                    ? TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      )
-                    : TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-              ),
-              tileColor: (player as FvpPlayer).externalSubtitle.value == null &&
-                      activeSubtitles.contains(subtitles.indexOf(subtitle))
-                  ? Theme.of(context).hoverColor
-                  : null,
+          ...subtitles.map((subtitle) {
+            final int index = subtitles.indexOf(subtitle);
+            final bool isActive = externalSubtitleIndex == null &&
+                activeSubtitles.contains(index);
+            return ListTile(
+              selected: isActive,
+              focusNode: isActive ? focusNode : null,
+              title: Text(subtitle.metadata['title'] ??
+                  subtitle.metadata['language'] ??
+                  subtitle.index.toString()),
               onTap: () {
-                logger(
-                    'Set subtitle: ${subtitle.metadata['title'] ?? subtitle.metadata['language'] ?? subtitle.index.toString()}');
-                (player as FvpPlayer).externalSubtitle.value = null;
-                (player as FvpPlayer)
-                    .controller
-                    .setSubtitleTracks([subtitles.indexOf(subtitle)]);
+                player.externalSubtitle.value = null;
+                player.controller.setSubtitleTracks([index]);
                 Navigator.of(context).pop();
               },
-            ),
-          ),
-          ...(player as FvpPlayer).externalSubtitles.map(
-                (subtitle) => ListTile(
-                  focusNode: (player as FvpPlayer).externalSubtitle.value ==
-                          (player as FvpPlayer)
-                              .externalSubtitles
-                              .indexOf(subtitle)
-                      ? focusNode
-                      : null,
-                  title: (player as FvpPlayer).externalSubtitle.value ==
-                          (player as FvpPlayer)
-                              .externalSubtitles
-                              .indexOf(subtitle)
-                      ? Text(
-                          subtitle.name,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary),
-                        )
-                      : Text(
-                          subtitle.name,
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                  tileColor: (player as FvpPlayer).externalSubtitle.value ==
-                          (player as FvpPlayer)
-                              .externalSubtitles
-                              .indexOf(subtitle)
-                      ? Theme.of(context).hoverColor
-                      : null,
-                  onTap: () {
-                    logger('Set external subtitle: $subtitle');
-                    (player as FvpPlayer).externalSubtitle.value =
-                        (player as FvpPlayer)
-                            .externalSubtitles
-                            .indexOf(subtitle);
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ),
+            );
+          }),
+          ...externalSubtitles.map((subtitle) {
+            final int index = externalSubtitles.indexOf(subtitle);
+            final bool isActive = externalSubtitleIndex == index;
+            return ListTile(
+              selected: isActive,
+              focusNode: isActive ? focusNode : null,
+              title: Text(subtitle.name),
+              onTap: () {
+                player.externalSubtitle.value = index;
+                Navigator.of(context).pop();
+              },
+            );
+          }),
         ],
       );
     }

@@ -16,16 +16,21 @@ import 'package:iris/utils/platform.dart';
 import 'package:iris/widgets/bottom_sheets/show_open_link_bottom_sheet.dart';
 import 'package:iris/widgets/dialogs/show_open_link_dialog.dart';
 import 'package:iris/widgets/popup.dart';
+import 'package:provider/provider.dart';
 
 typedef KeyboardEvent = void Function(KeyEvent event);
 
 KeyboardEvent useKeyboard({
-  required MediaPlayer player,
   required void Function() showControl,
   required Future<void> Function(Future<void>) showControlForHover,
   required void Function() showProgress,
 }) {
   final context = useContext();
+
+  final player = context.read<MediaPlayer>();
+
+  final isPlaying =
+      context.select<MediaPlayer, bool>((player) => player.isPlaying);
 
   final shuffle = useAppStore().state.shuffle;
   final isFullScreen = usePlayerUiStore().state.isFullScreen;
@@ -130,7 +135,7 @@ KeyboardEvent useKeyboard({
         case LogicalKeyboardKey.space:
         case LogicalKeyboardKey.mediaPlayPause:
           showControl();
-          if (player.isPlaying) {
+          if (isPlaying) {
             useAppStore().updateAutoPlay(false);
             player.pause();
           } else {
@@ -173,7 +178,7 @@ KeyboardEvent useKeyboard({
           showControlForHover(
             showPopup(
               context: context,
-              child: SubtitleAndAudioTrack(player: player),
+              child: SubtitleAndAudioTrack(),
               direction: PopupDirection.right,
             ),
           );

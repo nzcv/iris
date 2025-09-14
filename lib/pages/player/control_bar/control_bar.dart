@@ -23,18 +23,17 @@ import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:iris/widgets/popup.dart';
 import 'package:iris/pages/storages/storages.dart';
+import 'package:provider/provider.dart';
 
 class ControlBar extends HookWidget {
   const ControlBar({
     super.key,
-    required this.player,
     required this.showControl,
     required this.showControlForHover,
     this.color,
     this.overlayColor,
   });
 
-  final MediaPlayer player;
   final void Function() showControl;
   final Future<void> Function(Future<void> callback) showControlForHover;
   final Color? color;
@@ -43,6 +42,15 @@ class ControlBar extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
+
+    final isPlaying =
+        context.select<MediaPlayer, bool>((player) => player.isPlaying);
+
+    final isInitializing =
+        context.select<MediaPlayer, bool>((player) => player.isInitializing);
+
+    final play = context.read<MediaPlayer>().play;
+    final pause = context.read<MediaPlayer>().pause;
 
     final rate = useAppStore().select(context, (state) => state.rate);
     final volume = useAppStore().select(context, (state) => state.volume);
@@ -64,14 +72,14 @@ class ControlBar extends HookWidget {
     final isSeeking =
         usePlayerUiStore().select(context, (state) => state.isSeeking);
 
-    final displayIsPlaying = useState(player.isPlaying);
+    final displayIsPlaying = useState(isPlaying);
 
     useEffect(() {
       if (!isSeeking) {
-        displayIsPlaying.value = player.isPlaying;
+        displayIsPlaying.value = isPlaying;
       }
       return null;
-    }, [player.isPlaying]);
+    }, [isPlaying]);
 
     return Container(
       padding: const EdgeInsets.all(8),
@@ -92,7 +100,6 @@ class ControlBar extends HookWidget {
             Visibility(
               visible: MediaQuery.of(context).size.width < 1024 || !isDesktop,
               child: ControlBarSlider(
-                player: player,
                 showControl: showControl,
                 color: color,
               ),
@@ -117,17 +124,17 @@ class ControlBar extends HookWidget {
                       ),
                       onPressed: () {
                         showControl();
-                        if (player.isPlaying == true) {
+                        if (isPlaying == true) {
                           useAppStore().updateAutoPlay(false);
-                          player.pause();
+                          pause();
                         } else {
                           useAppStore().updateAutoPlay(true);
-                          player.play();
+                          play();
                         }
                       },
                       style: ButtonStyle(overlayColor: overlayColor),
                     ),
-                    if (player.isInitializing)
+                    if (isInitializing)
                       SizedBox(
                         width: 36,
                         height: 36,
@@ -148,7 +155,7 @@ class ControlBar extends HookWidget {
                   onPressed: () {
                     showControl();
                     useAppStore().updateAutoPlay(false);
-                    player.pause();
+                    pause();
                     usePlayQueueStore().updateCurrentIndex(-1);
                   },
                   style: ButtonStyle(overlayColor: overlayColor),
@@ -331,7 +338,6 @@ class ControlBar extends HookWidget {
                     visible:
                         MediaQuery.of(context).size.width >= 1024 && isDesktop,
                     child: ControlBarSlider(
-                      player: player,
                       showControl: showControl,
                       color: color,
                     ),
@@ -349,7 +355,10 @@ class ControlBar extends HookWidget {
                       showControlForHover(
                         showPopup(
                           context: context,
-                          child: SubtitleAndAudioTrack(player: player),
+                          child: Provider<MediaPlayer>.value(
+                            value: context.read<MediaPlayer>(),
+                            child: const SubtitleAndAudioTrack(),
+                          ),
                           direction: PopupDirection.right,
                         ),
                       );
@@ -602,7 +611,10 @@ class ControlBar extends HookWidget {
                         onTap: () => showControlForHover(
                           showPopup(
                             context: context,
-                            child: SubtitleAndAudioTrack(player: player),
+                            child: Provider<MediaPlayer>.value(
+                              value: context.read<MediaPlayer>(),
+                              child: const SubtitleAndAudioTrack(),
+                            ),
                             direction: PopupDirection.right,
                           ),
                         ),

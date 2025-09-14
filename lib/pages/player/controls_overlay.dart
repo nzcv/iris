@@ -13,11 +13,11 @@ import 'package:iris/utils/format_duration_to_minutes.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:iris/widgets/drag_aria.dart';
 import 'package:iris/widgets/title_bar.dart';
+import 'package:provider/provider.dart';
 
 class ControlsOverlay extends HookWidget {
   const ControlsOverlay({
     super.key,
-    required this.player,
     required this.currentPlay,
     required this.title,
     required this.showControl,
@@ -26,7 +26,6 @@ class ControlsOverlay extends HookWidget {
     required this.showProgress,
   });
 
-  final MediaPlayer player;
   final PlayQueueItem? currentPlay;
   final String title;
   final Function() showControl;
@@ -36,6 +35,16 @@ class ControlsOverlay extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPlaying =
+        context.select<MediaPlayer, bool>((player) => player.isPlaying);
+
+    final progress =
+        context.select<MediaPlayer, ({Duration position, Duration duration})>(
+      (player) => (position: player.position, duration: player.duration),
+    );
+
+    final saveProgress = context.read<MediaPlayer>().saveProgress;
+
     final rate = useAppStore().select(context, (state) => state.rate);
 
     final aspectRatio =
@@ -46,7 +55,6 @@ class ControlsOverlay extends HookWidget {
         usePlayerUiStore().select(context, (state) => state.isShowProgress);
 
     final gesture = useGesture(
-      player: player,
       showControl: showControl,
       hideControl: hideControl,
       showProgress: showProgress,
@@ -78,7 +86,7 @@ class ControlsOverlay extends HookWidget {
           right: 0,
           bottom: 0,
           child: MouseRegion(
-            cursor: isShowControl || player.isPlaying == false
+            cursor: isShowControl || isPlaying == false
                 ? SystemMouseCursors.basic
                 : SystemMouseCursors.none,
             onHover: gesture.onHover,
@@ -231,7 +239,6 @@ class ControlsOverlay extends HookWidget {
                       bottom: -16,
                       height: 32,
                       child: ControlBarSlider(
-                        player: player,
                         showControl: showControl,
                         disabled: true,
                       ),
@@ -274,7 +281,7 @@ class ControlsOverlay extends HookWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${formatDurationToMinutes(player.position)} / ${formatDurationToMinutes(player.duration)}',
+                            '${formatDurationToMinutes(progress.position)} / ${formatDurationToMinutes(progress.duration)}',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -317,7 +324,7 @@ class ControlsOverlay extends HookWidget {
                     actions: [const SizedBox(width: 8)],
                     color: contentColor,
                     overlayColor: overlayColor,
-                    saveProgress: () => player.saveProgress(),
+                    saveProgress: () => saveProgress(),
                     resizeWindow: () => resizeWindow(aspectRatio),
                   ),
                 ),
@@ -343,7 +350,6 @@ class ControlsOverlay extends HookWidget {
                 child: GestureDetector(
                   onTap: () => showControl(),
                   child: ControlBar(
-                    player: player,
                     showControl: showControl,
                     showControlForHover: showControlForHover,
                     color: contentColor,

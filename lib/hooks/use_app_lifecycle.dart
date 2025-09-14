@@ -1,10 +1,13 @@
 import 'dart:ui';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:iris/models/player.dart';
 import 'package:iris/utils/logger.dart';
+import 'package:provider/provider.dart';
 
-void useAppLifecycle(
-  Future<void> Function() saveProgress,
-) {
+void useAppLifecycle() {
+  final context = useContext();
+  final saveProgress = context.read<MediaPlayer>().saveProgress;
+
   AppLifecycleState? appLifecycleState = useAppLifecycleState();
 
   useEffect(() {
