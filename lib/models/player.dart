@@ -11,12 +11,8 @@ class MediaPlayer {
   final Duration position;
   final Duration duration;
   final Duration buffer;
-  final bool seeking;
-  final double? aspect;
   final double? width;
   final double? height;
-  final void Function(Duration) updatePosition;
-  final void Function(bool) updateSeeking;
   final Future<void> Function() saveProgress;
   final Future<void> Function() play;
   final Future<void> Function() pause;
@@ -24,7 +20,7 @@ class MediaPlayer {
   final Future<void> Function(int) forward;
   final Future<void> Function() stepBackward;
   final Future<void> Function() stepForward;
-  final Future<void> Function(Duration) seekTo;
+  final Future<void> Function(Duration) seek;
 
   MediaPlayer({
     required this.isInitializing,
@@ -33,12 +29,8 @@ class MediaPlayer {
     required this.position,
     required this.duration,
     required this.buffer,
-    required this.seeking,
-    required this.aspect,
     required this.width,
     required this.height,
-    required this.updatePosition,
-    required this.updateSeeking,
     required this.saveProgress,
     required this.play,
     required this.pause,
@@ -46,7 +38,7 @@ class MediaPlayer {
     required this.forward,
     required this.stepBackward,
     required this.stepForward,
-    required this.seekTo,
+    required this.seek,
   });
 }
 
@@ -71,12 +63,8 @@ class MediaKitPlayer extends MediaPlayer {
     required super.position,
     required super.duration,
     required super.buffer,
-    required super.seeking,
-    required super.aspect,
     required super.width,
     required super.height,
-    required super.updatePosition,
-    required super.updateSeeking,
     required super.saveProgress,
     required super.play,
     required super.pause,
@@ -84,7 +72,7 @@ class MediaKitPlayer extends MediaPlayer {
     required super.forward,
     required super.stepBackward,
     required super.stepForward,
-    required super.seekTo,
+    required super.seek,
   });
 }
 
@@ -101,12 +89,8 @@ class FvpPlayer extends MediaPlayer {
     required super.position,
     required super.duration,
     required super.buffer,
-    required super.seeking,
-    required super.aspect,
     required super.width,
     required super.height,
-    required super.updatePosition,
-    required super.updateSeeking,
     required super.saveProgress,
     required super.play,
     required super.pause,
@@ -114,6 +98,6 @@ class FvpPlayer extends MediaPlayer {
     required super.forward,
     required super.stepBackward,
     required super.stepForward,
-    required super.seekTo,
+    required super.seek,
   });
 }

@@ -12,6 +12,7 @@ import 'package:iris/models/store/app_state.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_history_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
+import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/platform.dart';
@@ -94,24 +95,37 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
           : playQueue[currentPlayIndex].file,
       [playQueue, currentPlayIndex]);
 
-  ValueNotifier<bool> seeking = useState(false);
+  final playingStream = useMemoized(() => player.stream.playing, []);
+  bool playing = useStream(playingStream).data ?? false;
 
-  bool playing = useStream(player.stream.playing).data ?? false;
-  VideoParams? videoParams = useStream(player.stream.videoParams).data;
+  final videoParamsStream = useMemoized(() => player.stream.videoParams, []);
+  VideoParams? videoParams = useStream(videoParamsStream).data;
+
   // AudioParams? audioParams = useStream(player.stream.audioParams).data;
-  ValueNotifier<Duration> position = useState(Duration.zero);
-  Duration duration = useStream(player.stream.duration).data ?? Duration.zero;
-  Duration buffer = useStream(player.stream.buffer).data ?? Duration.zero;
-  bool completed = useStream(player.stream.completed).data ?? false;
+
+  final positionStream = useMemoized(() => player.stream.position, []);
+  final position = useStream(positionStream).data ?? Duration.zero;
+
+  final durationStream = useMemoized(() => player.stream.duration, []);
+  Duration duration = useStream(durationStream).data ?? Duration.zero;
+
+  final bufferStream = useMemoized(() => player.stream.buffer, []);
+  Duration buffer = useStream(bufferStream).data ?? Duration.zero;
+
+  final completedStream = useMemoized(() => player.stream.completed, []);
+  bool completed = useStream(completedStream).data ?? false;
+
   // double rate = useStream(player.stream.rate).data ?? 1.0;
 
-  Track? track = useStream(player.stream.track).data;
+  final trackStream = useMemoized(() => player.stream.track, []);
+  Track? track = useStream(trackStream).data;
   AudioTrack audio =
       useMemoized(() => track?.audio ?? AudioTrack.no(), [track?.audio]);
   SubtitleTrack subtitle = useMemoized(
       () => track?.subtitle ?? SubtitleTrack.no(), [track?.subtitle]);
 
-  Tracks? tracks = useStream(player.stream.tracks).data;
+  final tracksStream = useMemoized(() => player.stream.tracks, []);
+  Tracks? tracks = useStream(tracksStream).data;
   List<AudioTrack> audios =
       useMemoized(() => (tracks?.audio ?? []), [tracks?.audio]);
   List<SubtitleTrack> subtitles = useMemoized(
@@ -124,18 +138,9 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
           (subtitle) => subtitles.any((item) => item.title == subtitle.name)),
       [file?.subtitles, subtitles]);
 
-  final positionStream = useStream(player.stream.position);
-
-  if (positionStream.hasData) {
-    if (!seeking.value) {
-      position.value = positionStream.data!;
-    }
-  }
-
   final isInitializing = useState(false);
 
-  MediaStream mediaStream = MediaStream();
-  final streamUrl = mediaStream.url;
+  MediaStream mediaStream = useMemoized(() => MediaStream(), []);
 
   Future<void> init(FileItem file) async {
     if (file.uri == '') return;
@@ -148,7 +153,7 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
       await player.open(
         Media(
           file.storageType == StorageType.ftp
-              ? '$streamUrl/${file.uri}'
+              ? '${mediaStream.url}/${file.uri}'
               : file.uri,
           httpHeaders: auth != null ? {'authorization': auth} : {},
         ),
@@ -212,7 +217,7 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
       if (externalSubtitles!.isNotEmpty) {
         logger('Set external subtitle: ${externalSubtitles[0]}');
         final uri = file?.storageType == StorageType.ftp
-            ? '$streamUrl/${externalSubtitles[0].uri}'
+            ? '${mediaStream.url}/${externalSubtitles[0].uri}'
             : externalSubtitles[0].uri;
         logger('External subtitle uri: $uri');
         await player.setSubtitleTrack(
@@ -269,9 +274,21 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     return;
   }, [repeat]);
 
-  void updatePosition(Duration newPosition) => position.value = newPosition;
+  useEffect(() {
+    if (file?.type != ContentType.video) {
+      usePlayerUiStore().updateAspectRatio(0);
+      return;
+    }
 
-  void updateSeeking(bool value) => seeking.value = value;
+    final width = videoParams?.w ?? 0;
+    final height = videoParams?.h ?? 0;
+    if (width == 0 || height == 0) {
+      usePlayerUiStore().updateAspectRatio(0);
+    } else {
+      usePlayerUiStore().updateAspectRatio(width / height);
+    }
+    return;
+  }, [file?.type, videoParams?.w, videoParams?.h]);
 
   Future<void> saveProgress() async {
     if (isAndroid &&
@@ -306,7 +323,7 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     await player.pause();
   }
 
-  Future<void> seekTo(Duration newPosition) async =>
+  Future<void> seek(Duration newPosition) async =>
       newPosition.inMilliseconds < 0
           ? await player.seek(Duration.zero)
           : newPosition.inMilliseconds > duration.inMilliseconds
@@ -314,11 +331,11 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
               : await player.seek(newPosition);
 
   Future<void> backward(int seconds) async {
-    await seekTo(Duration(seconds: position.value.inSeconds - seconds));
+    await seek(Duration(seconds: position.inSeconds - seconds));
   }
 
   Future<void> forward(int seconds) async {
-    await seekTo(Duration(seconds: position.value.inSeconds + seconds));
+    await seek(Duration(seconds: position.inSeconds + seconds));
   }
 
   Future<void> stepBackward() async {
@@ -337,32 +354,56 @@ MediaKitPlayer useMediaKitPlayer(BuildContext context) {
     }
   }
 
-  return MediaKitPlayer(
-    player: player,
-    controller: controller,
-    subtitle: subtitle,
-    subtitles: subtitles,
-    externalSubtitles: externalSubtitles ?? [],
-    audio: audio,
-    audios: audios,
-    isInitializing: isInitializing.value,
-    isPlaying: playing,
-    position: duration == Duration.zero ? Duration.zero : position.value,
-    duration: duration,
-    buffer: duration == Duration.zero ? Duration.zero : buffer,
-    seeking: seeking.value,
-    aspect: videoParams?.aspect,
-    width: videoParams?.w?.toDouble(),
-    height: videoParams?.h?.toDouble(),
-    updatePosition: updatePosition,
-    updateSeeking: updateSeeking,
-    saveProgress: saveProgress,
-    play: play,
-    pause: pause,
-    backward: backward,
-    forward: forward,
-    stepBackward: stepBackward,
-    stepForward: stepForward,
-    seekTo: seekTo,
+  final mediaKitPlayer = useMemoized(
+    () => MediaKitPlayer(
+      player: player,
+      controller: controller,
+      subtitle: subtitle,
+      subtitles: subtitles,
+      externalSubtitles: externalSubtitles ?? [],
+      audio: audio,
+      audios: audios,
+      isInitializing: isInitializing.value,
+      isPlaying: playing,
+      position: duration == Duration.zero ? Duration.zero : position,
+      duration: duration,
+      buffer: duration == Duration.zero ? Duration.zero : buffer,
+      width: videoParams?.w?.toDouble(),
+      height: videoParams?.h?.toDouble(),
+      saveProgress: saveProgress,
+      play: play,
+      pause: pause,
+      backward: backward,
+      forward: forward,
+      stepBackward: stepBackward,
+      stepForward: stepForward,
+      seek: seek,
+    ),
+    [
+      player,
+      controller,
+      subtitle,
+      subtitles,
+      externalSubtitles,
+      audio,
+      audios,
+      isInitializing.value,
+      playing,
+      position,
+      duration,
+      buffer,
+      videoParams?.w,
+      videoParams?.h,
+      saveProgress,
+      play,
+      pause,
+      backward,
+      forward,
+      stepBackward,
+      stepForward,
+      seek,
+    ],
   );
+
+  return mediaKitPlayer;
 }

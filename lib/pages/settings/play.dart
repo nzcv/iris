@@ -48,8 +48,7 @@ class Play extends HookWidget {
                   DropdownMenuItem<PlayerBackend>(
                       value: PlayerBackend.mediaKit, child: Text('Media Kit')),
                   DropdownMenuItem<PlayerBackend>(
-                      value: PlayerBackend.fvp,
-                      child: Text('FVP (${t.experimental})')),
+                      value: PlayerBackend.fvp, child: Text('FVP')),
                 ],
               )),
           Visibility(

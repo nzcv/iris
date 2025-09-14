@@ -6,7 +6,7 @@ import 'package:iris/globals.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/store/app_state.dart';
-import 'package:iris/store/use_ui_store.dart';
+import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/widgets/dialogs/show_open_link_dialog.dart';
 import 'package:iris/widgets/dialogs/show_rate_dialog.dart';
 import 'package:iris/pages/player/control_bar/control_bar_slider.dart';
@@ -47,17 +47,13 @@ class ControlBar extends HookWidget {
     final rate = useAppStore().select(context, (state) => state.rate);
     final volume = useAppStore().select(context, (state) => state.volume);
     final isMuted = useAppStore().select(context, (state) => state.isMuted);
+
+    final aspectRatio =
+        usePlayerUiStore().select(context, (state) => state.aspectRatio);
     final isFullScreen =
-        useUiStore().select(context, (state) => state.isFullScreen);
+        usePlayerUiStore().select(context, (state) => state.isFullScreen);
     final int playQueueLength =
         usePlayQueueStore().select(context, (state) => state.playQueue.length);
-    final playQueue =
-        usePlayQueueStore().select(context, (state) => state.playQueue);
-    final currentIndex =
-        usePlayQueueStore().select(context, (state) => state.currentIndex);
-    final currentPlayIndex = useMemoized(
-        () => playQueue.indexWhere((element) => element.index == currentIndex),
-        [playQueue, currentIndex]);
 
     final bool shuffle =
         useAppStore().select(context, (state) => state.shuffle);
@@ -65,10 +61,13 @@ class ControlBar extends HookWidget {
         useAppStore().select(context, (state) => state.repeat);
     final BoxFit fit = useAppStore().select(context, (state) => state.fit);
 
+    final isSeeking =
+        usePlayerUiStore().select(context, (state) => state.isSeeking);
+
     final displayIsPlaying = useState(player.isPlaying);
 
     useEffect(() {
-      if (!player.seeking) {
+      if (!isSeeking) {
         displayIsPlaying.value = player.isPlaying;
       }
       return null;
@@ -102,26 +101,7 @@ class ControlBar extends HookWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(width: 8),
-                if (playQueueLength > 1)
-                  IconButton(
-                    tooltip: currentPlayIndex == 0
-                        ? null
-                        : '${t.previous} ( Ctrl + ← )',
-                    icon: Icon(
-                      Icons.skip_previous_rounded,
-                      size: 28,
-                      color:
-                          currentPlayIndex == 0 ? color?.withAlpha(153) : color,
-                    ),
-                    onPressed: currentPlayIndex == 0
-                        ? null
-                        : () {
-                            showControl();
-                            usePlayQueueStore().previous();
-                          },
-                    style: ButtonStyle(overlayColor: overlayColor),
-                  ),
+                const SizedBox(width: 4),
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -158,24 +138,47 @@ class ControlBar extends HookWidget {
                       ),
                   ],
                 ),
+                IconButton(
+                  tooltip: '${t.stop} ( Ctrl + C )',
+                  icon: Icon(
+                    Icons.stop_rounded,
+                    size: 28,
+                    color: color,
+                  ),
+                  onPressed: () {
+                    showControl();
+                    useAppStore().updateAutoPlay(false);
+                    player.pause();
+                    usePlayQueueStore().updateCurrentIndex(-1);
+                  },
+                  style: ButtonStyle(overlayColor: overlayColor),
+                ),
                 if (playQueueLength > 1)
                   IconButton(
-                    tooltip: currentPlayIndex == playQueueLength - 1
-                        ? null
-                        : '${t.next} ( Ctrl + → )',
+                    tooltip: '${t.previous} ( Ctrl + ← )',
+                    icon: Icon(
+                      Icons.skip_previous_rounded,
+                      size: 28,
+                      color: color,
+                    ),
+                    onPressed: () {
+                      showControl();
+                      usePlayQueueStore().previous();
+                    },
+                    style: ButtonStyle(overlayColor: overlayColor),
+                  ),
+                if (playQueueLength > 1)
+                  IconButton(
+                    tooltip: '${t.next} ( Ctrl + → )',
                     icon: Icon(
                       Icons.skip_next_rounded,
                       size: 28,
-                      color: currentPlayIndex == playQueueLength - 1
-                          ? color?.withAlpha(153)
-                          : color,
+                      color: color,
                     ),
-                    onPressed: currentPlayIndex == playQueueLength - 1
-                        ? null
-                        : () {
-                            showControl();
-                            usePlayQueueStore().next();
-                          },
+                    onPressed: () {
+                      showControl();
+                      usePlayQueueStore().next();
+                    },
                     style: ButtonStyle(overlayColor: overlayColor),
                   ),
                 if (MediaQuery.of(context).size.width >= 768)
@@ -406,9 +409,9 @@ class ControlBar extends HookWidget {
                     onPressed: () async {
                       showControl();
                       if (isFullScreen) {
-                        await resizeWindow(player.aspect);
+                        await resizeWindow(aspectRatio);
                       }
-                      useUiStore().updateFullScreen(!isFullScreen);
+                      usePlayerUiStore().updateFullScreen(!isFullScreen);
                     },
                     style: ButtonStyle(overlayColor: overlayColor),
                   ),
@@ -654,7 +657,7 @@ class ControlBar extends HookWidget {
                     ),
                   ],
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
               ],
             ),
           ],

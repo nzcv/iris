@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/info.dart';
-import 'package:iris/store/use_ui_store.dart';
+import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
@@ -29,9 +29,9 @@ class TitleBar extends HookWidget {
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
     final isAlwaysOnTop =
-        useUiStore().select(context, (state) => state.isAlwaysOnTop);
+        usePlayerUiStore().select(context, (state) => state.isAlwaysOnTop);
     final isFullScreen =
-        useUiStore().select(context, (state) => state.isFullScreen);
+        usePlayerUiStore().select(context, (state) => state.isFullScreen);
 
     return Container(
       padding: isDesktop
@@ -103,7 +103,8 @@ class TitleBar extends HookWidget {
                                   size: 18,
                                   color: color,
                                 ),
-                                onPressed: useUiStore().toggleIsAlwaysOnTop,
+                                onPressed:
+                                    usePlayerUiStore().toggleIsAlwaysOnTop,
                                 style: ButtonStyle(overlayColor: overlayColor),
                               ),
                             ),
@@ -124,7 +125,8 @@ class TitleBar extends HookWidget {
                                   if (isFullScreen) {
                                     await resizeWindow?.call();
                                   }
-                                  useUiStore().updateFullScreen(!isFullScreen);
+                                  usePlayerUiStore()
+                                      .updateFullScreen(!isFullScreen);
                                 },
                                 style: ButtonStyle(overlayColor: overlayColor),
                               ),

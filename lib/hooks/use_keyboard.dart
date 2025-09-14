@@ -1,7 +1,6 @@
 import 'dart:io';
-
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:iris/globals.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/models/storages/local.dart';
@@ -12,7 +11,7 @@ import 'package:iris/pages/settings/settings.dart';
 import 'package:iris/pages/storages/storages.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
-import 'package:iris/store/use_ui_store.dart';
+import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/platform.dart';
 import 'package:iris/widgets/bottom_sheets/show_open_link_bottom_sheet.dart';
 import 'package:iris/widgets/dialogs/show_open_link_dialog.dart';
@@ -21,15 +20,17 @@ import 'package:iris/widgets/popup.dart';
 typedef KeyboardEvent = void Function(KeyEvent event);
 
 KeyboardEvent useKeyboard({
-  required BuildContext context,
   required MediaPlayer player,
-  required bool isFullScreen,
-  required ValueNotifier<bool> isShowControl,
   required void Function() showControl,
   required Future<void> Function(Future<void>) showControlForHover,
   required void Function() showProgress,
-  required bool shuffle,
 }) {
+  final context = useContext();
+
+  final shuffle = useAppStore().state.shuffle;
+  final isFullScreen = usePlayerUiStore().state.isFullScreen;
+  final isShowControl = usePlayerUiStore().state.isShowControl;
+
   void onKeyEvent(KeyEvent event) async {
     if (event.runtimeType == KeyDownEvent) {
       if (HardwareKeyboard.instance.isAltPressed) {
@@ -130,8 +131,10 @@ KeyboardEvent useKeyboard({
         case LogicalKeyboardKey.mediaPlayPause:
           showControl();
           if (player.isPlaying) {
+            useAppStore().updateAutoPlay(false);
             player.pause();
           } else {
+            useAppStore().updateAutoPlay(true);
             player.play();
           }
           break;
@@ -178,14 +181,14 @@ KeyboardEvent useKeyboard({
         // 退出全屏
         case LogicalKeyboardKey.escape:
           if (isDesktop && isFullScreen) {
-            useUiStore().updateFullScreen(false);
+            usePlayerUiStore().updateFullScreen(false);
           }
           break;
         // 全屏
         case LogicalKeyboardKey.enter:
         case LogicalKeyboardKey.f11:
           if (isDesktop) {
-            useUiStore().updateFullScreen(!isFullScreen);
+            usePlayerUiStore().updateFullScreen(!isFullScreen);
           }
           break;
         case LogicalKeyboardKey.tab:
@@ -193,7 +196,7 @@ KeyboardEvent useKeyboard({
           break;
         case LogicalKeyboardKey.f10:
           showControl();
-          await useUiStore().toggleIsAlwaysOnTop();
+          await usePlayerUiStore().toggleIsAlwaysOnTop();
           break;
         case LogicalKeyboardKey.equal:
           await player.stepForward();
@@ -215,7 +218,7 @@ KeyboardEvent useKeyboard({
       switch (event.logicalKey) {
         // 快退
         case LogicalKeyboardKey.arrowLeft:
-          if (isShowControl.value) {
+          if (isShowControl) {
             showControl();
           } else {
             showProgress();
@@ -224,7 +227,7 @@ KeyboardEvent useKeyboard({
           break;
         // 快进
         case LogicalKeyboardKey.arrowRight:
-          if (isShowControl.value) {
+          if (isShowControl) {
             showControl();
           } else {
             showProgress();

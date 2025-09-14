@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/store/use_app_store.dart';
+import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/format_duration_to_minutes.dart';
 
 class ControlBarSlider extends HookWidget {
@@ -89,22 +90,18 @@ class ControlBarSlider extends HookWidget {
                       min: 0,
                       max: player.duration.inMilliseconds.toDouble(),
                       onChangeStart: (value) {
-                        player.updateSeeking(true);
+                        usePlayerUiStore().updateIsSeeking(true);
                         player.pause();
                       },
                       onChanged: (value) {
                         showControl();
-                        if (player is MediaKitPlayer) {
-                          player.updatePosition(
-                              Duration(milliseconds: value.toInt()));
-                        }
-                        player.seekTo(Duration(milliseconds: value.toInt()));
+                        player.seek(Duration(milliseconds: value.toInt()));
                       },
                       onChangeEnd: (value) async {
                         if (autoPlay) {
                           player.play();
                         }
-                        player.updateSeeking(false);
+                        usePlayerUiStore().updateIsSeeking(false);
                       },
                     ),
                   ),

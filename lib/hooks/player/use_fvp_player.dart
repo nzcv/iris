@@ -12,6 +12,7 @@ import 'package:iris/models/store/app_state.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_history_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
+import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/store/use_storage_store.dart';
 import 'package:iris/utils/check_data_source_type.dart';
 import 'package:iris/utils/logger.dart';
@@ -43,25 +44,50 @@ FvpPlayer useFvpPlayer(BuildContext context) {
       () => playQueue.indexWhere((element) => element.index == currentIndex),
       [playQueue, currentIndex]);
 
-  final PlayQueueItem? currentPlay = useMemoized(
+  final FileItem? file = useMemoized(
       () => playQueue.isEmpty || currentPlayIndex < 0
           ? null
-          : playQueue[currentPlayIndex],
+          : playQueue[currentPlayIndex].file,
       [playQueue, currentPlayIndex]);
-
-  final file = useMemoized(() => currentPlay?.file, [currentPlay]);
 
   final externalSubtitle = useState<int?>(null);
 
-  final List<Subtitle> externalSubtitles = useMemoized(
-      () => currentPlay?.file.subtitles ?? [], [currentPlay?.file.subtitles]);
+  final List<Subtitle> externalSubtitles =
+      useMemoized(() => file?.subtitles ?? [], [file?.subtitles]);
 
   final isInitializing = useState(false);
 
-  MediaStream mediaStream = MediaStream();
-  final streamUrl = mediaStream.url;
+  MediaStream mediaStream = useMemoized(() => MediaStream());
+  final streamUrl = useMemoized(() => mediaStream.url);
 
   final controller = useState(VideoPlayerController.networkUrl(Uri.parse('')));
+
+  final isPlaying = useListenableSelector(
+      controller.value, () => controller.value.value.isPlaying);
+  final position = useListenableSelector(
+      controller.value, () => controller.value.value.position);
+  final duration = useListenableSelector(
+      controller.value, () => controller.value.value.duration);
+  final buffered = useListenableSelector(
+      controller.value, () => controller.value.value.buffered);
+  final width = useListenableSelector(
+      controller.value, () => controller.value.value.size.width);
+  final height = useListenableSelector(
+      controller.value, () => controller.value.value.size.height);
+
+  useEffect(() {
+    if (file?.type != ContentType.video) {
+      usePlayerUiStore().updateAspectRatio(0);
+      return;
+    }
+
+    if (width != 0 && height != 0) {
+      usePlayerUiStore().updateAspectRatio(width / height);
+    } else {
+      usePlayerUiStore().updateAspectRatio(0);
+    }
+    return;
+  }, [file?.type, width, height]);
 
   Future<void> init() async {
     isInitializing.value = true;
@@ -127,27 +153,6 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     };
   }, []);
 
-  final double aspect = useMemoized(() {
-    if (file?.type != ContentType.video) {
-      return 0;
-    }
-
-    final width = controller.value.value.size.width;
-    final height = controller.value.value.size.height;
-
-    if (width != 0 && height != 0) {
-      return width / height;
-    } else {
-      return 0;
-    }
-  }, [
-    file?.type,
-    controller.value.value.size.width,
-    controller.value.value.size.height
-  ]);
-
-  final seeking = useState(false);
-
   useEffect(() {
     () async {
       final currentExternalSubtitle = externalSubtitle.value;
@@ -182,11 +187,11 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   useEffect(() {
     () async {
-      if (currentPlay != null &&
+      if (file != null &&
           controller.value.value.isCompleted &&
           controller.value.value.position != Duration.zero &&
           controller.value.value.duration != Duration.zero) {
-        logger('Completed: ${currentPlay.file.name}');
+        logger('Completed: ${file.name}');
         if (repeat == Repeat.one) return;
         if (currentPlayIndex == playQueue.length - 1) {
           if (repeat == Repeat.all) {
@@ -274,7 +279,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
         ));
       }
     };
-  }, [currentPlay?.file]);
+  }, [file]);
 
   useEffect(() {
     if (controller.value.value.isPlaying) {
@@ -298,7 +303,7 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     controller.value.pause();
   }
 
-  Future<void> seekTo(Duration newPosition) async {
+  Future<void> seek(Duration newPosition) async {
     logger('Seek to: $newPosition');
     if (controller.value.value.duration == Duration.zero) return;
     newPosition.inSeconds < 0
@@ -307,6 +312,12 @@ FvpPlayer useFvpPlayer(BuildContext context) {
             ? await controller.value.seekTo(controller.value.value.duration)
             : await controller.value.seekTo(newPosition);
   }
+
+  Future<void> backward(int seconds) async => await seek(
+      Duration(seconds: controller.value.value.position.inSeconds - seconds));
+
+  Future<void> forward(int seconds) async => await seek(
+      Duration(seconds: controller.value.value.position.inSeconds + seconds));
 
   Future<void> stepBackward() async {
     if (file?.type == ContentType.video) {
@@ -344,37 +355,54 @@ FvpPlayer useFvpPlayer(BuildContext context) {
 
   useEffect(() => saveProgress, []);
 
-  return FvpPlayer(
-    controller: controller.value,
-    isInitializing: isInitializing.value,
-    isPlaying: controller.value.value.isPlaying,
-    externalSubtitle: externalSubtitle,
-    externalSubtitles: externalSubtitles,
-    position: controller.value.value.duration == Duration.zero
-        ? Duration.zero
-        : controller.value.value.position,
-    duration: controller.value.value.duration,
-    buffer: controller.value.value.buffered.isEmpty ||
-            controller.value.value.duration == Duration.zero
-        ? Duration.zero
-        : controller.value.value.buffered
-            .reduce((max, curr) => curr.end > max.end ? curr : max)
-            .end,
-    aspect: aspect,
-    width: controller.value.value.size.width,
-    height: controller.value.value.size.height,
-    play: play,
-    pause: pause,
-    backward: (seconds) => seekTo(
-        Duration(seconds: controller.value.value.position.inSeconds - seconds)),
-    forward: (seconds) => seekTo(
-        Duration(seconds: controller.value.value.position.inSeconds + seconds)),
-    stepBackward: stepBackward,
-    stepForward: stepForward,
-    seekTo: seekTo,
-    saveProgress: saveProgress,
-    seeking: seeking.value,
-    updatePosition: seekTo,
-    updateSeeking: (value) => seeking.value = value,
+  final fvpPlayer = useMemoized(
+    () => FvpPlayer(
+      controller: controller.value,
+      isInitializing: isInitializing.value,
+      isPlaying: isPlaying,
+      externalSubtitle: externalSubtitle,
+      externalSubtitles: externalSubtitles,
+      position:
+          !controller.value.value.isInitialized || duration == Duration.zero
+              ? Duration.zero
+              : position,
+      duration: controller.value.value.isInitialized ? duration : Duration.zero,
+      buffer: buffered.isEmpty || duration == Duration.zero
+          ? Duration.zero
+          : buffered.reduce((max, curr) => curr.end > max.end ? curr : max).end,
+      width: width,
+      height: height,
+      play: play,
+      pause: pause,
+      backward: backward,
+      forward: forward,
+      stepBackward: stepBackward,
+      stepForward: stepForward,
+      seek: seek,
+      saveProgress: saveProgress,
+    ),
+    [
+      controller.value,
+      controller.value.value.isInitialized,
+      isInitializing.value,
+      isPlaying,
+      externalSubtitle.value,
+      externalSubtitles,
+      position,
+      duration,
+      buffered,
+      width,
+      height,
+      play,
+      pause,
+      seek,
+      backward,
+      forward,
+      stepBackward,
+      stepForward,
+      saveProgress,
+    ],
   );
+
+  return fvpPlayer;
 }

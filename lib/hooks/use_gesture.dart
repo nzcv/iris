@@ -1,11 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/hooks/use_brightness.dart';
 import 'package:iris/hooks/use_volume.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/store/use_app_store.dart';
-import 'package:iris/store/use_ui_store.dart';
+import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/platform.dart';
 import 'package:iris/utils/resize_window.dart';
 import 'package:window_manager/window_manager.dart';
@@ -54,15 +55,28 @@ class Gesture {
 }
 
 Gesture useGesture({
-  required BuildContext context,
   required MediaPlayer player,
-  required bool isFullScreen,
   required void Function() showControl,
   required void Function() hideControl,
   required void Function() showProgress,
-  required ValueNotifier<bool> isHover,
-  required ValueNotifier<bool> isShowControl,
 }) {
+  final context = useContext();
+
+  final aspectRatio =
+      usePlayerUiStore().select(context, (state) => state.aspectRatio);
+
+  final isFullScreen =
+      usePlayerUiStore().select(context, (state) => state.isFullScreen);
+
+  final isShowControl =
+      usePlayerUiStore().select(context, (state) => state.isShowControl);
+  final isSeeking =
+      usePlayerUiStore().select(context, (state) => state.isSeeking);
+
+  final updateIsHovering = useCallback((bool value) {
+    usePlayerUiStore().updateIsHovering(value);
+  }, [usePlayerUiStore().updateIsHovering]);
+
   final isTouch = useState(false);
   final isLongPress = useState(false);
   final startPosition = useState<Offset?>(null);
@@ -81,7 +95,7 @@ Gesture useGesture({
   }
 
   void onTap() {
-    if (isShowControl.value) {
+    if (isShowControl) {
       hideControl();
     } else {
       showControl();
@@ -93,14 +107,14 @@ Gesture useGesture({
       double position =
           details.globalPosition.dx / MediaQuery.of(context).size.width;
       if (position > 0.75) {
-        if (isShowControl.value) {
+        if (isShowControl) {
           showControl();
         } else {
           showProgress();
         }
         await player.forward(5);
       } else if (position < 0.25) {
-        if (isShowControl.value) {
+        if (isShowControl) {
           showControl();
         } else {
           showProgress();
@@ -119,9 +133,9 @@ Gesture useGesture({
     } else {
       if (isDesktop) {
         if (isFullScreen) {
-          await resizeWindow(player.aspect);
+          await resizeWindow(aspectRatio);
         }
-        useUiStore().updateFullScreen(!isFullScreen);
+        usePlayerUiStore().updateFullScreen(!isFullScreen);
       }
     }
   }
@@ -176,14 +190,14 @@ Gesture useGesture({
       if (!isHorizontalGesture.value && !isVerticalGesture.value) {
         if (dx > dy) {
           isHorizontalGesture.value = true;
-          player.updateSeeking(true);
+          usePlayerUiStore().updateIsSeeking(true);
         } else {
           isVerticalGesture.value = true;
         }
       }
 
       // 水平滑动
-      if (isHorizontalGesture.value && player.seeking) {
+      if (isHorizontalGesture.value && isSeeking) {
         double dx = details.delta.dx;
         int seconds = (dx * 2 + player.position.inSeconds).toInt();
         Duration position = Duration(
@@ -192,8 +206,8 @@ Gesture useGesture({
                 : seconds > player.duration.inSeconds
                     ? player.duration.inSeconds
                     : seconds);
-        player.updatePosition(position);
-        if (isShowControl.value) {
+        player.seek(position);
+        if (isShowControl) {
           showControl();
         } else {
           showProgress();
@@ -243,9 +257,9 @@ Gesture useGesture({
     isLeftGesture.value = false;
     isRightGesture.value = false;
     startPosition.value = null;
-    if (player.seeking) {
-      await player.seekTo(player.position);
-      player.updateSeeking(false);
+    if (isSeeking) {
+      await player.seek(player.position);
+      usePlayerUiStore().updateIsSeeking(false);
     }
   }
 
@@ -255,16 +269,16 @@ Gesture useGesture({
     isLeftGesture.value = false;
     isRightGesture.value = false;
     startPosition.value = null;
-    if (player.seeking) {
+    if (isSeeking) {
       isTouch.value = false;
-      await player.seekTo(player.position);
-      player.updateSeeking(false);
+      await player.seek(player.position);
+      usePlayerUiStore().updateIsSeeking(false);
     }
   }
 
   void onHover(PointerHoverEvent event) {
     if (event.kind != PointerDeviceKind.touch) {
-      isHover.value = true;
+      updateIsHovering(true);
       showControl();
     }
   }

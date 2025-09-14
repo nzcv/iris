@@ -264,7 +264,7 @@ Future<List<FileItem>> getLocalFiles(
         uri: entity.path,
         path: [...path, p.basename(entity.path)],
         isDir: isDir,
-        size: stat.size,
+        size: isDir ? 0 : stat.size,
         lastModified: stat.modified,
         type: isDir ? ContentType.dir : checkContentType(entity.path),
         subtitles: [],
