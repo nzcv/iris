@@ -70,8 +70,8 @@ dev_dependencies:
   freezed: ^3.2.3
   json_serializable: ^6.11.1
   msix: ^3.16.12
-  flutter_hooks_lint: ^1.4.0
-  custom_lint: ^0.8.1
+  # flutter_hooks_lint: ^1.4.0
+  # custom_lint: ^0.8.1
 
 flutter:
   generate: true
