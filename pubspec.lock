@@ -332,12 +332,11 @@ packages:
   desktop_drop:
     dependency: "direct main"
     description:
-      path: "packages/desktop_drop"
-      ref: main
-      resolved-ref: c1b887a0c225c5f9f91917a107f52d4d4d5814ee
-      url: "https://github.com/nini22P/flutter-plugins"
-    source: git
-    version: "0.7.0"
+      name: desktop_drop
+      sha256: "927511f590ce01ee90d0d80f79bc71b9c919d8522d01e495e89a00c6f4a4fb5b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.1"
   device_info_plus:
     dependency: "direct main"
     description:

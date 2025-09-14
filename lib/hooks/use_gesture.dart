@@ -148,6 +148,7 @@ Gesture useGesture({
   }
 
   void onLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
+    if (!isLongPress.value) return;
     int fast = (details.offsetFromOrigin.dx / 50).toInt();
     if (fast >= 1) {
       useAppStore().updateRate(fast > 4 ? 5.0 : (1 + fast).toDouble());

@@ -83,7 +83,7 @@ class ControlsOverlay extends HookWidget {
                 : SystemMouseCursors.none,
             onHover: gesture.onHover,
             child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
+              behavior: HitTestBehavior.opaque,
               onTap: gesture.onTap,
               onTapDown: gesture.onTapDown,
               onDoubleTapDown: gesture.onDoubleTapDown,
