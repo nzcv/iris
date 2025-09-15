@@ -38,6 +38,7 @@
   "edit_local_storage": "Edit local storage",
   "edit_webdav_storage": "Edit WebDAV storage",
   "enter_fullscreen": "Enter fullscreen",
+  "exit": "Exit",
   "exit_app_back_again": "Press back again to exit.",
   "exit_fullscreen": "Exit fullscreen",
   "experimental": "Experimental",

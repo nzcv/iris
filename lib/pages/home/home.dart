@@ -27,7 +27,7 @@ class Home extends HookWidget {
         systemNavigationBarColor: Colors.transparent,
       ),
       child: Scaffold(
-        backgroundColor: Color(0xFF2f2f2f),
+        backgroundColor: Color.fromARGB(255, 0, 0, 0),
         body: PlayerView(playerBackend: playerBackend),
       ),
     );

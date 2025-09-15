@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:app_links/app_links.dart';
+import 'package:flutter/services.dart';
 import 'package:fvp/fvp.dart' as fvp;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -72,6 +73,8 @@ void main(List<String> arguments) async {
       await windowManager.focus();
     });
   }
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   MediaStream mediaStream = MediaStream();
   mediaStream.startServer();

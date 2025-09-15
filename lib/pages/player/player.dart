@@ -21,7 +21,6 @@ import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/platform.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
-import 'package:iris/utils/get_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -30,8 +29,6 @@ class Player extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = getLocalizations(context);
-
     final isPlaying =
         context.select<MediaPlayer, bool>((player) => player.isPlaying);
     final width = context.select<MediaPlayer, double>((player) => player.width);
@@ -44,30 +41,8 @@ class Player extends HookWidget {
 
     final cover = useCover();
 
-    final playerUiStore = usePlayerUiStore();
-
-    final isHovering =
-        playerUiStore.select(context, (state) => state.isHovering);
-    final isShowControl =
-        playerUiStore.select(context, (state) => state.isShowControl);
-    final isShowProgress =
-        playerUiStore.select(context, (state) => state.isShowProgress);
-
-    final updateIsHovering = useCallback((bool value) {
-      playerUiStore.updateIsHovering(value);
-    }, [playerUiStore.updateIsHovering]);
-
-    final updateIsShowControl = useCallback((bool value) {
-      playerUiStore.updateIsShowControl(value);
-    }, [playerUiStore.updateIsShowControl]);
-
-    final updateIsShowProgress = useCallback((bool value) {
-      playerUiStore.updateIsShowProgress(value);
-    }, [playerUiStore.updateIsShowProgress]);
-
     final controlHideTimer = useRef<Timer?>(null);
     final progressHideTimer = useRef<Timer?>(null);
-    final systemUiHideTimer = useRef<Timer?>(null);
 
     final fit = useAppStore().select(context, (state) => state.fit);
 
@@ -101,93 +76,67 @@ class Player extends HookWidget {
       return;
     }, []);
 
-    final canPop = useState(false);
-
-    useEffect(() {
-      final timer = Future.delayed(Duration(seconds: 4), () {
-        canPop.value = false;
-      });
-      return () {
-        timer.ignore();
-      };
-    }, [canPop.value]);
-
-    final startControlHideTimer = useCallback(() {
+    void startControlHideTimer() {
       controlHideTimer.value = Timer(
         const Duration(seconds: 5),
         () {
-          if (isShowControl && !isHovering) {
-            updateIsShowControl(false);
+          if (usePlayerUiStore().state.isShowControl &&
+              !usePlayerUiStore().state.isHovering) {
+            usePlayerUiStore().updateIsShowControl(false);
           }
         },
       );
-    }, [isShowControl, isHovering, updateIsShowControl]);
+    }
 
-    final startProgressHideTimer = useCallback(() {
+    void startProgressHideTimer() {
       progressHideTimer.value = Timer(
         const Duration(seconds: 5),
         () {
-          if (isShowProgress) {
-            updateIsShowProgress(false);
+          if (usePlayerUiStore().state.isShowProgress) {
+            usePlayerUiStore().updateIsShowProgress(false);
           }
         },
       );
-    }, [isShowProgress, updateIsShowProgress]);
+    }
 
-    final startSystemUiHideTimer = useCallback(() {
-      systemUiHideTimer.value = Timer(
-        const Duration(seconds: 3),
-        () {
-          if (!isShowControl && currentPlay?.file.type == ContentType.video) {
-            SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-          }
-        },
-      );
-    }, [isShowControl, currentPlay?.file.type]);
-
-    final resetControlHideTimer = useCallback(() {
+    void resetControlHideTimer() {
       controlHideTimer.value?.cancel();
       startControlHideTimer();
-    }, [startControlHideTimer]);
+    }
 
-    final resetBottomProgressTimer = useCallback(() {
+    void resetBottomProgressTimer() {
       progressHideTimer.value?.cancel();
       startProgressHideTimer();
-    }, [startProgressHideTimer]);
+    }
 
-    final resetSystemUiHideTimer = useCallback(() {
-      systemUiHideTimer.value?.cancel();
-      startSystemUiHideTimer();
-    }, [startSystemUiHideTimer]);
-
-    final showControl = useCallback(() {
-      updateIsShowControl(true);
-      updateIsHovering(false);
+    void showControl() {
+      usePlayerUiStore().updateIsShowControl(true);
+      usePlayerUiStore().updateIsHovering(false);
       resetControlHideTimer();
-    }, [updateIsShowControl, updateIsHovering, resetControlHideTimer]);
+    }
 
-    final hideControl = useCallback(() {
-      updateIsShowControl(false);
-      updateIsHovering(false);
+    void hideControl() {
+      usePlayerUiStore().updateIsShowControl(false);
+      usePlayerUiStore().updateIsHovering(false);
       controlHideTimer.value?.cancel();
-    }, [updateIsShowControl, updateIsHovering]);
+    }
 
-    final showControlForHover = useCallback((Future<void> callback) async {
+    Future<void> showControlForHover(Future<void> callback) async {
       try {
         saveProgress();
         showControl();
-        updateIsHovering(true);
+        usePlayerUiStore().updateIsHovering(true);
         await callback;
         showControl();
       } catch (e) {
         logger(e.toString());
       }
-    }, [showControl, updateIsHovering]);
+    }
 
-    final showProgress = useCallback(() {
-      updateIsShowProgress(true);
+    void showProgress() {
+      usePlayerUiStore().updateIsShowProgress(true);
       resetBottomProgressTimer();
-    }, [updateIsShowProgress, resetBottomProgressTimer]);
+    }
 
     final onKeyEvent = useKeyboard(
       showControl: showControl,
@@ -210,25 +159,6 @@ class Player extends HookWidget {
       }
       return;
     }, [title, isPlaying]);
-
-    useEffect(() {
-      if (isShowControl || currentPlay?.file.type == ContentType.video) {
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-        systemUiHideTimer.value?.cancel();
-      } else {
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-      }
-      return;
-    }, [isShowControl, currentPlay?.file.type]);
-
-    useEffect(() {
-      SystemChrome.setSystemUIChangeCallback((value) async {
-        if (value) {
-          resetSystemUiHideTimer();
-        }
-      });
-      return null;
-    }, []);
 
     final scaleFactor = useMemoized(
       () =>
@@ -286,14 +216,10 @@ class Player extends HookWidget {
         onPopInvokedWithResult: (bool didPop, Object? result) async {
           if (!didPop) {
             await saveProgress();
-            if (!canPop.value) {
-              canPop.value = true;
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(t.exit_app_back_again)),
-                );
-              }
+            if (isDesktop) {
+              windowManager.close();
             } else {
+              SystemNavigator.pop();
               exit(0);
             }
           }

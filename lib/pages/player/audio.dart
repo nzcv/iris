@@ -25,8 +25,7 @@ class Audio extends HookWidget {
     return IgnorePointer(
       child: Stack(
         children: [
-          Container(
-            color: Colors.grey[800],
+          SizedBox(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
             child: cover != null

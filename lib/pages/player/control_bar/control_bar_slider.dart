@@ -33,13 +33,19 @@ class ControlBarSlider extends HookWidget {
       (player) => (
         position: player.position,
         duration: player.duration,
-        buffer: player.buffer
+        buffer: player.buffer,
       ),
     );
 
     final play = context.read<MediaPlayer>().play;
     final pause = context.read<MediaPlayer>().pause;
     final seek = context.read<MediaPlayer>().seek;
+
+    final double max = progress.duration.inMilliseconds.toDouble();
+    final double positionValue =
+        progress.position.inMilliseconds.toDouble().clamp(0.0, max);
+    final double bufferValue =
+        progress.buffer.inMilliseconds.toDouble().clamp(0.0, max);
 
     return ExcludeFocus(
       child: Container(
@@ -50,88 +56,67 @@ class ControlBarSlider extends HookWidget {
               visible: !disabled,
               child: Text(
                 formatDurationToMinutes(progress.position),
-                style: TextStyle(
-                  color: color,
-                  height: 2,
-                ),
+                style: TextStyle(color: color, height: 2),
               ),
             ),
             Expanded(
-              child: Stack(
-                children: [
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      disabledActiveTrackColor: color?.withAlpha(111),
-                      thumbShape: const RoundSliderThumbShape(
-                        disabledThumbRadius: 0,
-                        elevation: 0,
-                        pressedElevation: 0,
-                      ),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 12,
-                      ),
-                      trackShape: const RoundedActiveTrackShape(),
-                      trackHeight: 3,
-                    ),
-                    child: Slider(
-                      value: progress.buffer.inMilliseconds.toDouble() >
-                              progress.duration.inMilliseconds.toDouble()
-                          ? 0
-                          : progress.buffer.inMilliseconds.toDouble(),
-                      min: 0,
-                      max: progress.duration.inMilliseconds.toDouble(),
-                      onChanged: null,
-                    ),
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: color?.withAlpha(222) ??
+                      Theme.of(context).colorScheme.primary,
+                  inactiveTrackColor: color?.withAlpha(70) ??
+                      Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.25),
+                  secondaryActiveTrackColor: color?.withAlpha(120) ??
+                      Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.4),
+                  thumbColor: color ?? Theme.of(context).colorScheme.primary,
+                  thumbShape: RoundSliderThumbShape(
+                    enabledThumbRadius: disabled ? 0 : 6,
                   ),
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      thumbColor: color,
-                      activeTrackColor: color?.withAlpha(222),
-                      inactiveTrackColor: color?.withAlpha(99),
-                      thumbShape: RoundSliderThumbShape(
-                        enabledThumbRadius: disabled ? 0 : 6,
-                      ),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 12,
-                      ),
-                      trackShape:
-                          disabled ? const RoundedActiveTrackShape() : null,
-                      trackHeight: 4,
-                    ),
-                    child: Slider(
-                      value: progress.position.inMilliseconds.toDouble() >
-                              progress.duration.inMilliseconds.toDouble()
-                          ? 0
-                          : progress.position.inMilliseconds.toDouble(),
-                      min: 0,
-                      max: progress.duration.inMilliseconds.toDouble(),
-                      onChangeStart: (value) {
-                        usePlayerUiStore().updateIsSeeking(true);
-                        pause();
-                      },
-                      onChanged: (value) {
-                        showControl();
-                        seek(Duration(milliseconds: value.toInt()));
-                      },
-                      onChangeEnd: (value) async {
-                        if (autoPlay) {
-                          play();
-                        }
-                        usePlayerUiStore().updateIsSeeking(false);
-                      },
-                    ),
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 12,
                   ),
-                ],
+                  trackHeight: 4,
+                  trackShape: const _CustomTrackShape(),
+                ),
+                child: Slider(
+                  value: positionValue,
+                  secondaryTrackValue: bufferValue,
+                  min: 0,
+                  max: max > 0 ? max : 1.0,
+                  onChanged: disabled
+                      ? null
+                      : (value) {
+                          showControl();
+                          seek(Duration(milliseconds: value.toInt()));
+                        },
+                  onChangeStart: disabled
+                      ? null
+                      : (value) {
+                          usePlayerUiStore().updateIsSeeking(true);
+                          pause();
+                        },
+                  onChangeEnd: disabled
+                      ? null
+                      : (value) async {
+                          if (autoPlay) {
+                            play();
+                          }
+                          usePlayerUiStore().updateIsSeeking(false);
+                        },
+                ),
               ),
             ),
             Visibility(
               visible: !disabled,
               child: Text(
                 formatDurationToMinutes(progress.duration),
-                style: TextStyle(
-                  color: color,
-                  height: 2,
-                ),
+                style: TextStyle(color: color, height: 2),
               ),
             ),
           ],
@@ -141,9 +126,8 @@ class ControlBarSlider extends HookWidget {
   }
 }
 
-class RoundedActiveTrackShape extends SliderTrackShape
-    with BaseSliderTrackShape {
-  const RoundedActiveTrackShape();
+class _CustomTrackShape extends RoundedRectSliderTrackShape {
+  const _CustomTrackShape();
 
   @override
   void paint(
@@ -159,20 +143,9 @@ class RoundedActiveTrackShape extends SliderTrackShape
     bool isEnabled = false,
     double additionalActiveTrackHeight = 2,
   }) {
-    assert(sliderTheme.disabledActiveTrackColor != null);
-    assert(sliderTheme.disabledInactiveTrackColor != null);
-    assert(sliderTheme.activeTrackColor != null);
-    assert(sliderTheme.inactiveTrackColor != null);
-    assert(sliderTheme.thumbShape != null);
     if (sliderTheme.trackHeight == null || sliderTheme.trackHeight! <= 0) {
       return;
     }
-
-    final ColorTween activeTrackColorTween = ColorTween(
-        begin: sliderTheme.disabledActiveTrackColor,
-        end: sliderTheme.activeTrackColor);
-    final Paint activePaint = Paint()
-      ..color = activeTrackColorTween.evaluate(enableAnimation)!;
 
     final Rect trackRect = getPreferredRect(
       parentBox: parentBox,
@@ -181,20 +154,40 @@ class RoundedActiveTrackShape extends SliderTrackShape
       isEnabled: isEnabled,
       isDiscrete: isDiscrete,
     );
-    final Radius activeTrackRadius =
-        Radius.circular((trackRect.height + additionalActiveTrackHeight) / 2);
 
+    final Radius trackRadius = Radius.circular(trackRect.height / 2);
+
+    final Paint inactivePaint = Paint()
+      ..color = sliderTheme.inactiveTrackColor!;
     context.canvas.drawRRect(
-      RRect.fromLTRBAndCorners(
+      RRect.fromRectAndRadius(trackRect, trackRadius),
+      inactivePaint,
+    );
+
+    if (secondaryOffset != null) {
+      final Paint secondaryPaint = Paint()
+        ..color = sliderTheme.secondaryActiveTrackColor!;
+      final Rect secondaryRect = Rect.fromLTRB(
         trackRect.left,
-        trackRect.top - (additionalActiveTrackHeight / 2),
-        thumbCenter.dx,
-        trackRect.bottom + (additionalActiveTrackHeight / 2),
-        topLeft: activeTrackRadius,
-        bottomLeft: activeTrackRadius,
-        topRight: activeTrackRadius,
-        bottomRight: activeTrackRadius,
-      ),
+        trackRect.top,
+        secondaryOffset.dx,
+        trackRect.bottom,
+      );
+      context.canvas.drawRRect(
+        RRect.fromRectAndRadius(secondaryRect, trackRadius),
+        secondaryPaint,
+      );
+    }
+
+    final Paint activePaint = Paint()..color = sliderTheme.activeTrackColor!;
+    final Rect activeRect = Rect.fromLTRB(
+      trackRect.left,
+      trackRect.top,
+      thumbCenter.dx,
+      trackRect.bottom,
+    );
+    context.canvas.drawRRect(
+      RRect.fromRectAndRadius(activeRect, trackRadius),
       activePaint,
     );
   }

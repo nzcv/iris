@@ -89,23 +89,10 @@ FvpPlayer useFvpPlayer(BuildContext context) {
     return;
   }, [file?.type, width, height]);
 
-  Future<void> init() async {
+  Future<void> init(FileItem? file) async {
     isInitializing.value = true;
 
     try {
-      await controller.value.initialize();
-      await controller.value.setLooping(repeat == Repeat.one ? true : false);
-      await controller.value.setPlaybackSpeed(rate);
-      await controller.value.setVolume(isMuted ? 0 : volume / 100);
-    } catch (e) {
-      logger('Error initializing player: $e');
-    }
-
-    isInitializing.value = false;
-  }
-
-  useEffect(() {
-    () async {
       if (controller.value.value.isInitialized) {
         logger('Dispose player');
         controller.value.dispose();
@@ -138,10 +125,20 @@ FvpPlayer useFvpPlayer(BuildContext context) {
               httpHeaders: auth != null ? {'authorization': auth} : {},
             );
         }
-        await init();
       }
-    }();
+      await controller.value.initialize();
+      await controller.value.setLooping(repeat == Repeat.one ? true : false);
+      await controller.value.setPlaybackSpeed(rate);
+      await controller.value.setVolume(isMuted ? 0 : volume / 100);
+    } catch (e) {
+      logger('Error initializing player: $e');
+    } finally {
+      isInitializing.value = false;
+    }
+  }
 
+  useEffect(() {
+    init(file);
     return;
   }, [file?.uri]);
 
@@ -293,8 +290,10 @@ FvpPlayer useFvpPlayer(BuildContext context) {
   }, [controller.value.value.isPlaying]);
 
   Future<void> play() async {
-    if (!controller.value.value.isInitialized && !isInitializing.value) {
-      init();
+    if (!controller.value.value.isInitialized &&
+        !isInitializing.value &&
+        file != null) {
+      init(file);
     }
     controller.value.play();
   }

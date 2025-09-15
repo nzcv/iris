@@ -17,45 +17,47 @@ class LanguageDialog extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final t = getLocalizations(context);
-    String language = useAppStore().select(context, (state) => state.language);
+    final String language =
+        useAppStore().select(context, (state) => state.language);
 
-    void updateLanguage(String language) {
-      useAppStore().updateLanguage(language);
+    void updateLanguage(String? newLanguage) {
+      if (newLanguage == null) return;
+      useAppStore().updateLanguage(newLanguage);
       Navigator.pop(context);
     }
+
+    final Map<String, String> languageOptions = {
+      'system': t.system,
+      ...languages,
+    };
 
     return AlertDialog(
       title: Text(t.select_language),
       content: SingleChildScrollView(
+        child: RadioGroup<String>(
+          groupValue: language,
+          onChanged: updateLanguage,
           child: Column(
-        children: [
-          ListTile(
-            title: Text(t.system),
-            contentPadding: const EdgeInsets.only(left: 8),
-            leading: Radio(
-              value: 'system',
-              groupValue: language,
-              onChanged: (_) => updateLanguage('system'),
-            ),
-            onTap: () => updateLanguage('system'),
+            mainAxisSize: MainAxisSize.min,
+            children: languageOptions.entries.map((entry) {
+              final String langCode = entry.key;
+              final String langName = entry.value;
+
+              return ListTile(
+                title: Text(langName),
+                leading: Radio<String>(
+                  value: langCode,
+                ),
+                onTap: () => updateLanguage(langCode),
+                contentPadding: const EdgeInsets.only(left: 8),
+              );
+            }).toList(),
           ),
-          ...languages.entries.map(
-            (e) => ListTile(
-              title: Text(e.value),
-              contentPadding: const EdgeInsets.only(left: 8),
-              leading: Radio(
-                value: e.key,
-                groupValue: language,
-                onChanged: (_) => updateLanguage(e.key),
-              ),
-              onTap: () => updateLanguage(e.key),
-            ),
-          ),
-        ],
-      )),
+        ),
+      ),
       actions: <Widget>[
         TextButton(
-          onPressed: () => Navigator.pop(context, 'Cancel'),
+          onPressed: () => Navigator.pop(context),
           child: Text(t.cancel),
         ),
       ],

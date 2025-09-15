@@ -231,7 +231,7 @@ Future<List<FileItem>> getLocalFiles(
       final videoStat = await video.stat();
       final associatedSubtitles = subtitles.map((sub) {
         final baseName = p.basenameWithoutExtension(video.path);
-        String subTitleName = p.basename(sub.path); // Default name
+        String subTitleName = p.basename(sub.path);
         final regex = RegExp(r'^' + RegExp.escape(baseName) + r'\.(.+?)\.');
         final match = regex.firstMatch(subTitleName);
         if (match != null) {

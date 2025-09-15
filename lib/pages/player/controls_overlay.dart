@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_zustand/flutter_zustand.dart';
+import 'package:iris/globals.dart' show speedStops, speedSelectorItemWidth;
 import 'package:iris/hooks/use_gesture.dart';
 import 'package:iris/models/file.dart';
 import 'package:iris/models/player.dart';
@@ -7,10 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:iris/pages/player/control_bar/control_bar.dart';
 import 'package:iris/pages/player/control_bar/control_bar_slider.dart';
+import 'package:iris/pages/player/speed_selector.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/format_duration_to_minutes.dart';
-import 'package:iris/widgets/drag_aria.dart';
+import 'package:iris/widgets/drag_area.dart';
 import 'package:iris/widgets/title_bar.dart';
 import 'package:provider/provider.dart';
 
@@ -44,17 +46,54 @@ class ControlsOverlay extends HookWidget {
 
     final saveProgress = context.read<MediaPlayer>().saveProgress;
 
-    final rate = useAppStore().select(context, (state) => state.rate);
-
     final isShowControl =
         usePlayerUiStore().select(context, (state) => state.isShowControl);
     final isShowProgress =
         usePlayerUiStore().select(context, (state) => state.isShowProgress);
 
+    final isSpeedSelectorVisible = useState(false);
+    final selectedSpeed = useState(1.0);
+    final speedSelectorPosition = useState(Offset.zero);
+    final visualOffset = useState(0.0);
+    final initialSpeed = useRef(1.0);
+
+    void showSpeedSelectorCallback(Offset position) {
+      isSpeedSelectorVisible.value = true;
+      speedSelectorPosition.value = position;
+      visualOffset.value = 0.0;
+      initialSpeed.value = useAppStore().state.rate;
+    }
+
+    void hideSpeedSelectorCallback(double finalSpeed) {
+      final initialIndex = speedStops.indexOf(initialSpeed.value);
+      final finalIndex = speedStops.indexOf(finalSpeed);
+
+      if (initialIndex == -1 || finalIndex == -1) return;
+
+      visualOffset.value = (initialIndex - finalIndex) * speedSelectorItemWidth;
+
+      Future.delayed(
+        const Duration(milliseconds: 200),
+        () {
+          if (context.mounted) {
+            isSpeedSelectorVisible.value = false;
+          }
+        },
+      );
+    }
+
+    void updateSelectedSpeedCallback(double speed, double newVisualOffset) {
+      selectedSpeed.value = speed;
+      visualOffset.value = newVisualOffset;
+    }
+
     final gesture = useGesture(
       showControl: showControl,
       hideControl: hideControl,
       showProgress: showProgress,
+      showSpeedSelector: showSpeedSelectorCallback,
+      hideSpeedSelector: hideSpeedSelectorCallback,
+      updateSelectedSpeed: updateSelectedSpeedCallback,
     );
 
     final contentColor = useMemoized(
@@ -103,43 +142,16 @@ class ControlsOverlay extends HookWidget {
               child: Stack(
                 children: [
                   // 播放速度
-                  if (rate != 1.0 && gesture.isLongPress)
+                  if (isSpeedSelectorVisible.value)
                     Positioned(
                       left: 0,
                       top: 0,
                       right: 0,
                       bottom: 0,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(12, 12, 18, 12),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Transform.translate(
-                                offset: const Offset(0, 1.5),
-                                child: Icon(
-                                  Icons.speed_rounded,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                rate.toString(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  height: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      child: SpeedSelector(
+                        selectedSpeed: selectedSpeed.value,
+                        visualOffset: visualOffset.value,
+                        initialSpeed: initialSpeed.value,
                       ),
                     ),
                   // 屏幕亮度
@@ -310,19 +322,17 @@ class ControlsOverlay extends HookWidget {
               : -72,
           left: 0,
           right: 0,
-          child: SafeArea(
-            child: MouseRegion(
-              onHover: gesture.onHover,
-              child: GestureDetector(
-                onTap: () => showControl(),
-                child: DragAria(
-                  child: TitleBar(
-                    title: title,
-                    actions: [const SizedBox(width: 8)],
-                    color: contentColor,
-                    overlayColor: overlayColor,
-                    saveProgress: () => saveProgress(),
-                  ),
+          child: MouseRegion(
+            onHover: gesture.onHover,
+            child: GestureDetector(
+              onTap: () => showControl(),
+              child: DragArea(
+                child: TitleBar(
+                  title: title,
+                  actions: [const SizedBox(width: 8)],
+                  color: contentColor,
+                  overlayColor: overlayColor,
+                  saveProgress: () => saveProgress(),
                 ),
               ),
             ),

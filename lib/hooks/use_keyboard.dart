@@ -17,6 +17,7 @@ import 'package:iris/widgets/bottom_sheets/show_open_link_bottom_sheet.dart';
 import 'package:iris/widgets/dialogs/show_open_link_dialog.dart';
 import 'package:iris/widgets/popup.dart';
 import 'package:provider/provider.dart';
+import 'package:window_manager/window_manager.dart';
 
 typedef KeyboardEvent = void Function(KeyEvent event);
 
@@ -44,7 +45,12 @@ KeyboardEvent useKeyboard({
           case LogicalKeyboardKey.keyX:
             showControl();
             await player.saveProgress();
-            exit(0);
+            if (isDesktop) {
+              windowManager.close();
+            } else {
+              SystemNavigator.pop();
+              exit(0);
+            }
         }
         return;
       }

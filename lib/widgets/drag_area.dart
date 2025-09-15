@@ -4,8 +4,8 @@ import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
-class DragAria extends StatelessWidget {
-  const DragAria({
+class DragArea extends StatelessWidget {
+  const DragArea({
     super.key,
     required this.child,
   });

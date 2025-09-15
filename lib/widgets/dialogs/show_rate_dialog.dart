@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
+import 'package:iris/globals.dart' show speedStops;
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 
@@ -18,45 +19,35 @@ class RateDialog extends HookWidget {
     final t = getLocalizations(context);
     final rate = useAppStore().select(context, (state) => state.rate);
 
-    void updateRate(double rate) {
-      useAppStore().updateRate(rate);
+    void updateRate(double? newRate) {
+      if (newRate == null) return;
+      useAppStore().updateRate(newRate);
       Navigator.pop(context);
     }
 
     return AlertDialog(
       title: Text(t.playback_speed),
       content: SingleChildScrollView(
-        child: Column(
-          children: [
-            0.25,
-            0.5,
-            0.75,
-            1.0,
-            1.25,
-            1.5,
-            1.75,
-            2.0,
-            3.0,
-            4.0,
-            5.0,
-          ]
-              .map(
-                (item) => ListTile(
-                  title: Text('${item}X'),
-                  leading: Radio(
-                    value: item,
-                    groupValue: rate,
-                    onChanged: (_) => updateRate(item),
-                  ),
-                  onTap: () => updateRate(item),
+        child: RadioGroup<double>(
+          groupValue: rate,
+          onChanged: updateRate,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: speedStops.map((item) {
+              return ListTile(
+                title: Text('${item}X'),
+                leading: Radio<double>(
+                  value: item,
                 ),
-              )
-              .toList(),
+                onTap: () => updateRate(item),
+              );
+            }).toList(),
+          ),
         ),
       ),
       actions: <Widget>[
         TextButton(
-          onPressed: () => Navigator.pop(context, 'Cancel'),
+          onPressed: () => Navigator.pop(context),
           child: Text(t.cancel),
         ),
       ],

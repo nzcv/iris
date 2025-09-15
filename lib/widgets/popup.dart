@@ -52,65 +52,61 @@ class Popup<T> extends PopupRoute<T> {
             ? 2
             : 1;
 
-    return SafeArea(
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onPanStart: (details) {
-                if (Platform.isWindows ||
-                    Platform.isLinux ||
-                    Platform.isMacOS) {
-                  windowManager.startDragging();
-                }
-              },
-              onTap: () => Navigator.of(context).pop(),
-            ),
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            onPanStart: (details) {
+              if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+                windowManager.startDragging();
+              }
+            },
+            onTap: () => Navigator.of(context).pop(),
           ),
-          Align(
-            alignment: direction == PopupDirection.left
-                ? Alignment.bottomLeft
-                : Alignment.bottomRight,
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: 0,
-                bottom: 8,
-                left: direction == PopupDirection.left ? 8 : 0,
-                right: direction == PopupDirection.right ? 8 : 0,
-              ),
-              child: AnimatedBuilder(
-                animation: animation,
-                builder: (context, child) {
-                  return SlideTransition(
-                    position: Tween<Offset>(
-                      begin: direction == PopupDirection.left
-                          ? const Offset(-1.0, 0.0)
-                          : const Offset(1.0, 0.0),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeInOutCubicEmphasized,
-                    )),
-                    child: child,
-                  );
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Material(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.75),
-                      child: UnconstrainedBox(
-                        child: LimitedBox(
-                          maxWidth: screenWidth / size - 16,
-                          maxHeight: screenHeight - 18 - 48,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [Expanded(child: child)],
-                          ),
+        ),
+        Align(
+          alignment: direction == PopupDirection.left
+              ? Alignment.bottomLeft
+              : Alignment.bottomRight,
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: 0,
+              bottom: 8,
+              left: direction == PopupDirection.left ? 8 : 0,
+              right: direction == PopupDirection.right ? 8 : 0,
+            ),
+            child: AnimatedBuilder(
+              animation: animation,
+              builder: (context, child) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: direction == PopupDirection.left
+                        ? const Offset(-1.0, 0.0)
+                        : const Offset(1.0, 0.0),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeInOutCubicEmphasized,
+                  )),
+                  child: child,
+                );
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Material(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surface
+                        .withValues(alpha: 0.75),
+                    child: UnconstrainedBox(
+                      child: LimitedBox(
+                        maxWidth: screenWidth / size - 16,
+                        maxHeight: screenHeight - 16,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [Expanded(child: child)],
                         ),
                       ),
                     ),
@@ -119,8 +115,8 @@ class Popup<T> extends PopupRoute<T> {
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
