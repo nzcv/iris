@@ -1,4 +1,4 @@
-import 'package:iris/utils/platform.dart';
+import 'package:iris/utils/build_file_uri.dart';
 import 'package:iris/models/file.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:path/path.dart' as path;
@@ -6,9 +6,8 @@ import 'package:path/path.dart' as path;
 Future<List<Subtitle>> findSubtitle(
   List<String> fileNames,
   String videoName,
-  String baseUri, {
-  bool encodeUri = true,
-}) async {
+  String baseUri,
+) async {
   if (checkContentType(videoName) != ContentType.video) {
     return [];
   }
@@ -38,19 +37,9 @@ Future<List<Subtitle>> findSubtitle(
       subTitleName = match.group(1) ?? fileName;
     }
 
-    final Uri fileUri;
-    if (isAndroid && baseUri.startsWith('content://')) {
-      fileUri = Uri.parse('$baseUri/${Uri.encodeComponent(fileName)}');
-    } else {
-      final uriParts = Uri.parse(baseUri);
-      fileUri = uriParts.replace(
-        pathSegments: [...uriParts.pathSegments, fileName],
-      );
-    }
-
     return Subtitle(
       name: subTitleName,
-      uri: encodeUri ? fileUri.toString() : '$baseUri/$fileName',
+      uri: buildFileUri(baseUri, fileName),
     );
   }).toList();
 }

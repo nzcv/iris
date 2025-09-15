@@ -314,7 +314,6 @@ Future<List<FileItem>> getContentFiles(String uri) async {
               allFileNames,
               file.name,
               uri,
-              encodeUri: false,
             ),
           ))
       .toList());

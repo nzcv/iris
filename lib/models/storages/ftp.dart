@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:iris/models/file.dart';
 import 'package:iris/models/storages/storage.dart';
+import 'package:iris/utils/build_file_uri.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:iris/utils/find_subtitle.dart';
 import 'package:iris/utils/logger.dart';
@@ -26,14 +27,14 @@ Future<List<FileItem>> getFTPFiles(
 
   try {
     await client.connect();
-    await client.fs.changeDirectory(path.join('/').replaceFirst('//', '/'));
+    await client.fs.changeDirectory(path.join('/').replaceAll('//', '/'));
 
     final files = await client.fs.listDirectory();
 
     await client.disconnect();
 
     final baseUri =
-        'ftp?host=${storage.host}&port=${storage.port}&path=${path.join('/').replaceFirst('//', '/')}';
+        'ftp?host=${storage.host}&port=${storage.port}&path=${path.join('/').replaceAll('//', '/')}';
 
     final allFileNames = files.map((file) => file.name).toList();
 
@@ -42,7 +43,7 @@ Future<List<FileItem>> getFTPFiles(
         storageId: storage.id,
         storageType: StorageType.ftp,
         name: file.name,
-        uri: Uri.encodeFull('$baseUri/${file.name}'),
+        uri: buildFileUri(baseUri, file.name),
         path: [...path, file.name],
         isDir: file.isDirectory,
         size: file.isDirectory ? 0 : file.info?.size ?? 0,

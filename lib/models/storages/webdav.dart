@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:iris/models/storages/storage.dart';
+import 'package:iris/utils/build_file_uri.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:iris/utils/find_subtitle.dart';
 import 'package:iris/utils/logger.dart';
@@ -60,26 +61,24 @@ Future<List<FileItem>> getWebDAVFiles(
   client.setReceiveTimeout(8000);
 
   var files = await client.readDir(path.join('/'));
-
-  final String baseUri =
-      'http${https ? 's' : ''}://$host:$port${path.join('/')}';
-
   final allFileNames = files.map((f) => f.name as String).toList();
+
+  final cleanPathSegments = path.map((e) => e.replaceAll('/', '')).toList();
+  final baseUri = Uri(
+    scheme: storage.https ? 'https' : 'http',
+    host: storage.host,
+    port: int.tryParse(storage.port),
+    pathSegments: cleanPathSegments,
+  );
+  final baseUriString = baseUri.toString();
 
   return await Future.wait(
     files.map((file) async {
-      final fileUri = Uri(
-        scheme: https ? 'https' : 'http',
-        host: host,
-        port: int.tryParse(port),
-        pathSegments: [...path, file.name!],
-      );
-
       return FileItem(
         storageId: id,
         storageType: StorageType.webdav,
         name: '${file.name}',
-        uri: fileUri.toString(),
+        uri: buildFileUri(baseUriString, file.name!),
         path: [...path, '${file.name}'],
         isDir: file.isDir ?? false,
         size: file.size ?? 0,
@@ -90,7 +89,7 @@ Future<List<FileItem>> getWebDAVFiles(
         subtitles: await findSubtitle(
           allFileNames,
           file.name as String,
-          baseUri,
+          baseUriString,
         ),
       );
     }),
