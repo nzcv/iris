@@ -162,7 +162,9 @@ Gesture useGesture({
     double selectedSpeed = speedStops[finalIndex];
 
     updateSelectedSpeed(selectedSpeed, visualOffset);
-    useAppStore().updateRate(selectedSpeed);
+    if (useAppStore().state.rate != selectedSpeed) {
+      useAppStore().updateRate(selectedSpeed);
+    }
   }
 
   void onLongPressEnd(LongPressEndDetails details) {
