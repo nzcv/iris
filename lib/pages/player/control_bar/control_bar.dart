@@ -20,7 +20,6 @@ import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/pages/player/play_queue.dart';
 import 'package:iris/utils/platform.dart';
-import 'package:iris/utils/resize_window.dart';
 import 'package:iris/widgets/popup.dart';
 import 'package:iris/pages/storages/storages.dart';
 import 'package:provider/provider.dart';
@@ -56,8 +55,6 @@ class ControlBar extends HookWidget {
     final volume = useAppStore().select(context, (state) => state.volume);
     final isMuted = useAppStore().select(context, (state) => state.isMuted);
 
-    final aspectRatio =
-        usePlayerUiStore().select(context, (state) => state.aspectRatio);
     final isFullScreen =
         usePlayerUiStore().select(context, (state) => state.isFullScreen);
     final int playQueueLength =
@@ -417,9 +414,6 @@ class ControlBar extends HookWidget {
                     ),
                     onPressed: () async {
                       showControl();
-                      if (isFullScreen) {
-                        await resizeWindow(aspectRatio);
-                      }
                       usePlayerUiStore().updateFullScreen(!isFullScreen);
                     },
                     style: ButtonStyle(overlayColor: overlayColor),

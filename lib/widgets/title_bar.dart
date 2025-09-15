@@ -15,7 +15,6 @@ class TitleBar extends HookWidget {
     this.color,
     this.overlayColor,
     this.saveProgress,
-    this.resizeWindow,
   });
 
   final String? title;
@@ -23,7 +22,6 @@ class TitleBar extends HookWidget {
   final Color? color;
   final WidgetStateProperty<Color?>? overlayColor;
   final Future<void> Function()? saveProgress;
-  final Future<void> Function()? resizeWindow;
 
   @override
   Widget build(BuildContext context) {
@@ -122,9 +120,6 @@ class TitleBar extends HookWidget {
                                   color: color,
                                 ),
                                 onPressed: () async {
-                                  if (isFullScreen) {
-                                    await resizeWindow?.call();
-                                  }
                                   usePlayerUiStore()
                                       .updateFullScreen(!isFullScreen);
                                 },
@@ -148,7 +143,6 @@ class TitleBar extends HookWidget {
                                 onPressed: () async {
                                   if (isMaximized) {
                                     await windowManager.unmaximize();
-                                    await resizeWindow?.call();
                                   } else {
                                     await windowManager.maximize();
                                   }

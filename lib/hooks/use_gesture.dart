@@ -8,7 +8,6 @@ import 'package:iris/models/player.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/platform.dart';
-import 'package:iris/utils/resize_window.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -74,9 +73,6 @@ Gesture useGesture({
   final forward = context.read<MediaPlayer>().forward;
   final backward = context.read<MediaPlayer>().backward;
   final seek = context.read<MediaPlayer>().seek;
-
-  final aspectRatio =
-      usePlayerUiStore().select(context, (state) => state.aspectRatio);
 
   final isFullScreen =
       usePlayerUiStore().select(context, (state) => state.isFullScreen);
@@ -145,9 +141,6 @@ Gesture useGesture({
       }
     } else {
       if (isDesktop) {
-        if (isFullScreen) {
-          await resizeWindow(aspectRatio);
-        }
         usePlayerUiStore().updateFullScreen(!isFullScreen);
       }
     }

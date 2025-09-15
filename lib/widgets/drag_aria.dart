@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/platform.dart';
-import 'package:iris/utils/resize_window.dart';
 import 'package:window_manager/window_manager.dart';
 
 class DragAria extends StatelessWidget {
@@ -14,8 +13,6 @@ class DragAria extends StatelessWidget {
   final Widget child;
   @override
   Widget build(BuildContext context) {
-    final aspectRatio =
-        usePlayerUiStore().select(context, (state) => state.aspectRatio);
     final isFullScreen =
         usePlayerUiStore().select(context, (state) => state.isFullScreen);
 
@@ -26,7 +23,6 @@ class DragAria extends StatelessWidget {
         } else {
           if (isDesktop && await windowManager.isMaximized()) {
             await windowManager.unmaximize();
-            await resizeWindow(aspectRatio);
           } else {
             await windowManager.maximize();
           }

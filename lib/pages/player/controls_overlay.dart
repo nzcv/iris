@@ -10,7 +10,6 @@ import 'package:iris/pages/player/control_bar/control_bar_slider.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/format_duration_to_minutes.dart';
-import 'package:iris/utils/resize_window.dart';
 import 'package:iris/widgets/drag_aria.dart';
 import 'package:iris/widgets/title_bar.dart';
 import 'package:provider/provider.dart';
@@ -47,8 +46,6 @@ class ControlsOverlay extends HookWidget {
 
     final rate = useAppStore().select(context, (state) => state.rate);
 
-    final aspectRatio =
-        usePlayerUiStore().select(context, (state) => state.aspectRatio);
     final isShowControl =
         usePlayerUiStore().select(context, (state) => state.isShowControl);
     final isShowProgress =
@@ -325,7 +322,6 @@ class ControlsOverlay extends HookWidget {
                     color: contentColor,
                     overlayColor: overlayColor,
                     saveProgress: () => saveProgress(),
-                    resizeWindow: () => resizeWindow(aspectRatio),
                   ),
                 ),
               ),
