@@ -23,7 +23,7 @@ class Home extends HookWidget {
     return AnnotatedRegion(
       value: const SystemUiOverlayStyle(
         statusBarIconBrightness: Brightness.light,
-        statusBarColor: Colors.transparent,
+        statusBarColor: Colors.black45,
         systemNavigationBarColor: Colors.transparent,
       ),
       child: Scaffold(
