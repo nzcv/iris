@@ -50,18 +50,6 @@ void useResizeWindow() {
 
       if (contentType == ContentType.audio) {
         await windowManager.setAspectRatio(0);
-        const Size defaultAudioSize = Size(450, 600);
-        if ((await windowManager.getSize()) != defaultAudioSize) {
-          final screen = await getCurrentScreen();
-          if (screen == null) return;
-          final screenRect = screen.visibleFrame;
-          final position = Offset(
-            (screenRect.width - defaultAudioSize.width) / 2,
-            (screenRect.height - defaultAudioSize.height) / 2,
-          );
-          await _applyResize(Rect.fromLTWH(position.dx, position.dy,
-              defaultAudioSize.width, defaultAudioSize.height));
-        }
         return;
       }
 

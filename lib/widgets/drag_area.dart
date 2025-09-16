@@ -18,10 +18,11 @@ class DragArea extends StatelessWidget {
 
     return GestureDetector(
       onDoubleTap: () async {
+        if (!isDesktop) return;
         if (isFullScreen) {
           await usePlayerUiStore().updateFullScreen(false);
         } else {
-          if (isDesktop && await windowManager.isMaximized()) {
+          if (await windowManager.isMaximized()) {
             await windowManager.unmaximize();
           } else {
             await windowManager.maximize();

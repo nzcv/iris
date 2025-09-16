@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'dart:ui';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Card;
+import 'package:iris/widgets/card.dart';
 import 'package:window_manager/window_manager.dart';
 
 enum PopupDirection { left, right }
@@ -113,25 +113,18 @@ class Popup<T> extends PopupRoute<T> {
                     child: child,
                   );
                 },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Material(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.75),
-                      child: UnconstrainedBox(
-                        child: LimitedBox(
-                          maxWidth: screenWidth / size - 16,
-                          maxHeight: screenHeight - 16,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Expanded(child: child),
-                            ],
-                          ),
+                child: UnconstrainedBox(
+                  child: LimitedBox(
+                    maxWidth: screenWidth / size - 16,
+                    maxHeight: screenHeight - 16,
+                    child: Card(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Expanded(child: child),
+                          ],
                         ),
                       ),
                     ),
