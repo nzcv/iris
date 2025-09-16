@@ -40,8 +40,8 @@ class TitleBar extends HookWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black87.withValues(alpha: 0.8),
-            Colors.black87.withValues(alpha: 0.3),
+            Colors.black87.withValues(alpha: 0.6),
+            Colors.black87.withValues(alpha: 0.25),
             Colors.black87.withValues(alpha: 0),
           ],
         ),

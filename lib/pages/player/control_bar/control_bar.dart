@@ -86,9 +86,9 @@ class ControlBar extends HookWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black87.withValues(alpha: 0),
-            Colors.black87.withValues(alpha: 0.3),
-            Colors.black87.withValues(alpha: 0.8),
+            Colors.black.withValues(alpha: 0),
+            Colors.black.withValues(alpha: 0.25),
+            Colors.black.withValues(alpha: 0.65),
           ],
         ),
       ),
@@ -105,7 +105,7 @@ class ControlBar extends HookWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(width: 4),
+              const SizedBox(width: 2),
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -116,7 +116,7 @@ class ControlBar extends HookWidget {
                       displayIsPlaying.value
                           ? Icons.pause_rounded
                           : Icons.play_arrow_rounded,
-                      size: 36,
+                      size: 32,
                       color: color,
                     ),
                     onPressed: () {
@@ -133,8 +133,8 @@ class ControlBar extends HookWidget {
                   ),
                   if (isInitializing)
                     SizedBox(
-                      width: 36,
-                      height: 36,
+                      width: 32,
+                      height: 32,
                       child: CircularProgressIndicator(
                         strokeWidth: 4,
                         color: Theme.of(context).colorScheme.surface,
@@ -146,7 +146,7 @@ class ControlBar extends HookWidget {
                 tooltip: '${t.stop} ( Ctrl + C )',
                 icon: Icon(
                   Icons.stop_rounded,
-                  size: 28,
+                  size: 26,
                   color: color,
                 ),
                 onPressed: () {
@@ -162,7 +162,7 @@ class ControlBar extends HookWidget {
                   tooltip: '${t.previous} ( Ctrl + ← )',
                   icon: Icon(
                     Icons.skip_previous_rounded,
-                    size: 28,
+                    size: 26,
                     color: color,
                   ),
                   onPressed: () {
@@ -176,7 +176,7 @@ class ControlBar extends HookWidget {
                   tooltip: '${t.next} ( Ctrl + → )',
                   icon: Icon(
                     Icons.skip_next_rounded,
-                    size: 28,
+                    size: 26,
                     color: color,
                   ),
                   onPressed: () {
@@ -263,6 +263,7 @@ class ControlBar extends HookWidget {
                               fontWeight: item == rate
                                   ? FontWeight.bold
                                   : FontWeight.w100,
+                              height: 1,
                             ),
                           ),
                           onTap: () async {
@@ -288,7 +289,7 @@ class ControlBar extends HookWidget {
                     ),
                   ),
                 ),
-              if (MediaQuery.of(context).size.width < 600)
+              if (MediaQuery.of(context).size.width < 640)
                 Builder(
                   builder: (context) => IconButton(
                     tooltip: '${t.volume}: $volume',
@@ -307,7 +308,7 @@ class ControlBar extends HookWidget {
                     style: ButtonStyle(overlayColor: overlayColor),
                   ),
                 ),
-              if (MediaQuery.of(context).size.width >= 600)
+              if (MediaQuery.of(context).size.width >= 640)
                 SizedBox(
                   width: 160,
                   child: VolumeControl(
@@ -670,7 +671,7 @@ class ControlBar extends HookWidget {
                   ),
                 ],
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 2),
             ],
           ),
         ],
