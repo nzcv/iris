@@ -13,7 +13,7 @@ import 'package:iris/models/file.dart';
 import 'package:iris/models/player.dart';
 import 'package:iris/models/storages/local.dart';
 import 'package:iris/pages/player/audio.dart';
-import 'package:iris/pages/player/controls_overlay.dart';
+import 'package:iris/pages/player/overlays/controls_overlay.dart';
 import 'package:iris/pages/player/video_view.dart';
 import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/check_content_type.dart';

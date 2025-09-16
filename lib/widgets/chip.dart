@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class AppChip extends StatelessWidget {
+class Chip extends StatelessWidget {
   final String text;
   final bool primary;
 
-  const AppChip({super.key, required this.text, this.primary = false});
+  const Chip({super.key, required this.text, this.primary = false});
 
   @override
   Widget build(BuildContext context) {

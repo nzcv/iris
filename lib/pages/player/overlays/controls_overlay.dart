@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:iris/pages/player/control_bar/control_bar.dart';
 import 'package:iris/pages/player/control_bar/control_bar_slider.dart';
-import 'package:iris/pages/player/speed_selector.dart';
+import 'package:iris/pages/player/overlays/speed_selector.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_player_ui_store.dart';
 import 'package:iris/utils/format_duration_to_minutes.dart';

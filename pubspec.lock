@@ -811,7 +811,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: ffdd8015191aee63acc32c5657ecf050302861be
+      resolved-ref: "0abae44bddaa9befe16a90acd23ac544a9fe9325"
       url: "https://github.com/nini22P/media_stream"
     source: git
     version: "0.0.1"

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_breadcrumb/flutter_breadcrumb.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
@@ -19,7 +19,7 @@ import 'package:iris/utils/file_size_convert.dart';
 import 'package:iris/utils/files_sort.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/request_storage_permission.dart';
-import 'package:iris/widgets/app_chip.dart';
+import 'package:iris/widgets/chip.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -217,7 +217,7 @@ class Files extends HookWidget {
                                                   progress.position
                                                       .inMilliseconds) <=
                                               5000) {
-                                            return AppChip(text: '100%');
+                                            return Chip(text: '100%');
                                           }
                                           final String progressString =
                                               (progress.position
@@ -226,7 +226,7 @@ class Files extends HookWidget {
                                                           .inMilliseconds *
                                                       100)
                                                   .toStringAsFixed(0);
-                                          return AppChip(
+                                          return Chip(
                                               text: '$progressString %');
                                         } else {
                                           return const SizedBox();
@@ -245,7 +245,7 @@ class Files extends HookWidget {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 const SizedBox(width: 4),
-                                                AppChip(
+                                                Chip(
                                                   text: subtitleType,
                                                   primary: true,
                                                 ),
