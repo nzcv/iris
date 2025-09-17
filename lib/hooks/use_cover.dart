@@ -6,7 +6,6 @@ import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/storages/storage.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/store/use_storage_store.dart';
-import 'package:iris/utils/files_filter.dart';
 
 FileItem? useCover() {
   final context = useContext();
@@ -53,7 +52,9 @@ FileItem? useCover() {
 
       final files = await storage.getFiles(dir);
 
-      final images = filesFilter(files, types: [ContentType.image]);
+      final images = files
+          .where((file) => [ContentType.image].contains(file.type))
+          .toList();
 
       cover.value = images.firstWhereOrNull((image) =>
               image.name.split('.').first.toLowerCase() == 'cover') ??

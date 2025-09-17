@@ -8,7 +8,6 @@ import 'package:iris/models/storages/storage.dart';
 import 'package:iris/models/store/play_queue_state.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
-import 'package:iris/utils/files_filter.dart';
 import 'package:iris/utils/files_sort.dart';
 import 'package:iris/utils/get_subtitle_map.dart';
 import 'package:iris/utils/get_localizations.dart';
@@ -156,8 +155,11 @@ Future<PlayQueueState?> getLocalPlayQueue(String filePath) async {
     basePath: dirPath,
   ).getFiles(dirPath);
   final List<FileItem> sortedFiles = filesSort(files: files);
-  final List<FileItem> filteredFiles =
-      filesFilter(sortedFiles, types: [ContentType.video, ContentType.audio]);
+  final List<FileItem> filteredFiles = sortedFiles
+      .where(
+          (file) => [ContentType.video, ContentType.audio].contains(file.type))
+      .toList();
+
   final List<PlayQueueItem> playQueue = filteredFiles
       .asMap()
       .entries
@@ -267,7 +269,7 @@ Future<List<FileItem>> getLocalFiles(
         isDir: isDir,
         size: isDir ? 0 : stat.size,
         lastModified: stat.modified,
-        type: checkContentType(entity.path),
+        type: isDir ? ContentType.other : checkContentType(entity.path),
         subtitles: [],
       ));
     }
@@ -301,7 +303,6 @@ Future<List<FileItem>> getContentFiles(String uri) async {
 
   final subtitleMap = getSubtitleMap<SafDocumentFile>(
     files: files,
-    baseUri: uri,
     getName: (file) => file.name,
     getUri: (file) => file.uri,
   );
@@ -318,7 +319,7 @@ Future<List<FileItem>> getContentFiles(String uri) async {
         isDir: file.isDir,
         size: file.isDir ? 0 : file.length,
         lastModified: DateTime.fromMillisecondsSinceEpoch(file.lastModified),
-        type: checkContentType(file.name),
+        type: file.isDir ? ContentType.other : checkContentType(file.name),
         subtitles: isVideoFile(file.name) ? subtitleMap[basename] ?? [] : [],
       ));
     }

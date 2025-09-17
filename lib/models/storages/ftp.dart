@@ -42,7 +42,6 @@ Future<List<FileItem>> getFTPFiles(
 
     final subtitleMap = getSubtitleMap<FtpEntry>(
       files: files,
-      baseUri: baseUri,
       getName: (file) => file.name,
       getUri: (file) => getUri(file.name),
     );
@@ -64,7 +63,9 @@ Future<List<FileItem>> getFTPFiles(
             lastModified: file.info?.modifyTime != null
                 ? DateTime.tryParse(file.info!.modifyTime!)
                 : null,
-            type: checkContentType(file.name),
+            type: file.isDirectory
+                ? ContentType.other
+                : checkContentType(file.name),
             subtitles:
                 isVideoFile(file.name) ? subtitleMap[basename] ?? [] : [],
           ),

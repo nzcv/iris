@@ -3,7 +3,6 @@ import 'package:path/path.dart' as path;
 
 Map<String, List<Subtitle>> getSubtitleMap<T>({
   required List<T> files,
-  required String baseUri,
   required String Function(T) getName,
   required String Function(T) getUri,
 }) {

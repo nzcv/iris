@@ -84,7 +84,6 @@ Future<List<FileItem>> getWebDAVFiles(
 
   final subtitleMap = getSubtitleMap<webdav.File>(
     files: files,
-    baseUri: baseUriString,
     getName: (file) => file.name ?? '',
     getUri: (file) => getUri(file.name ?? ''),
   );
@@ -105,10 +104,10 @@ Future<List<FileItem>> getWebDAVFiles(
         name: fileName,
         uri: getUri(fileName),
         path: [...path, fileName],
-        isDir: file.isDir ?? false,
+        isDir: isDir ?? false,
         size: file.size ?? 0,
         lastModified: file.mTime,
-        type: checkContentType(fileName),
+        type: isDir ?? false ? ContentType.other : checkContentType(fileName),
         subtitles: isVideoFile(fileName) ? subtitleMap[basename] ?? [] : [],
       ));
     }
