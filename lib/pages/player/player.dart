@@ -29,8 +29,6 @@ class Player extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPlaying =
-        context.select<MediaPlayer, bool>((player) => player.isPlaying);
     final width = context.select<MediaPlayer, double>((player) => player.width);
     final height =
         context.select<MediaPlayer, double>((player) => player.height);
@@ -55,19 +53,19 @@ class Player extends HookWidget {
         () => playQueue.indexWhere((element) => element.index == currentIndex),
         [playQueue, currentIndex]);
 
-    final PlayQueueItem? currentPlay = useMemoized(
+    final FileItem? file = useMemoized(
         () => playQueue.isEmpty || currentPlayIndex < 0
             ? null
-            : playQueue[currentPlayIndex],
+            : playQueue[currentPlayIndex].file,
         [playQueue, currentPlayIndex]);
 
     final title = useMemoized(
-        () => currentPlay != null
+        () => file != null
             ? playQueue.length > 1
-                ? '[${currentPlayIndex + 1}/${playQueue.length}] ${currentPlay.file.name}'
-                : currentPlay.file.name
+                ? '[${currentPlayIndex + 1}/${playQueue.length}] ${file.name}'
+                : file.name
             : INFO.title,
-        [currentPlay, currentPlayIndex, playQueue]);
+        [file, currentPlayIndex, playQueue]);
 
     final focusNode = useFocusNode();
 
@@ -158,31 +156,32 @@ class Player extends HookWidget {
         windowManager.setTitle(title);
       }
       return;
-    }, [title, isPlaying]);
+    }, [title]);
+
+    final Size windowSize = useMemoized(
+        () => MediaQuery.sizeOf(context), [MediaQuery.sizeOf(context)]);
 
     final scaleFactor = useMemoized(
-      () =>
-          View.of(context).physicalSize.width /
-          MediaQuery.of(context).size.width,
-      [View.of(context).physicalSize.width, MediaQuery.of(context).size.width],
+      () => View.of(context).physicalSize.width / windowSize.width,
+      [View.of(context).physicalSize.width],
     );
 
     final videoViewSize = useMemoized(() {
       if (fit != BoxFit.none || width == 0 || height == 0) {
-        return MediaQuery.of(context).size;
+        return windowSize;
       } else {
         return Size(width / scaleFactor, height / scaleFactor);
       }
-    }, [fit, MediaQuery.of(context).size, width, height, scaleFactor]);
+    }, [fit, windowSize, width, height, scaleFactor]);
 
     final videoViewOffset = useMemoized(
         () => fit == BoxFit.none
             ? Offset(
-                (MediaQuery.of(context).size.width - videoViewSize.width) / 2,
-                (MediaQuery.of(context).size.height - videoViewSize.height) / 2,
+                (windowSize.width - videoViewSize.width) / 2,
+                (windowSize.height - videoViewSize.height) / 2,
               )
             : Offset(0, 0),
-        [fit, MediaQuery.of(context).size, videoViewSize]);
+        [fit, windowSize, videoViewSize]);
 
     return DropTarget(
       onDragDone: (details) async {
@@ -236,26 +235,18 @@ class Player extends HookWidget {
                 width: videoViewSize.width,
                 height: videoViewSize.height,
                 child: VideoView(
-                  key: ValueKey(currentPlay?.file.uri),
+                  key: ValueKey(file?.uri),
                   fit: fit,
                 ),
               ),
               // Audio
-              if (currentPlay?.file.type == ContentType.audio)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  right: 0,
-                  bottom: 0,
+              if (file?.type == ContentType.audio)
+                Positioned.fill(
                   child: Audio(cover: cover),
                 ),
-              Positioned(
-                left: 0,
-                top: 0,
-                right: 0,
-                bottom: 0,
+              Positioned.fill(
                 child: ControlsOverlay(
-                  currentPlay: currentPlay,
+                  file: file,
                   title: title,
                   showControl: showControl,
                   showControlForHover: showControlForHover,

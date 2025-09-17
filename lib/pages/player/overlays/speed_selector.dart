@@ -16,7 +16,7 @@ class SpeedSelector extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+    final screenSize = MediaQuery.sizeOf(context);
 
     const double itemWidth = speedSelectorItemWidth;
     const double horizontalPadding = 12.0;

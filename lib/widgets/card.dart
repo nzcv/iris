@@ -49,11 +49,7 @@ class Card extends StatelessWidget {
             ),
           ),
         ),
-        Positioned(
-          left: 0,
-          top: 0,
-          right: 0,
-          bottom: 0,
+        Positioned.fill(
           child: IgnorePointer(
             child: Container(
               decoration: BoxDecoration(

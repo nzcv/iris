@@ -68,8 +68,11 @@ class Files extends HookWidget {
     final isError = result.error != null;
 
     final filteredFiles = useMemoized(
-        () => filesFilter(result.data ?? [],
-            [ContentType.dir, ContentType.video, ContentType.audio]),
+        () => filesFilter(
+              result.data ?? [],
+              types: [ContentType.video, ContentType.audio],
+              includeDirs: true,
+            ),
         [result.data]);
 
     final files = useMemoized(
@@ -81,16 +84,18 @@ class Files extends HookWidget {
             ),
         [filteredFiles, sortBy, sortOrder, folderFirst]);
 
-    ItemScrollController itemScrollController = ItemScrollController();
-    ScrollOffsetController scrollOffsetController = ScrollOffsetController();
-    ItemPositionsListener itemPositionsListener =
-        ItemPositionsListener.create();
-    ScrollOffsetListener scrollOffsetListener = ScrollOffsetListener.create();
+    final itemScrollController = useMemoized(() => ItemScrollController(), []);
+    final scrollOffsetController =
+        useMemoized(() => ScrollOffsetController(), []);
+    final itemPositionsListener =
+        useMemoized(() => ItemPositionsListener.create(), []);
+    final scrollOffsetListener =
+        useMemoized(() => ScrollOffsetListener.create(), []);
 
     void play(List<FileItem> files, int index) async {
       final clickedFile = files[index];
       final List<FileItem> filteredFiles =
-          filesFilter(files, [ContentType.video, ContentType.audio]);
+          filesFilter(files, types: [ContentType.video, ContentType.audio]);
       final List<PlayQueueItem> playQueue = filteredFiles
           .asMap()
           .entries
@@ -152,9 +157,11 @@ class Files extends HookWidget {
                                   visualDensity: const VisualDensity(
                                       horizontal: 0, vertical: -4),
                                   leading: () {
+                                    if (files[index].isDir == true &&
+                                        files[index].name.isNotEmpty) {
+                                      return const Icon(Icons.folder_rounded);
+                                    }
                                     switch (files[index].type) {
-                                      case ContentType.dir:
-                                        return const Icon(Icons.folder_rounded);
                                       case ContentType.video:
                                         return const Icon(Icons.movie_rounded);
                                       case ContentType.audio:

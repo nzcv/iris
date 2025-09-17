@@ -92,7 +92,7 @@ task downloadFiles(type: Exec) {
 
              def calculatedMD5 = MessageDigest.getInstance("MD5").digest(Files.readAllBytes(destFile.toPath())).encodeHex().toString()
             if (calculatedMD5 != fileInfo.md5) {
-                throw new FileNotFoundException("MD5 verification failed for ${destFile}")
+                throw new GradleException("MD5 verification failed for ${destFile}")
             }
         }
     }

@@ -1,15 +1,15 @@
 class Info {
   final List<String> en;
 
-  Info({required this.en});
+  const Info({required this.en});
 }
 
-Map<String, Info> customLanguageCodes = {
+const Map<String, Info> customLanguageCodes = {
   'chs': Info(en: ['Chinese (Simplified)']),
   'cht': Info(en: ['Chinese (Traditional)']),
 };
 
-Map<String, Info> iso_639_1 = {
+const Map<String, Info> iso_639_1 = {
   'aa': Info(en: ['Afar']),
   'ab': Info(en: ['Abkhazian']),
   'ae': Info(en: ['Avestan']),
@@ -203,7 +203,7 @@ Map<String, Info> iso_639_1 = {
   'zu': Info(en: ['Zulu']),
 };
 
-Map<String, Info> iso_639_2 = {
+const Map<String, Info> iso_639_2 = {
   'aar': Info(en: ['Afar']),
   'abk': Info(en: ['Abkhazian']),
   'ace': Info(en: ['Achinese']),

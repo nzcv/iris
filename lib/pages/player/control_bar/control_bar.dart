@@ -42,6 +42,7 @@ class ControlBar extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
     final t = getLocalizations(context);
 
     final isPlaying =
@@ -95,7 +96,7 @@ class ControlBar extends HookWidget {
       child: Column(
         children: [
           Visibility(
-            visible: MediaQuery.of(context).size.width < 1024 || !isDesktop,
+            visible: width < 1024 || !isDesktop,
             child: ControlBarSlider(
               showControl: showControl,
               color: color,
@@ -185,7 +186,7 @@ class ControlBar extends HookWidget {
                   },
                   style: ButtonStyle(overlayColor: overlayColor),
                 ),
-              if (MediaQuery.of(context).size.width >= 768)
+              if (width >= 768)
                 Builder(
                   builder: (context) => IconButton(
                     tooltip:
@@ -205,7 +206,7 @@ class ControlBar extends HookWidget {
                     style: ButtonStyle(overlayColor: overlayColor),
                   ),
                 ),
-              if (MediaQuery.of(context).size.width >= 768)
+              if (width >= 768)
                 Builder(
                   builder: (context) => IconButton(
                     tooltip:
@@ -225,7 +226,7 @@ class ControlBar extends HookWidget {
                     style: ButtonStyle(overlayColor: overlayColor),
                   ),
                 ),
-              if (MediaQuery.of(context).size.width >= 768)
+              if (width >= 768)
                 IconButton(
                   tooltip:
                       '${t.video_zoom}: ${fit == BoxFit.contain ? t.fit : fit == BoxFit.fill ? t.stretch : fit == BoxFit.cover ? t.crop : '100%'} ( Ctrl + V )',
@@ -246,7 +247,7 @@ class ControlBar extends HookWidget {
                   },
                   style: ButtonStyle(overlayColor: overlayColor),
                 ),
-              if (MediaQuery.of(context).size.width > 600)
+              if (width > 600)
                 PopupMenuButton(
                   key: rateMenuKey,
                   clipBehavior: Clip.hardEdge,
@@ -289,7 +290,7 @@ class ControlBar extends HookWidget {
                     ),
                   ),
                 ),
-              if (MediaQuery.of(context).size.width < 640)
+              if (width < 640)
                 Builder(
                   builder: (context) => IconButton(
                     tooltip: '${t.volume}: $volume',
@@ -308,7 +309,7 @@ class ControlBar extends HookWidget {
                     style: ButtonStyle(overlayColor: overlayColor),
                   ),
                 ),
-              if (MediaQuery.of(context).size.width >= 640)
+              if (width >= 640)
                 SizedBox(
                   width: 160,
                   child: VolumeControl(
@@ -321,14 +322,14 @@ class ControlBar extends HookWidget {
               Expanded(
                 child: Visibility(
                   visible:
-                      MediaQuery.of(context).size.width >= 1024 && isDesktop,
+                      width >= 1024 && isDesktop,
                   child: ControlBarSlider(
                     showControl: showControl,
                     color: color,
                   ),
                 ),
               ),
-              if (MediaQuery.of(context).size.width >= 420)
+              if (width >= 420)
                 IconButton(
                   tooltip: '${t.subtitle_and_audio_track} ( S )',
                   icon: Icon(
@@ -467,7 +468,7 @@ class ControlBar extends HookWidget {
                       showControl();
                     },
                   ),
-                  if (MediaQuery.of(context).size.width < 768)
+                  if (width < 768)
                     PopupMenuItem(
                       child: ListTile(
                         mouseCursor: SystemMouseCursors.click,
@@ -495,7 +496,7 @@ class ControlBar extends HookWidget {
                         useAppStore().updateShuffle(!shuffle);
                       },
                     ),
-                  if (MediaQuery.of(context).size.width < 768)
+                  if (width < 768)
                     PopupMenuItem(
                       child: ListTile(
                         mouseCursor: SystemMouseCursors.click,
@@ -526,7 +527,7 @@ class ControlBar extends HookWidget {
                         useAppStore().toggleRepeat();
                       },
                     ),
-                  if (MediaQuery.of(context).size.width < 768)
+                  if (width < 768)
                     PopupMenuItem(
                       child: ListTile(
                         mouseCursor: SystemMouseCursors.click,
@@ -555,7 +556,7 @@ class ControlBar extends HookWidget {
                         useAppStore().toggleFit();
                       },
                     ),
-                  if (MediaQuery.of(context).size.width <= 460)
+                  if (width <= 460)
                     PopupMenuItem(
                       child: ListTile(
                         mouseCursor: SystemMouseCursors.click,
@@ -567,7 +568,7 @@ class ControlBar extends HookWidget {
                       ),
                       onTap: () => showControlForHover(showRateDialog(context)),
                     ),
-                  if (MediaQuery.of(context).size.width < 420)
+                  if (width < 420)
                     PopupMenuItem(
                       child: ListTile(
                         mouseCursor: SystemMouseCursors.click,

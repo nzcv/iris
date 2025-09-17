@@ -65,7 +65,6 @@ void main(List<String> arguments) async {
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.hidden,
-      title: INFO.title,
     );
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {

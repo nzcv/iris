@@ -10,7 +10,7 @@ import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/utils/files_filter.dart';
 import 'package:iris/utils/files_sort.dart';
-import 'package:iris/utils/find_subtitle.dart';
+import 'package:iris/utils/get_subtitle_map.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/path_conv.dart';
@@ -19,6 +19,7 @@ import 'package:path/path.dart' as p;
 import 'package:iris/models/file.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:saf_util/saf_util.dart';
+import 'package:saf_util/saf_util_platform_interface.dart';
 
 Future<List<LocalStorage>> getLocalStorages(
   BuildContext context,
@@ -156,7 +157,7 @@ Future<PlayQueueState?> getLocalPlayQueue(String filePath) async {
   ).getFiles(dirPath);
   final List<FileItem> sortedFiles = filesSort(files: files);
   final List<FileItem> filteredFiles =
-      filesFilter(sortedFiles, [ContentType.video, ContentType.audio]);
+      filesFilter(sortedFiles, types: [ContentType.video, ContentType.audio]);
   final List<PlayQueueItem> playQueue = filteredFiles
       .asMap()
       .entries
@@ -266,7 +267,7 @@ Future<List<FileItem>> getLocalFiles(
         isDir: isDir,
         size: isDir ? 0 : stat.size,
         lastModified: stat.modified,
-        type: isDir ? ContentType.dir : checkContentType(entity.path),
+        type: checkContentType(entity.path),
         subtitles: [],
       ));
     }
@@ -296,25 +297,32 @@ Future<void> pickContentFile() async {
 }
 
 Future<List<FileItem>> getContentFiles(String uri) async {
-  final list = await SafUtil().list(uri);
+  final files = await SafUtil().list(uri);
 
-  final allFileNames = list.map((e) => e.name).toList();
+  final subtitleMap = getSubtitleMap<SafDocumentFile>(
+    files: files,
+    baseUri: uri,
+    getName: (file) => file.name,
+    getUri: (file) => file.uri,
+  );
 
-  return await Future.wait(list
-      .map((file) async => FileItem(
-            name: file.name,
-            uri: file.uri,
-            path: [uri, file.name],
-            isDir: file.isDir,
-            size: file.isDir ? 0 : file.length,
-            lastModified:
-                DateTime.fromMillisecondsSinceEpoch(file.lastModified),
-            type: file.isDir ? ContentType.dir : checkContentType(file.name),
-            subtitles: await findSubtitle(
-              allFileNames,
-              file.name,
-              uri,
-            ),
-          ))
-      .toList());
+  List<FileItem> fileItems = [];
+
+  for (final file in files) {
+    if (file.isDir || isMediaFile(file.name)) {
+      final basename = p.basenameWithoutExtension(file.name).split('.').first;
+      fileItems.add(FileItem(
+        name: file.name,
+        uri: file.uri,
+        path: [uri, file.name],
+        isDir: file.isDir,
+        size: file.isDir ? 0 : file.length,
+        lastModified: DateTime.fromMillisecondsSinceEpoch(file.lastModified),
+        type: checkContentType(file.name),
+        subtitles: isVideoFile(file.name) ? subtitleMap[basename] ?? [] : [],
+      ));
+    }
+  }
+
+  return fileItems;
 }

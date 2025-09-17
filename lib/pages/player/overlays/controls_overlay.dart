@@ -19,7 +19,7 @@ import 'package:provider/provider.dart';
 class ControlsOverlay extends HookWidget {
   const ControlsOverlay({
     super.key,
-    required this.currentPlay,
+    required this.file,
     required this.title,
     required this.showControl,
     required this.showControlForHover,
@@ -27,7 +27,7 @@ class ControlsOverlay extends HookWidget {
     required this.showProgress,
   });
 
-  final PlayQueueItem? currentPlay;
+  final FileItem? file;
   final String title;
   final Function() showControl;
   final Future<void> Function(Future<void> callback) showControlForHover;
@@ -116,11 +116,7 @@ class ControlsOverlay extends HookWidget {
 
     return Stack(
       children: [
-        Positioned(
-          left: 0,
-          top: 0,
-          right: 0,
-          bottom: 0,
+        Positioned.fill(
           child: MouseRegion(
             cursor: isShowControl || isPlaying == false
                 ? SystemMouseCursors.basic
@@ -143,11 +139,7 @@ class ControlsOverlay extends HookWidget {
                 children: [
                   // 播放速度
                   if (isSpeedSelectorVisible.value)
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      right: 0,
-                      bottom: 0,
+                    Positioned.fill(
                       child: SpeedSelector(
                         selectedSpeed: selectedSpeed.value,
                         visualOffset: visualOffset.value,
@@ -156,11 +148,7 @@ class ControlsOverlay extends HookWidget {
                     ),
                   // 屏幕亮度
                   if (gesture.isLeftGesture && gesture.brightness != null)
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      right: 0,
-                      bottom: 0,
+                    Positioned.fill(
                       child: Center(
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(12, 12, 18, 12),
@@ -198,11 +186,7 @@ class ControlsOverlay extends HookWidget {
                     ),
                   // 音量
                   if (gesture.isRightGesture && gesture.volume != null)
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      right: 0,
-                      bottom: 0,
+                    Positioned.fill(
                       child: Center(
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(12, 12, 18, 12),
@@ -241,7 +225,7 @@ class ControlsOverlay extends HookWidget {
                     ),
                   if (isShowProgress &&
                       !isShowControl &&
-                      currentPlay?.file.type == ContentType.video)
+                      file?.type == ContentType.video)
                     Positioned(
                       left: -28,
                       right: -28,
@@ -254,7 +238,7 @@ class ControlsOverlay extends HookWidget {
                     ),
                   if (isShowProgress &&
                       !isShowControl &&
-                      currentPlay?.file.type == ContentType.video)
+                      file?.type == ContentType.video)
                     Positioned(
                       left: 12,
                       top: 12,
@@ -262,7 +246,7 @@ class ControlsOverlay extends HookWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            currentPlay != null ? title : '',
+                            file != null ? title : '',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -282,7 +266,7 @@ class ControlsOverlay extends HookWidget {
                     ),
                   if (isShowProgress &&
                       !isShowControl &&
-                      currentPlay?.file.type == ContentType.video)
+                      file?.type == ContentType.video)
                     Positioned(
                       left: 12,
                       bottom: 6,
@@ -317,9 +301,7 @@ class ControlsOverlay extends HookWidget {
         AnimatedPositioned(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOutCubicEmphasized,
-          top: isShowControl || currentPlay?.file.type != ContentType.video
-              ? 0
-              : -72,
+          top: isShowControl || file?.type != ContentType.video ? 0 : -72,
           left: 0,
           right: 0,
           child: MouseRegion(
@@ -342,25 +324,20 @@ class ControlsOverlay extends HookWidget {
         AnimatedPositioned(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOutCubicEmphasized,
-          bottom: isShowControl || currentPlay?.file.type != ContentType.video
-              ? 0
-              : -128,
+          bottom: isShowControl || file?.type != ContentType.video ? 0 : -128,
           left: 0,
           right: 0,
           child: Align(
             alignment: Alignment.bottomCenter,
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              child: MouseRegion(
-                onHover: gesture.onHover,
-                child: GestureDetector(
-                  onTap: () => showControl(),
-                  child: ControlBar(
-                    showControl: showControl,
-                    showControlForHover: showControlForHover,
-                    color: contentColor,
-                    overlayColor: overlayColor,
-                  ),
+            child: MouseRegion(
+              onHover: gesture.onHover,
+              child: GestureDetector(
+                onTap: () => showControl(),
+                child: ControlBar(
+                  showControl: showControl,
+                  showControlForHover: showControlForHover,
+                  color: contentColor,
+                  overlayColor: overlayColor,
                 ),
               ),
             ),

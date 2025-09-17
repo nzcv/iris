@@ -98,7 +98,7 @@ Gesture useGesture({
 
   void onDoubleTapDown(TapDownDetails details) {
     if (details.kind == PointerDeviceKind.touch) {
-      final screenWidth = MediaQuery.of(context).size.width;
+      final screenWidth = MediaQuery.sizeOf(context).width;
       final tapDx = details.globalPosition.dx;
 
       if (tapDx > screenWidth * 0.7) {
@@ -195,7 +195,7 @@ Gesture useGesture({
 
     if (details.kind == PointerDeviceKind.touch) {
       const double edgeDeadZone = 48.0;
-      final screenSize = MediaQuery.of(context).size;
+      final screenSize = MediaQuery.sizeOf(context);
       final startDx = details.globalPosition.dx;
 
       if (startDx < edgeDeadZone || startDx > screenSize.width - edgeDeadZone) {
@@ -257,7 +257,7 @@ Gesture useGesture({
       // 仅在垂直滑动开始时判断一次左右区域
       if (!isLeftGesture.value && !isRightGesture.value) {
         isLeftGesture.value =
-            startOffset.dx < MediaQuery.of(context).size.width / 2;
+            startOffset.dx < MediaQuery.sizeOf(context).width / 2;
         isRightGesture.value = !isLeftGesture.value;
       }
 

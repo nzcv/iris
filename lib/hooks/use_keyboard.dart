@@ -30,13 +30,6 @@ KeyboardEvent useKeyboard({
 
   final player = context.read<MediaPlayer>();
 
-  final isPlaying =
-      context.select<MediaPlayer, bool>((player) => player.isPlaying);
-
-  final shuffle = useAppStore().state.shuffle;
-  final isFullScreen = usePlayerUiStore().state.isFullScreen;
-  final isShowControl = usePlayerUiStore().state.isShowControl;
-
   void onKeyEvent(KeyEvent event) async {
     if (event.runtimeType == KeyDownEvent) {
       if (HardwareKeyboard.instance.isAltPressed) {
@@ -56,6 +49,7 @@ KeyboardEvent useKeyboard({
       }
 
       if (HardwareKeyboard.instance.isControlPressed) {
+        final appState = useAppStore().state;
         switch (event.logicalKey) {
           // 上一个
           case LogicalKeyboardKey.arrowLeft:
@@ -86,10 +80,12 @@ KeyboardEvent useKeyboard({
           // 随机
           case LogicalKeyboardKey.keyX:
             showControl();
-            shuffle
-                ? usePlayQueueStore().sort()
-                : usePlayQueueStore().shuffle();
-            useAppStore().updateShuffle(!shuffle);
+            if (appState.shuffle) {
+              usePlayQueueStore().sort();
+            } else {
+              usePlayQueueStore().shuffle();
+            }
+            useAppStore().updateShuffle(!appState.shuffle);
             break;
           // 循环
           case LogicalKeyboardKey.keyR:
@@ -136,12 +132,13 @@ KeyboardEvent useKeyboard({
         return;
       }
 
+      final playerUiState = usePlayerUiStore().state;
       switch (event.logicalKey) {
         // 播放 | 暂停
         case LogicalKeyboardKey.space:
         case LogicalKeyboardKey.mediaPlayPause:
           showControl();
-          if (isPlaying) {
+          if (context.read<MediaPlayer>().isPlaying) {
             useAppStore().updateAutoPlay(false);
             player.pause();
           } else {
@@ -191,7 +188,7 @@ KeyboardEvent useKeyboard({
           break;
         // 退出全屏
         case LogicalKeyboardKey.escape:
-          if (isDesktop && isFullScreen) {
+          if (isDesktop && playerUiState.isFullScreen) {
             usePlayerUiStore().updateFullScreen(false);
           }
           break;
@@ -199,7 +196,7 @@ KeyboardEvent useKeyboard({
         case LogicalKeyboardKey.enter:
         case LogicalKeyboardKey.f11:
           if (isDesktop) {
-            usePlayerUiStore().updateFullScreen(!isFullScreen);
+            usePlayerUiStore().updateFullScreen(!playerUiState.isFullScreen);
           }
           break;
         case LogicalKeyboardKey.tab:
@@ -229,7 +226,7 @@ KeyboardEvent useKeyboard({
       switch (event.logicalKey) {
         // 快退
         case LogicalKeyboardKey.arrowLeft:
-          if (isShowControl) {
+          if (usePlayerUiStore().state.isShowControl) {
             showControl();
           } else {
             showProgress();
@@ -238,7 +235,7 @@ KeyboardEvent useKeyboard({
           break;
         // 快进
         case LogicalKeyboardKey.arrowRight:
-          if (isShowControl) {
+          if (usePlayerUiStore().state.isShowControl) {
             showControl();
           } else {
             showProgress();

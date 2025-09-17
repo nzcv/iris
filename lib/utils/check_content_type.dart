@@ -81,3 +81,7 @@ ContentType checkContentType(String name) {
 bool isMediaFile(String name) =>
     checkContentType(name) == ContentType.video ||
     checkContentType(name) == ContentType.audio;
+
+bool isVideoFile(String name) => checkContentType(name) == ContentType.video;
+bool isAudioFile(String name) => checkContentType(name) == ContentType.audio;
+bool isImageFile(String name) => checkContentType(name) == ContentType.image;

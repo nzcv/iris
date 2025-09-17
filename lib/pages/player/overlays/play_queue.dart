@@ -27,11 +27,13 @@ class PlayQueue extends HookWidget {
         () => playQueue.indexWhere((element) => element.index == currentIndex),
         [playQueue, currentIndex]);
 
-    ItemScrollController itemScrollController = ItemScrollController();
-    ScrollOffsetController scrollOffsetController = ScrollOffsetController();
-    ItemPositionsListener itemPositionsListener =
-        ItemPositionsListener.create();
-    ScrollOffsetListener scrollOffsetListener = ScrollOffsetListener.create();
+    final itemScrollController = useMemoized(() => ItemScrollController(), []);
+    final scrollOffsetController =
+        useMemoized(() => ScrollOffsetController(), []);
+    final itemPositionsListener =
+        useMemoized(() => ItemPositionsListener.create(), []);
+    final scrollOffsetListener =
+        useMemoized(() => ScrollOffsetListener.create(), []);
 
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
