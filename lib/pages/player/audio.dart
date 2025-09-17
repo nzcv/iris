@@ -86,10 +86,14 @@ class Audio extends HookWidget {
               const double wideLayoutThreshold = 600;
               final isWideScreen = constraints.maxWidth >= wideLayoutThreshold;
 
+              if (cover == null) {
+                return const SizedBox();
+              }
+
               if (isWideScreen) {
-                return _buildWideLayout(context, constraints, cover, auth);
+                return _buildWideLayout(context, constraints, cover!, auth);
               } else {
-                return _buildNarrowLayout(context, constraints, cover, auth);
+                return _buildNarrowLayout(context, constraints, cover!, auth);
               }
             },
           ),
@@ -98,12 +102,15 @@ class Audio extends HookWidget {
     );
   }
 
-  Widget _buildNarrowLayout(BuildContext context, BoxConstraints constraints,
-      FileItem? cover, String? auth) {
-    return Align(
-      alignment: const Alignment(0.0, -0.2),
+  Widget _buildNarrowLayout(
+    BuildContext context,
+    BoxConstraints constraints,
+    FileItem cover,
+    String? auth,
+  ) {
+    return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 24.0),
+        padding: const EdgeInsets.fromLTRB(48, 56, 48, 96),
         child: ConstrainedBox(
           constraints: const BoxConstraints(
             maxWidth: 400.0,
@@ -125,20 +132,28 @@ class Audio extends HookWidget {
     );
   }
 
-  Widget _buildWideLayout(BuildContext context, BoxConstraints constraints,
-      FileItem? cover, String? auth) {
+  Widget _buildWideLayout(
+    BuildContext context,
+    BoxConstraints constraints,
+    FileItem cover,
+    String? auth,
+  ) {
     return Row(
       children: [
         Expanded(
           flex: 5,
-          child: Align(
-            alignment: const Alignment(0.0, -0.2),
+          child: Center(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(48, 24, 24, 24),
+              padding: EdgeInsets.fromLTRB(
+                48,
+                56,
+                24,
+                constraints.maxWidth > 1024 ? 64 : 96,
+              ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
-                  maxWidth: 400.0,
-                  maxHeight: 400.0,
+                  maxWidth: 320.0,
+                  maxHeight: 320.0,
                 ),
                 child: AspectRatio(
                   aspectRatio: 1.0,
@@ -166,13 +181,14 @@ class Audio extends HookWidget {
     );
   }
 
-  Widget _buildCoverCard(
-      {required FileItem? cover,
-      required String? auth,
-      required Color shadowColor}) {
+  Widget _buildCoverCard({
+    required FileItem cover,
+    required String? auth,
+    required Color shadowColor,
+  }) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
             color: shadowColor,
@@ -183,14 +199,12 @@ class Audio extends HookWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: cover != null
-            ? _CoverImage(
-                cover: cover,
-                auth: auth,
-                fit: BoxFit.cover,
-              )
-            : Container(),
+        borderRadius: BorderRadius.circular(8),
+        child: _CoverImage(
+          cover: cover,
+          auth: auth,
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
