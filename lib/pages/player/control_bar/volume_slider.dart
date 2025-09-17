@@ -32,7 +32,7 @@ class VolumeSlider extends HookWidget {
             overlayShape: const RoundSliderOverlayShape(
               overlayRadius: 4,
             ),
-            trackHeight: 3.6,
+            trackHeight: 2.4,
           ),
           child: Slider(
             value: isMuted ? 0 : volume.toDouble(),
