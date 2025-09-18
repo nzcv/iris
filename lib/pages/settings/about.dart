@@ -31,7 +31,7 @@ class About extends HookWidget {
         children: [
           ListTile(
             leading:
-                Image.asset('assets/images/icon.png', width: 24, height: 24),
+                Image.asset('assets/images/logo.png', width: 24, height: 24),
             title: const Text(INFO.title),
             subtitle: Text(t.app_description),
           ),

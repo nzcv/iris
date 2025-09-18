@@ -54,7 +54,7 @@ class StoragesList extends HookWidget {
                       case StorageType.webdav:
                         final storage = allStorages[index] as WebDAVStorage;
                         subtitle =
-                            'http${storage.https ? 's' : ''}://${storage.host}${storage.basePath.join('/')}';
+                            'http${storage.https ? 's' : ''}://${storage.host}${storage.port.isNotEmpty && storage.port != '80' && storage.port != '443' ? ':${storage.port}' : ''}${storage.basePath.join('/')}';
                         break;
                       case StorageType.ftp:
                         final storage = allStorages[index] as FTPStorage;

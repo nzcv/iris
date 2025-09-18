@@ -16,7 +16,10 @@ ValueNotifier<double?> useVolume(bool isGesture) {
     } catch (e) {
       logger('Error getting volume: $e');
     }
-    return () => volume.value = null;
+    return () {
+      volume.value = null;
+      FlutterVolumeController.updateShowSystemUI(true);
+    };
   }, [isGesture]);
 
   useEffect(() {

@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:app_links/app_links.dart';
+import 'package:flutter/services.dart';
 import 'package:fvp/fvp.dart' as fvp;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/info.dart';
@@ -65,7 +65,6 @@ void main(List<String> arguments) async {
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.hidden,
-      title: INFO.title,
     );
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -73,6 +72,8 @@ void main(List<String> arguments) async {
       await windowManager.focus();
     });
   }
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   MediaStream mediaStream = MediaStream();
   mediaStream.startServer();
@@ -85,14 +86,6 @@ class MyApp extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    useEffect(() {
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-      ));
-      return null;
-    }, []);
-
     useEffect(() {
       () async {
         globals.storagePermissionStatus = Platform.isAndroid

@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:iris/models/storages/storage.dart';
 import 'package:iris/utils/check_content_type.dart';
-import 'package:iris/utils/find_subtitle.dart';
+import 'package:iris/utils/get_subtitle_map.dart';
 import 'package:iris/utils/logger.dart';
+import 'package:path/path.dart' as p;
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:iris/models/file.dart';
 
@@ -37,7 +38,9 @@ Future<bool> testWebDAV(WebDAVStorage storage) async {
 }
 
 Future<List<FileItem>> getWebDAVFiles(
-    WebDAVStorage storage, List<String> path) async {
+  WebDAVStorage storage,
+  List<String> path,
+) async {
   final id = storage.id;
   final host = storage.host;
   final port = storage.port;
@@ -59,26 +62,58 @@ Future<List<FileItem>> getWebDAVFiles(
 
   var files = await client.readDir(path.join('/'));
 
-  final String baseUri =
-      'http${https ? 's' : ''}://$host:$port${path.join('/')}';
+  final cleanPathSegments = path.map((e) => e.replaceAll('/', '')).toList();
+  final baseUri = Uri(
+    scheme: storage.https ? 'https' : 'http',
+    host: storage.host,
+    port: int.tryParse(storage.port),
+    pathSegments: cleanPathSegments,
+  );
+  final baseUriString = baseUri.toString();
 
-  return await Future.wait(files.map((file) async => FileItem(
+  String getUri(String fileName) {
+    try {
+      final dirUri = Uri.parse(
+          baseUriString.endsWith('/') ? baseUriString : '$baseUriString/');
+      return dirUri.resolve(fileName).toString();
+    } catch (e) {
+      final separator = baseUriString.endsWith('/') ? '' : '/';
+      return '$baseUriString$separator$fileName';
+    }
+  }
+
+  final subtitleMap = getSubtitleMap<webdav.File>(
+    files: files,
+    getName: (file) => file.name ?? '',
+    getUri: (file) => getUri(file.name ?? ''),
+  );
+
+  List<FileItem> fileItems = [];
+
+  for (final file in files) {
+    final fileName = file.name;
+
+    if (fileName == null) continue;
+
+    final isDir = file.isDir;
+    if (isDir == true || isMediaFile(fileName)) {
+      final basename = p.basenameWithoutExtension(fileName).split('.').first;
+      fileItems.add(FileItem(
         storageId: id,
         storageType: StorageType.webdav,
-        name: '${file.name}',
-        uri: Uri.encodeFull('$baseUri/${file.name}'),
-        path: [...path, '${file.name}'],
-        isDir: file.isDir ?? false,
+        name: fileName,
+        uri: getUri(fileName),
+        path: [...path, fileName],
+        isDir: isDir ?? false,
         size: file.size ?? 0,
         lastModified: file.mTime,
-        type: file.isDir ?? false
-            ? ContentType.dir
-            : checkContentType(file.name!),
-        subtitles: await findSubtitle(
-            files.map((file) => file.name as String).toList(),
-            file.name as String,
-            baseUri),
-      )));
+        type: isDir ?? false ? ContentType.other : checkContentType(fileName),
+        subtitles: isVideoFile(fileName) ? subtitleMap[basename] ?? [] : [],
+      ));
+    }
+  }
+
+  return fileItems;
 }
 
 String getWebDAVAuth(WebDAVStorage storage) =>

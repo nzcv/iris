@@ -1,19 +1,15 @@
 import 'package:collection/collection.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/models/file.dart';
-import 'package:iris/models/player.dart';
 import 'package:iris/models/storages/local.dart';
 import 'package:iris/models/storages/storage.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/store/use_storage_store.dart';
-import 'package:iris/utils/files_filter.dart';
 
-FileItem? useCover(
-  BuildContext context,
-  MediaPlayer player,
-) {
+FileItem? useCover() {
+  final context = useContext();
+
   final playQueue =
       usePlayQueueStore().select(context, (state) => state.playQueue);
   final currentIndex =
@@ -23,10 +19,10 @@ FileItem? useCover(
       () => playQueue.indexWhere((element) => element.index == currentIndex),
       [playQueue, currentIndex]);
 
-  final PlayQueueItem? currentPlay = useMemoized(
+  final FileItem? file = useMemoized(
       () => playQueue.isEmpty || currentPlayIndex < 0
           ? null
-          : playQueue[currentPlayIndex],
+          : playQueue[currentPlayIndex].file,
       [playQueue, currentPlayIndex]);
 
   final localStoragesFuture =
@@ -35,38 +31,40 @@ FileItem? useCover(
 
   final storages = useStorageStore().select(context, (state) => state.storages);
 
-  final List<String> dir = useMemoized(
-    () => currentPlay?.file == null || currentPlay!.file.path.isEmpty
-        ? []
-        : ([...currentPlay.file.path]..removeLast()),
-    [currentPlay?.file],
-  );
-
   final Storage? storage = useMemoized(
-      () => currentPlay?.file == null
+      () => file == null
           ? null
-          : [...localStorages, ...storages].firstWhereOrNull(
-              (storage) => storage.id == currentPlay?.file.storageId),
-      [currentPlay?.file, localStorages, storages]);
+          : [...localStorages, ...storages]
+              .firstWhereOrNull((storage) => storage.id == file.storageId),
+      [file, localStorages, storages]);
 
-  final getCover = useMemoized(() async {
-    if (currentPlay?.file.type != ContentType.audio) return null;
+  final cover = useState<FileItem?>(null);
 
-    final files = await storage?.getFiles(dir);
+  useEffect(() {
+    () async {
+      if (storage == null || file == null || file.type != ContentType.audio) {
+        cover.value = null;
+        return;
+      }
 
-    if (files == null) return null;
+      final dir =
+          file.path.isEmpty ? <String>[] : ([...file.path]..removeLast());
 
-    final images = filesFilter(files, [ContentType.image]);
+      final files = await storage.getFiles(dir);
 
-    return images.firstWhereOrNull(
-            (image) => image.name.split('.').first.toLowerCase() == 'cover') ??
-        images.firstWhereOrNull((image) =>
-            image.name.toLowerCase().startsWith('cover') ||
-            image.name.toLowerCase().startsWith('folder')) ??
-        images.firstOrNull;
-  }, [currentPlay?.file, dir, player.isPlaying]);
+      final images = files
+          .where((file) => [ContentType.image].contains(file.type))
+          .toList();
 
-  final cover = useFuture(getCover).data;
+      cover.value = images.firstWhereOrNull((image) =>
+              image.name.split('.').first.toLowerCase() == 'cover') ??
+          images.firstWhereOrNull((image) =>
+              image.name.toLowerCase().startsWith('cover') ||
+              image.name.toLowerCase().startsWith('folder')) ??
+          images.firstOrNull;
+    }();
+    return null;
+  }, [storage, file]);
 
-  return cover;
+  return cover.value;
 }

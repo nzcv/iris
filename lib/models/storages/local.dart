@@ -8,9 +8,8 @@ import 'package:iris/models/storages/storage.dart';
 import 'package:iris/models/store/play_queue_state.dart';
 import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
-import 'package:iris/utils/files_filter.dart';
 import 'package:iris/utils/files_sort.dart';
-import 'package:iris/utils/find_subtitle.dart';
+import 'package:iris/utils/get_subtitle_map.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/logger.dart';
 import 'package:iris/utils/path_conv.dart';
@@ -19,6 +18,7 @@ import 'package:path/path.dart' as p;
 import 'package:iris/models/file.dart';
 import 'package:iris/utils/check_content_type.dart';
 import 'package:saf_util/saf_util.dart';
+import 'package:saf_util/saf_util_platform_interface.dart';
 
 Future<List<LocalStorage>> getLocalStorages(
   BuildContext context,
@@ -84,9 +84,22 @@ Future<List<LocalStorage>> getLocalStorages(
     return storages;
   } else if (isAndroid) {
     final androidXStorage = AndroidXStorage();
-    final external = await androidXStorage.getExternalStorageDirectory();
-    final sdcard = await androidXStorage.getSDCardStorageDirectory();
-    final usbs = await androidXStorage.getUSBStorageDirectories();
+    final external =
+        await androidXStorage.getExternalStorageDirectory().catchError((error) {
+      logger('Error getting external storage: $error');
+      return null;
+    });
+    final sdcard =
+        await androidXStorage.getSDCardStorageDirectory().catchError((error) {
+      logger('Error getting SD card: $error');
+      return null;
+    });
+    final usbs =
+        await androidXStorage.getUSBStorageDirectories().catchError((error) {
+      logger('Error getting USB storages: $error');
+      return <String?>[];
+    });
+
     List<LocalStorage> storages = [];
 
     if (external != null) {
@@ -142,8 +155,11 @@ Future<PlayQueueState?> getLocalPlayQueue(String filePath) async {
     basePath: dirPath,
   ).getFiles(dirPath);
   final List<FileItem> sortedFiles = filesSort(files: files);
-  final List<FileItem> filteredFiles =
-      filesFilter(sortedFiles, [ContentType.video, ContentType.audio]);
+  final List<FileItem> filteredFiles = sortedFiles
+      .where(
+          (file) => [ContentType.video, ContentType.audio].contains(file.type))
+      .toList();
+
   final List<PlayQueueItem> playQueue = filteredFiles
       .asMap()
       .entries
@@ -182,64 +198,84 @@ Future<void> pickLocalFile() async {
 
 Future<List<FileItem>> getLocalFiles(
     LocalStorage storage, List<String> path) async {
-  final directory = Directory(p.normalize(path.join('/')));
+  final directoryPath = p.joinAll(path);
+  final directory = Directory(directoryPath);
 
-  List<FileItem> files = [];
-  try {
-    final entities = directory.list();
+  if (!await directory.exists()) {
+    logger('Error: Directory does not exist at $directoryPath');
+    return [];
+  }
 
-    await for (final entity in entities) {
+  final Map<String, List<FileSystemEntity>> groupedEntities = {};
+  final allEntities = await directory.list().toList();
+
+  for (final entity in allEntities) {
+    final baseName = p.basenameWithoutExtension(entity.path);
+    groupedEntities.putIfAbsent(baseName, () => []).add(entity);
+  }
+
+  final List<FileItem> fileItems = [];
+  final subtitleExtensions = {'ass', 'srt', 'vtt', 'sub'};
+
+  for (final group in groupedEntities.values) {
+    final videos = group
+        .where((e) =>
+            e is! Directory && checkContentType(e.path) == ContentType.video)
+        .toList();
+    final subtitles = group.where((e) {
+      final ext = p.extension(e.path).replaceFirst('.', '');
+      return e is! Directory && subtitleExtensions.contains(ext);
+    }).toList();
+    final others = group
+        .where((e) => !videos.contains(e) && !subtitles.contains(e))
+        .toList();
+
+    for (final video in videos) {
+      final videoStat = await video.stat();
+      final associatedSubtitles = subtitles.map((sub) {
+        final baseName = p.basenameWithoutExtension(video.path);
+        String subTitleName = p.basename(sub.path);
+        final regex = RegExp(r'^' + RegExp.escape(baseName) + r'\.(.+?)\.');
+        final match = regex.firstMatch(subTitleName);
+        if (match != null) {
+          subTitleName = match.group(1) ?? subTitleName;
+        }
+        return Subtitle(name: subTitleName, uri: sub.path);
+      }).toList();
+
+      fileItems.add(FileItem(
+        storageId: storage.id,
+        storageType: storage.type,
+        name: p.basename(video.path),
+        uri: video.path,
+        path: [...path, p.basename(video.path)],
+        isDir: false,
+        size: videoStat.size,
+        lastModified: videoStat.modified,
+        type: ContentType.video,
+        subtitles: associatedSubtitles,
+      ));
+    }
+
+    for (final entity in others) {
+      final stat = await entity.stat();
       final isDir = entity is Directory;
-      int size = 0;
-      DateTime? lastModified;
-      if (!isDir) {
-        final file = File(entity.path);
-        try {
-          size = await file.length();
-          lastModified = await file.lastModified();
-        } on PathAccessException catch (e) {
-          logger(
-              'PathAccessException when getting file info for ${entity.path}: $e');
-        } catch (e) {
-          logger('Error getting file info for ${entity.path}: $e');
-        }
-      }
-
-      if (isDir) {
-        final dir = Directory(entity.path);
-        try {
-          final stat = await dir.stat();
-          lastModified = stat.modified;
-        } on PathAccessException catch (e) {
-          logger(
-              'PathAccessException when getting directory info for ${entity.path}: $e');
-        } catch (e) {
-          logger('Error getting directory info for ${entity.path}: $e');
-        }
-      }
-
-      final subtitles = await findLocalSubtitle(entity.path);
-
-      files.add(FileItem(
+      fileItems.add(FileItem(
         storageId: storage.id,
         storageType: storage.type,
         name: p.basename(entity.path),
         uri: entity.path,
         path: [...path, p.basename(entity.path)],
         isDir: isDir,
-        size: size,
-        lastModified: lastModified,
-        type:
-            isDir ? ContentType.dir : checkContentType(p.basename(entity.path)),
-        subtitles: subtitles,
+        size: isDir ? 0 : stat.size,
+        lastModified: stat.modified,
+        type: isDir ? ContentType.other : checkContentType(entity.path),
+        subtitles: [],
       ));
     }
-  } catch (e) {
-    logger('Error reading directory $path : $e');
-    return [];
   }
 
-  return files;
+  return fileItems;
 }
 
 Future<void> pickContentFile() async {
@@ -263,24 +299,31 @@ Future<void> pickContentFile() async {
 }
 
 Future<List<FileItem>> getContentFiles(String uri) async {
-  final list = await SafUtil().list(uri);
+  final files = await SafUtil().list(uri);
 
-  return await Future.wait(list
-      .map((file) async => FileItem(
-            name: file.name,
-            uri: file.uri,
-            path: [uri, file.name],
-            isDir: file.isDir,
-            size: file.isDir ? 0 : file.length,
-            lastModified:
-                DateTime.fromMillisecondsSinceEpoch(file.lastModified),
-            type: file.isDir ? ContentType.dir : checkContentType(file.name),
-            subtitles: await findSubtitle(
-              list.map((e) => e.name).toList(),
-              file.name,
-              uri,
-              encodeUri: false,
-            ),
-          ))
-      .toList());
+  final subtitleMap = getSubtitleMap<SafDocumentFile>(
+    files: files,
+    getName: (file) => file.name,
+    getUri: (file) => file.uri,
+  );
+
+  List<FileItem> fileItems = [];
+
+  for (final file in files) {
+    if (file.isDir || isMediaFile(file.name)) {
+      final basename = p.basenameWithoutExtension(file.name).split('.').first;
+      fileItems.add(FileItem(
+        name: file.name,
+        uri: file.uri,
+        path: [uri, file.name],
+        isDir: file.isDir,
+        size: file.isDir ? 0 : file.length,
+        lastModified: DateTime.fromMillisecondsSinceEpoch(file.lastModified),
+        type: file.isDir ? ContentType.other : checkContentType(file.name),
+        subtitles: isVideoFile(file.name) ? subtitleMap[basename] ?? [] : [],
+      ));
+    }
+  }
+
+  return fileItems;
 }

@@ -20,8 +20,9 @@ class OrientationDialog extends HookWidget {
     final orientation =
         useAppStore().select(context, (state) => state.orientation);
 
-    void updateOrientation(ScreenOrientation orientation) {
-      useAppStore().updateOrientation(orientation);
+    void updateOrientation(ScreenOrientation? newOrientation) {
+      if (newOrientation == null) return;
+      useAppStore().updateOrientation(newOrientation);
       Navigator.pop(context);
     }
 
@@ -34,24 +35,26 @@ class OrientationDialog extends HookWidget {
     return AlertDialog(
       title: Text(t.screen_orientation),
       content: SingleChildScrollView(
+        child: RadioGroup<ScreenOrientation>(
+          groupValue: orientation,
+          onChanged: updateOrientation,
           child: Column(
-        children: ScreenOrientation.values
-            .map(
-              (e) => ListTile(
+            mainAxisSize: MainAxisSize.min,
+            children: ScreenOrientation.values.map((e) {
+              return ListTile(
                 title: Text(orientationMap[e] ?? e.name),
-                leading: Radio(
+                leading: Radio<ScreenOrientation>(
                   value: e,
-                  groupValue: orientation,
-                  onChanged: (_) => updateOrientation(e),
                 ),
                 onTap: () => updateOrientation(e),
-              ),
-            )
-            .toList(),
-      )),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
       actions: <Widget>[
         TextButton(
-          onPressed: () => Navigator.pop(context, 'Cancel'),
+          onPressed: () => Navigator.pop(context),
           child: Text(t.cancel),
         ),
       ],

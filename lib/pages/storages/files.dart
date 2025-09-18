@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_breadcrumb/flutter_breadcrumb.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
@@ -14,12 +14,11 @@ import 'package:iris/store/use_app_store.dart';
 import 'package:iris/store/use_history_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/store/use_storage_store.dart';
-import 'package:iris/utils/files_filter.dart';
 import 'package:iris/utils/file_size_convert.dart';
 import 'package:iris/utils/files_sort.dart';
 import 'package:iris/utils/get_localizations.dart';
 import 'package:iris/utils/request_storage_permission.dart';
-import 'package:iris/widgets/app_chip.dart';
+import 'package:iris/widgets/chip.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -68,8 +67,11 @@ class Files extends HookWidget {
     final isError = result.error != null;
 
     final filteredFiles = useMemoized(
-        () => filesFilter(result.data ?? [],
-            [ContentType.dir, ContentType.video, ContentType.audio]),
+        () => (result.data ?? [])
+            .where((file) =>
+                [ContentType.video, ContentType.audio].contains(file.type) ||
+                file.isDir)
+            .toList(),
         [result.data]);
 
     final files = useMemoized(
@@ -81,16 +83,21 @@ class Files extends HookWidget {
             ),
         [filteredFiles, sortBy, sortOrder, folderFirst]);
 
-    ItemScrollController itemScrollController = ItemScrollController();
-    ScrollOffsetController scrollOffsetController = ScrollOffsetController();
-    ItemPositionsListener itemPositionsListener =
-        ItemPositionsListener.create();
-    ScrollOffsetListener scrollOffsetListener = ScrollOffsetListener.create();
+    final itemScrollController = useMemoized(() => ItemScrollController(), []);
+    final scrollOffsetController =
+        useMemoized(() => ScrollOffsetController(), []);
+    final itemPositionsListener =
+        useMemoized(() => ItemPositionsListener.create(), []);
+    final scrollOffsetListener =
+        useMemoized(() => ScrollOffsetListener.create(), []);
 
     void play(List<FileItem> files, int index) async {
       final clickedFile = files[index];
-      final List<FileItem> filteredFiles =
-          filesFilter(files, [ContentType.video, ContentType.audio]);
+      final List<FileItem> filteredFiles = files
+          .where((file) =>
+              [ContentType.video, ContentType.audio].contains(file.type))
+          .toList();
+
       final List<PlayQueueItem> playQueue = filteredFiles
           .asMap()
           .entries
@@ -152,9 +159,11 @@ class Files extends HookWidget {
                                   visualDensity: const VisualDensity(
                                       horizontal: 0, vertical: -4),
                                   leading: () {
+                                    if (files[index].isDir == true &&
+                                        files[index].name.isNotEmpty) {
+                                      return const Icon(Icons.folder_rounded);
+                                    }
                                     switch (files[index].type) {
-                                      case ContentType.dir:
-                                        return const Icon(Icons.folder_rounded);
                                       case ContentType.video:
                                         return const Icon(Icons.movie_rounded);
                                       case ContentType.audio:
@@ -217,7 +226,7 @@ class Files extends HookWidget {
                                                   progress.position
                                                       .inMilliseconds) <=
                                               5000) {
-                                            return AppChip(text: '100%');
+                                            return Chip(text: '100%');
                                           }
                                           final String progressString =
                                               (progress.position
@@ -226,7 +235,7 @@ class Files extends HookWidget {
                                                           .inMilliseconds *
                                                       100)
                                                   .toStringAsFixed(0);
-                                          return AppChip(
+                                          return Chip(
                                               text: '$progressString %');
                                         } else {
                                           return const SizedBox();
@@ -245,7 +254,7 @@ class Files extends HookWidget {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 const SizedBox(width: 4),
-                                                AppChip(
+                                                Chip(
                                                   text: subtitleType,
                                                   primary: true,
                                                 ),

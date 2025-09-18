@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:collection/collection.dart';
+import 'dart:math';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_zustand/flutter_zustand.dart';
 import 'package:iris/models/file.dart';
@@ -45,13 +45,10 @@ class PlayQueueStore extends PersistentStore<PlayQueueState> {
   }
 
   Future<void> add(List<FileItem> files) async {
-    final int startIndex = state.playQueue.isEmpty
-        ? 0
-        : state.playQueue
-                .sorted((a, b) => a.index.compareTo(b.index))
-                .last
-                .index +
-            1;
+    final int maxIndex = state.playQueue.isEmpty
+        ? -1
+        : state.playQueue.map((e) => e.index).reduce(max);
+    final int startIndex = maxIndex + 1;
 
     final List<PlayQueueItem> playQueue = files
         .asMap()
@@ -103,15 +100,21 @@ class PlayQueueStore extends PersistentStore<PlayQueueState> {
   Future<void> previous() async {
     final int currentPlayIndex = state.playQueue
         .indexWhere((element) => element.index == state.currentIndex);
-    if (currentPlayIndex <= 0) return;
-    await updateCurrentIndex(state.playQueue[currentPlayIndex - 1].index);
+    if (currentPlayIndex <= 0) {
+      await updateCurrentIndex(state.playQueue.last.index);
+    } else {
+      await updateCurrentIndex(state.playQueue[currentPlayIndex - 1].index);
+    }
   }
 
   Future<void> next() async {
     final int currentPlayIndex = state.playQueue
         .indexWhere((element) => element.index == state.currentIndex);
-    if (currentPlayIndex >= state.playQueue.length - 1) return;
-    await updateCurrentIndex(state.playQueue[currentPlayIndex + 1].index);
+    if (currentPlayIndex >= state.playQueue.length - 1) {
+      await updateCurrentIndex(state.playQueue.first.index);
+    } else {
+      await updateCurrentIndex(state.playQueue[currentPlayIndex + 1].index);
+    }
   }
 
   Future<void> shuffle() async => update(

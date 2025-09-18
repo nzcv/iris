@@ -15,3 +15,6 @@ key.properties
 **/*.jks
 
 /app/src/main/assets/flutter_assets
+
+.kotlin
+build

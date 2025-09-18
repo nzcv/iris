@@ -6,7 +6,6 @@ part 'file.freezed.dart';
 part 'file.g.dart';
 
 enum ContentType {
-  dir,
   video,
   audio,
   image,
@@ -38,7 +37,7 @@ abstract class FileItem with _$FileItem {
   factory FileItem.fromJson(Map<String, dynamic> json) =>
       _$FileItemFromJson(json);
 
-  String getID() => '$storageId:$uri}';
+  String getID() => '$storageId:$uri';
 }
 
 @freezed

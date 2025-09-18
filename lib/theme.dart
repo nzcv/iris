@@ -21,9 +21,9 @@ ThemeData baseTheme(BuildContext context) {
 }
 
 ColorScheme customColorScheme =
-    ColorScheme.fromSeed(seedColor: Color(0xFFB3BCDF));
+    ColorScheme.fromSeed(seedColor: const Color(0xFFB3BCDF));
 ColorScheme customDarkColorScheme = ColorScheme.fromSeed(
-    seedColor: Color(0xFFB3BCDF), brightness: Brightness.dark);
+    seedColor: const Color(0xFFB3BCDF), brightness: Brightness.dark);
 
 class CustomTheme {
   final ThemeData light;
@@ -42,13 +42,15 @@ CustomTheme getTheme({
   ColorScheme darkColorScheme =
       darkDynamic != null ? darkDynamic.harmonized() : customDarkColorScheme;
 
+  final base = baseTheme(context);
+
   final lightTheme = ThemeData(
     colorScheme: colorScheme,
     useMaterial3: true,
     textTheme: GoogleFonts.notoSansScTextTheme(),
-    popupMenuTheme: baseTheme(context).popupMenuTheme,
-    dropdownMenuTheme: baseTheme(context).dropdownMenuTheme,
-    listTileTheme: baseTheme(context).listTileTheme,
+    popupMenuTheme: base.popupMenuTheme,
+    dropdownMenuTheme: base.dropdownMenuTheme,
+    listTileTheme: base.listTileTheme,
   );
 
   final darkTheme = ThemeData.dark(useMaterial3: true).copyWith(
@@ -58,9 +60,9 @@ CustomTheme getTheme({
           .copyWith(colorScheme: darkColorScheme)
           .textTheme,
     ),
-    popupMenuTheme: baseTheme(context).popupMenuTheme,
-    dropdownMenuTheme: baseTheme(context).dropdownMenuTheme,
-    listTileTheme: baseTheme(context).listTileTheme,
+    popupMenuTheme: base.popupMenuTheme,
+    dropdownMenuTheme: base.dropdownMenuTheme,
+    listTileTheme: base.listTileTheme,
   );
 
   return CustomTheme(light: lightTheme, dark: darkTheme);

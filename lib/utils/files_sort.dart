@@ -7,59 +7,28 @@ List<FileItem> filesSort({
   SortOrder sortOrder = SortOrder.asc,
   bool folderFirst = true,
 }) {
-  final dirs_ = files.where((file) => file.isDir).toList();
-  final files_ = files.where((file) => !file.isDir).toList();
+  final sortedFiles = files.toList();
+  sortedFiles.sort((a, b) {
+    if (folderFirst) {
+      if (a.isDir && !b.isDir) return -1;
+      if (!a.isDir && b.isDir) return 1;
+    }
 
-  int compare(dynamic a, dynamic b) {
     int result;
-    if (a is String && b is String) {
-      result = a.toLowerCase().compareTo(b.toLowerCase());
-    } else if (a is Comparable && b is Comparable) {
-      result = a.compareTo(b);
-    } else {
-      result = 0;
+    switch (sortBy) {
+      case SortBy.name:
+        result = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        break;
+      case SortBy.size:
+        result = a.size.compareTo(b.size);
+        break;
+      case SortBy.lastModified:
+        result = (a.lastModified ?? DateTime(0))
+            .compareTo(b.lastModified ?? DateTime(0));
+        break;
     }
 
     return sortOrder == SortOrder.asc ? result : -result;
-  }
-
-  if (folderFirst) {
-    switch (sortBy) {
-      case SortBy.name:
-        dirs_.sort((a, b) => compare(a.name, b.name));
-        files_.sort((a, b) => compare(a.name, b.name));
-        break;
-      case SortBy.size:
-        dirs_.sort((a, b) => compare(a.size, b.size));
-        files_.sort((a, b) => compare(a.size, b.size));
-        break;
-      case SortBy.lastModified:
-        dirs_.sort((a, b) => compare(
-              a.lastModified ?? DateTime(0),
-              b.lastModified ?? DateTime(0),
-            ));
-        files_.sort((a, b) => compare(
-              a.lastModified ?? DateTime(0),
-              b.lastModified ?? DateTime(0),
-            ));
-        break;
-    }
-    return [...dirs_, ...files_];
-  } else {
-    switch (sortBy) {
-      case SortBy.name:
-        files.sort((a, b) => compare(a.name, b.name));
-        break;
-      case SortBy.size:
-        files.sort((a, b) => compare(a.size, b.size));
-        break;
-      case SortBy.lastModified:
-        files.sort((a, b) => compare(
-              a.lastModified ?? DateTime(0),
-              b.lastModified ?? DateTime(0),
-            ));
-        break;
-    }
-    return files;
-  }
+  });
+  return sortedFiles;
 }
