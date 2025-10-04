@@ -157,7 +157,7 @@ KeyboardEvent useKeyboard({
           usePlayQueueStore().next();
           break;
         // 存储
-        case LogicalKeyboardKey.keyF:
+        case LogicalKeyboardKey.contextMenu:
           showControlForHover(
             showPopup(
               context: context,
