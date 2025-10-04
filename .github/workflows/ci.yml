@@ -8,11 +8,6 @@ on:
       - README.md
       - README_CN.md
       - LICENSE
-  pull_request:
-    paths-ignore:
-      - README.md
-      - README_CN.md
-      - LICENSE
 
 jobs:
   build-windows:
